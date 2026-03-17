@@ -50,6 +50,7 @@ export type ContactSubmission = {
   buyerName: string;
   phone: string | null;
   email: string | null;
+  location: string | null;
   message: string;
   captchaPrompt: string;
   createdAt: string;
@@ -95,6 +96,7 @@ export type SaveContactSubmissionInput = {
   buyerName: string;
   phone?: string;
   email?: string;
+  location: string;
   message: string;
   captchaPrompt: string;
 };

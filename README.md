@@ -7,11 +7,14 @@ A local-first personal item selling board built with Next.js, TypeScript, Tailwi
 The app now runs fully in local mode without cloud infrastructure:
 
 - public catalogue with search and filters
+- catalogue export to CSV with item links
 - item detail page with gallery and interest form
+- dedicated contact seller page with captcha and validation
 - admin login with local cookie session
 - admin CRUD for items
+- admin contact submissions log with CSV export
 - local photo upload to `public/uploads`
-- lead capture stored in `data/local-db.json`
+- lead and contact submission capture stored in `data/local-db.json`
 
 This keeps the project testable before moving the same shape to Supabase.
 
@@ -54,6 +57,21 @@ NEXT_ALLOWED_DEV_ORIGINS=192.168.1.21,localhost
 - local catalogue data is auto-seeded on first run
 - admin login defaults come from `.env.local`
 - uploaded images are written to `public/uploads`
+
+## Testing
+
+- Run all tests: `npm run test`
+- Run tests in watch mode: `npm run test:watch`
+
+Current unit tests cover:
+
+- captcha answer normalization and validation
+- contact seller schema validation for phone, email, and message size rules
+
+Test files:
+
+- `tests/contact-captcha.test.ts`
+- `tests/contact-seller-validation.test.ts`
 
 ## Moving to Supabase later
 

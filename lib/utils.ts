@@ -24,6 +24,22 @@ export function formatDate(value: string | null | undefined) {
   }).format(new Date(value));
 }
 
+export function formatDateTime(value: string | null | undefined) {
+  if (!value) {
+    return "Not listed";
+  }
+
+  return new Intl.DateTimeFormat("en-IN", {
+    day: "numeric",
+    month: "short",
+    year: "numeric",
+    hour: "2-digit",
+    minute: "2-digit",
+    second: "2-digit",
+    hour12: true,
+  }).format(new Date(value));
+}
+
 export function slugify(value: string) {
   return value
     .toLowerCase()

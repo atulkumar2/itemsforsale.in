@@ -2,48 +2,46 @@
 
 Frontend
 
-- Next.js latest (App Router)
+- Next.js 16 (App Router)
+- React 19
 - TypeScript
-- Tailwind CSS
-- shadcn/ui
+- Tailwind CSS v4
+- Custom reusable UI components (no mandatory UI kit dependency)
 
 Backend
 
-- Next.js server actions / route handlers
+- Next.js route handlers
 
-Database
+Validation and forms
 
-- Supabase Postgres
+- Zod
+- React Hook Form
 
-Storage
+Data and storage
 
-- Supabase Storage
+- Local-first JSON persistence (`data/local-db.json`) for development and launch simplicity
+- Local image storage in `public/uploads`
+- Supabase-ready schema for later migration (Postgres + Storage)
 
 Auth
 
-- Supabase Auth (admin only)
+- Local admin cookie session currently
+- Designed to be replaceable with Supabase Auth later
 
-Hosting
+Testing
 
-- Vercel
+- Vitest unit tests for key validation and captcha logic
 
-Domain
+Hosting and deployment
 
-- itemsforsale.in
-
-Validation
-
-- Zod
-
-Forms
-
-- React Hook Form
+- Vercel-friendly
+- Domain: itemsforsale.in
 
 Rules
 
-- No CDN required
 - No payments
 - No buyer login
-- No chat
-- No notifications
-- No analytics
+- No multi-seller model
+- No chat system
+- No notification pipeline
+- Keep local development fully usable before cloud migration

@@ -35,6 +35,7 @@ export async function POST(request: Request) {
     buyerName: parsed.data.buyerName,
     phone: parsed.data.phone,
     email: parsed.data.email,
+    location: parsed.data.location,
     message: parsed.data.message,
     captchaPrompt: challenge?.prompt ?? "Unknown prompt",
   });

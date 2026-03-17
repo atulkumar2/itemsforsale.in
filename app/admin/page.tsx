@@ -97,6 +97,9 @@ export default async function AdminPage() {
                 Edit details, upload more images, or remove an item.
               </p>
             </div>
+            <Link className="button-secondary" href="/api/catalogue/export">
+              Export catalogue CSV
+            </Link>
           </div>
           <ItemTable items={items} />
         </div>

@@ -58,8 +58,7 @@ export default async function Home({ searchParams }: HomePageProps) {
               Silk Board Junctions - 3 km. Electronic City - 10 km. HSR Layout - 5 km. Koramangala - 6 km. Jayanagar - 7 km. BTM Layout - 4 km.
             </p>
             <p className="max-w-2xl text-lg leading-8 text-[color:var(--muted)]">
-              Browse available, reserved, and sold items, inspect photos and
-              history, then send a direct interest or bid request to the seller.
+              Browse available items, inspect photos and details, then send a direct interest or bid request to the seller.
             </p>
           </div>
           <div className="flex flex-wrap gap-3">

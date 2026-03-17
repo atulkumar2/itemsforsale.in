@@ -1,7 +1,12 @@
 import { z } from "zod";
 
 import { contactCaptchaChallenges } from "@/lib/contact-captcha";
-import { itemStatuses } from "@/lib/constants";
+import {
+  contactFormLimits,
+  emailRegex,
+  itemStatuses,
+  phoneRegex,
+} from "@/lib/constants";
 
 const optionalNumberField = z
   .string()
@@ -57,20 +62,32 @@ export const itemFormSchema = z.object({
 export type ItemFormValues = z.infer<typeof itemFormSchema>;
 
 export const contactSellerSchema = z.object({
-  buyerName: z.string().trim().min(2, "Name is required.").max(80, "Name is too long."),
-  phone: z.string().trim().max(25, "Phone is too long.").optional().or(z.literal("")),
+  buyerName: z
+    .string()
+    .trim()
+    .min(2, "Name is required.")
+    .max(contactFormLimits.buyerNameMax, "Name is too long."),
+  phone: z
+    .string()
+    .trim()
+    .regex(phoneRegex, "Phone must be exactly 10 digits and start with 6, 7, 8, or 9."),
   email: z
     .string()
     .trim()
-    .max(160, "Email is too long.")
-    .email("Enter a valid email address.")
+    .max(contactFormLimits.emailMax, "Email is too long.")
+    .regex(emailRegex, "Enter a valid email address.")
     .optional()
     .or(z.literal("")),
+  location: z
+    .string()
+    .trim()
+    .min(2, "Location is required.")
+    .max(contactFormLimits.locationMax, "Location is too long."),
   message: z
     .string()
     .trim()
     .min(10, "Message must be at least 10 characters.")
-    .max(1200, "Message is too long."),
+    .max(contactFormLimits.messageMax, "Message is too long."),
   captchaId: z
     .string()
     .trim()
@@ -82,7 +99,7 @@ export const contactSellerSchema = z.object({
     .string()
     .trim()
     .min(1, "Captcha answer is required.")
-    .max(80, "Captcha answer is too long."),
+    .max(contactFormLimits.captchaAnswerMax, "Captcha answer is too long."),
 });
 
 export type ContactSellerValues = z.infer<typeof contactSellerSchema>;

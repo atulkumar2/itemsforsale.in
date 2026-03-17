@@ -1,5 +1,7 @@
 "use client";
 
+import Link from "next/link";
+import { useSearchParams } from "next/navigation";
 import { useState } from "react";
 import type { ItemWithImages } from "@/lib/types";
 import { ItemCard } from "./item-card";
@@ -12,6 +14,10 @@ type CatalogueViewProps = {
 
 export function CatalogueView({ items, itemCount }: CatalogueViewProps) {
   const [viewMode, setViewMode] = useState<"grid" | "table">("grid");
+  const searchParams = useSearchParams();
+  const exportHref = searchParams.toString()
+    ? `/api/catalogue/export?${searchParams.toString()}`
+    : "/api/catalogue/export";
 
   return (
     <>
@@ -26,7 +32,10 @@ export function CatalogueView({ items, itemCount }: CatalogueViewProps) {
           </p>
         </div>
 
-        <div className="flex gap-2">
+        <div className="flex flex-wrap items-center gap-2">
+          <Link className="button-secondary" href={exportHref}>
+            Export CSV
+          </Link>
           <button
             onClick={() => setViewMode("grid")}
             className={`px-4 py-2 rounded-lg text-sm font-medium transition-colors ${

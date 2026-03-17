@@ -5,6 +5,7 @@ import { useMemo, useState, useTransition } from "react";
 import { useForm } from "react-hook-form";
 
 import { contactCaptchaChallenges } from "@/lib/contact-captcha";
+import { contactFormLimits, emailRegex, phoneRegex } from "@/lib/constants";
 import {
   contactSellerSchema,
   type ContactSellerValues,
@@ -40,6 +41,7 @@ export function ContactSellerForm() {
       buyerName: "",
       phone: "",
       email: "",
+      location: "",
       message: "",
       captchaId: activeChallenge.id,
       captchaAnswer: "",
@@ -92,6 +94,7 @@ export function ContactSellerForm() {
         buyerName: values.buyerName,
         phone: values.phone,
         email: values.email,
+        location: values.location,
         message: values.message,
         captchaId: values.captchaId,
         captchaAnswer: "",
@@ -115,7 +118,7 @@ export function ContactSellerForm() {
           <input
             id="contact-name"
             className="field"
-            maxLength={80}
+            maxLength={contactFormLimits.buyerNameMax}
             placeholder="Your full name"
             {...register("buyerName")}
           />
@@ -127,13 +130,16 @@ export function ContactSellerForm() {
         <div className="grid gap-4 sm:grid-cols-2">
           <div>
             <label className="mb-2 block text-sm font-semibold text-stone-800" htmlFor="contact-phone">
-              Phone (optional)
+              Phone
             </label>
             <input
               id="contact-phone"
               className="field"
-              maxLength={25}
-              placeholder="+91..."
+              maxLength={contactFormLimits.phoneLength}
+              minLength={contactFormLimits.phoneLength}
+              inputMode="numeric"
+              pattern={phoneRegex.source}
+              placeholder="10-digit mobile number"
               {...register("phone")}
             />
             {errors.phone ? (
@@ -148,7 +154,8 @@ export function ContactSellerForm() {
             <input
               id="contact-email"
               className="field"
-              maxLength={160}
+              maxLength={contactFormLimits.emailMax}
+              pattern={emailRegex.source}
               placeholder="you@example.com"
               {...register("email")}
             />
@@ -159,13 +166,29 @@ export function ContactSellerForm() {
         </div>
 
         <div>
+          <label className="mb-2 block text-sm font-semibold text-stone-800" htmlFor="contact-location">
+            Your location
+          </label>
+          <input
+            id="contact-location"
+            className="field"
+            maxLength={contactFormLimits.locationMax}
+            placeholder="Area / locality"
+            {...register("location")}
+          />
+          {errors.location ? (
+            <p className="mt-2 text-sm text-[color:var(--danger)]">{errors.location.message}</p>
+          ) : null}
+        </div>
+
+        <div>
           <label className="mb-2 block text-sm font-semibold text-stone-800" htmlFor="contact-message">
             Message
           </label>
           <textarea
             id="contact-message"
             className="textarea"
-            maxLength={1200}
+            maxLength={contactFormLimits.messageMax}
             placeholder="Tell the seller what item(s) you are interested in."
             {...register("message")}
           />
@@ -182,7 +205,7 @@ export function ContactSellerForm() {
           <div className="mt-3 flex flex-col gap-3 sm:flex-row">
             <input
               className="field"
-              maxLength={80}
+              maxLength={contactFormLimits.captchaAnswerMax}
               placeholder="Type your answer"
               {...register("captchaAnswer")}
             />

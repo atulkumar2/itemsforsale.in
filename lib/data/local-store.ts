@@ -192,6 +192,7 @@ export async function createContactSubmission(input: SaveContactSubmissionInput)
     buyerName: input.buyerName,
     phone: normaliseOptionalString(input.phone) ?? null,
     email: normaliseOptionalString(input.email) ?? null,
+    location: normaliseOptionalString(input.location) ?? null,
     message: normaliseOptionalString(input.message) ?? "",
     captchaPrompt: input.captchaPrompt,
     createdAt: new Date().toISOString(),

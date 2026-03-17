@@ -3,15 +3,22 @@
 Included
 
 - item listing
+- item listing grid/table toggle
 - item detail page
 - interest form
+- contact seller page with captcha
 - admin login
 - admin item CRUD
 - admin photo upload
 - admin leads viewer
+- admin contact submissions viewer
 - status badge
 - search
 - filter
+- seller location and map embed
+- catalogue CSV export with item links
+- contact submissions CSV export
+- unit tests for captcha and contact validation
 - responsive UI
 
 Not included
@@ -20,7 +27,6 @@ Not included
 - multi seller
 - chat
 - notifications
-- maps
 - bidding engine
 - email sending
 - analytics
