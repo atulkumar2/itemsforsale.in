@@ -73,22 +73,22 @@ The app already uses local filesystem storage for uploaded images. If you want a
 npm run db:up
 ```
 
-2. Copy `.env.example` to `.env.local` if not already done
-3. Set `DATA_MODE=postgres`
-4. Set `DATABASE_URL=postgresql://postgres:postgres@localhost:5432/itemsforsale`
-5. Optional: initialize schema manually with:
+1. Copy `.env.example` to `.env.local` if not already done
+1. Set `DATA_MODE=postgres`
+1. Set `DATABASE_URL=postgresql://postgres:postgres@localhost:5432/itemsforsale`
+1. Optional: initialize schema manually with:
 
 ```bash
 psql postgresql://postgres:postgres@localhost:5432/itemsforsale -f data/postgres.local.sql
 ```
 
-6. If you already have an older local PostgreSQL database without the latest constraints, run:
+1. If you already have an older local PostgreSQL database without the latest constraints, run:
 
 ```bash
 npm run db:migrate:constraints
 ```
 
-7. Optional: import your existing JSON data into PostgreSQL:
+1. Optional: import your existing JSON data into PostgreSQL:
 
 ```bash
 npm run db:import
@@ -101,6 +101,10 @@ npm run db:up
 npm run db:down
 npm run db:logs
 npm run db:migrate:constraints
+npm run db:seed:dev
+npm run db:seed:cleanup
+npm run db:recreate
+npm run db:recreate:seed
 ```
 
 Notes:
@@ -111,6 +115,45 @@ Notes:
 - switching back to `DATA_MODE=local` returns to JSON-backed storage
 - Docker Compose file: `docker-compose.yml`
 - JSON import script: `scripts/import-json-to-postgres.mjs`
+
+## Dev fake data seeding
+
+To quickly populate demo leads and contact submissions in development:
+
+```bash
+npm run db:seed:dev
+```
+
+Behavior:
+
+- if `DATA_MODE=postgres`, inserts fake rows into `leads` and `contact_submissions`
+- if `DATA_MODE=local`, writes fake rows into `data/local-db.json`
+
+You can also seed and start dev server in one command:
+
+```bash
+npm run dev:seed
+```
+
+To remove previously seeded fake data:
+
+```bash
+npm run db:seed:cleanup
+```
+
+## Recreate PostgreSQL database
+
+To fully recreate local PostgreSQL from scratch (drop volume, recreate schema, apply migrations, and import JSON data):
+
+```bash
+npm run db:recreate
+```
+
+To recreate and also seed fake leads/submissions:
+
+```bash
+npm run db:recreate:seed
+```
 
 ## Testing
 

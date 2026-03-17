@@ -15,7 +15,12 @@
     "db:down": "docker compose down",
     "db:logs": "docker compose logs -f postgres",
     "db:migrate:constraints": "node --env-file=.env.local scripts/migrate-postgres-constraints.mjs",
-    "db:import": "node --env-file=.env.local scripts/import-json-to-postgres.mjs"
+    "db:import": "node --env-file=.env.local scripts/import-json-to-postgres.mjs",
+    "db:seed:dev": "node --env-file=.env.local scripts/seed-dev-fake-data.mjs",
+    "db:seed:cleanup": "node --env-file=.env.local scripts/cleanup-dev-fake-data.mjs",
+    "db:recreate": "node --env-file=.env.local scripts/recreate-postgres-db.mjs",
+    "db:recreate:seed": "node --env-file=.env.local scripts/recreate-postgres-db.mjs --seed",
+    "dev:seed": "npm run db:seed:dev && npm run dev"
   },
   "dependencies": {
     "@hookform/resolvers": "^5.2.2",
