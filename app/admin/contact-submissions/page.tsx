@@ -3,13 +3,34 @@ import { LogoutButton } from "@/components/admin/logout-button";
 import { SiteHeader } from "@/components/site-header";
 import { requireAdminPage } from "@/lib/auth";
 import { listAdminContactSubmissions } from "@/lib/data/repository";
+import type { ContactSubmission } from "@/lib/types";
 import Link from "next/link";
 
 export const dynamic = "force-dynamic";
 
+function isPostgresUnavailable(error: unknown) {
+  if (!(error instanceof Error)) {
+    return false;
+  }
+
+  const code = "code" in error ? error.code : undefined;
+  return code === "ECONNREFUSED" || code === "ENOTFOUND" || code === "EAI_AGAIN";
+}
+
 export default async function AdminContactSubmissionsPage() {
   await requireAdminPage();
-  const submissions = await listAdminContactSubmissions();
+  let submissions: ContactSubmission[] = [];
+  let adminUnavailable = false;
+
+  try {
+    submissions = await listAdminContactSubmissions();
+  } catch (error) {
+    if (!isPostgresUnavailable(error)) {
+      throw error;
+    }
+
+    adminUnavailable = true;
+  }
 
   return (
     <main className="pb-16">
@@ -28,22 +49,43 @@ export default async function AdminContactSubmissionsPage() {
           <LogoutButton />
         </div>
 
-        <div className="panel p-6 md:p-8">
-          <div className="mb-5 flex items-center justify-between gap-4">
-            <div>
-              <h2 className="display-title text-3xl font-semibold text-stone-900">
-                Submission log
-              </h2>
-              <p className="mt-2 text-sm text-[color:var(--muted)]">
-                Download a CSV snapshot for backup or offline analysis.
-              </p>
+        {adminUnavailable ? (
+          <div className="panel p-8 md:p-10">
+            <p className="eyebrow">Contact submissions unavailable</p>
+            <h2 className="display-title mt-4 text-3xl font-semibold text-stone-900">
+              PostgreSQL is currently unavailable.
+            </h2>
+            <p className="mt-4 max-w-2xl text-base leading-8 text-[color:var(--muted)]">
+              Contact submissions cannot be loaded until the database connection is
+              restored.
+            </p>
+            <div className="mt-6 flex flex-wrap gap-3">
+              <Link className="button-secondary" href="/admin/system">
+                View system status
+              </Link>
+              <Link className="button-secondary" href="/admin">
+                Back to dashboard
+              </Link>
             </div>
-            <Link className="button-secondary" href="/api/admin/contact-submissions/export">
-              Export CSV
-            </Link>
           </div>
-          <ContactSubmissionsTable submissions={submissions} />
-        </div>
+        ) : (
+          <div className="panel p-6 md:p-8">
+            <div className="mb-5 flex items-center justify-between gap-4">
+              <div>
+                <h2 className="display-title text-3xl font-semibold text-stone-900">
+                  Submission log
+                </h2>
+                <p className="mt-2 text-sm text-[color:var(--muted)]">
+                  Download a CSV snapshot for backup or offline analysis.
+                </p>
+              </div>
+              <Link className="button-secondary" href="/api/admin/contact-submissions/export">
+                Export CSV
+              </Link>
+            </div>
+            <ContactSubmissionsTable submissions={submissions} />
+          </div>
+        )}
       </section>
     </main>
   );

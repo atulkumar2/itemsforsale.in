@@ -6,6 +6,7 @@ import path from "node:path";
 import { Pool, type PoolClient, type QueryResultRow } from "pg";
 
 import { getDatabaseUrl } from "@/lib/env";
+import { contactFormLimits, interestFormLimits, itemFormLimits } from "@/lib/constants";
 import { localSeedDatabase } from "@/lib/data/local-seed";
 import type {
   ContactSubmission,
@@ -62,17 +63,17 @@ async function ensureSchema() {
   await query(`
     create table if not exists items (
       id uuid primary key,
-      slug text not null unique,
-      title text not null,
-      description text,
-      category text,
-      condition text,
+      slug varchar(${itemFormLimits.slugMax}) not null unique check (char_length(slug) <= ${itemFormLimits.slugMax}),
+      title varchar(${itemFormLimits.titleMax}) not null check (char_length(title) between ${itemFormLimits.titleMin} and ${itemFormLimits.titleMax}),
+      description varchar(${itemFormLimits.descriptionMax}) check (description is null or char_length(description) <= ${itemFormLimits.descriptionMax}),
+      category varchar(${itemFormLimits.categoryMax}) check (category is null or char_length(category) <= ${itemFormLimits.categoryMax}),
+      condition varchar(${itemFormLimits.conditionMax}) check (condition is null or char_length(condition) <= ${itemFormLimits.conditionMax}),
       purchase_date date,
       purchase_price numeric(12,2),
       expected_price numeric(12,2),
       available_from date,
-      location_area text,
-      status text not null check (status in ('available', 'reserved', 'sold')),
+      location_area varchar(${itemFormLimits.locationAreaMax}) check (location_area is null or char_length(location_area) <= ${itemFormLimits.locationAreaMax}),
+      status varchar(20) not null check (status in ('available', 'reserved', 'sold')),
       created_at timestamptz not null,
       updated_at timestamptz not null
     );
@@ -80,7 +81,7 @@ async function ensureSchema() {
     create table if not exists item_images (
       id uuid primary key,
       item_id uuid not null references items(id) on delete cascade,
-      image_url text not null,
+      image_url varchar(${itemFormLimits.imageUrlMax}) not null check (char_length(image_url) <= ${itemFormLimits.imageUrlMax}),
       sort_order int not null default 0,
       created_at timestamptz not null
     );
@@ -88,22 +89,22 @@ async function ensureSchema() {
     create table if not exists leads (
       id uuid primary key,
       item_id uuid not null references items(id) on delete cascade,
-      buyer_name text not null,
-      phone text,
-      email text,
-      message text,
+      buyer_name varchar(${interestFormLimits.buyerNameMax}) not null check (char_length(buyer_name) between 2 and ${interestFormLimits.buyerNameMax}),
+      phone varchar(${interestFormLimits.phoneLength}) check (phone is null or char_length(phone) = ${interestFormLimits.phoneLength}),
+      email varchar(${interestFormLimits.emailMax}) check (email is null or char_length(email) <= ${interestFormLimits.emailMax}),
+      message varchar(${interestFormLimits.messageMax}) check (message is null or char_length(message) <= ${interestFormLimits.messageMax}),
       bid_price numeric(12,2),
       created_at timestamptz not null
     );
 
     create table if not exists contact_submissions (
       id uuid primary key,
-      buyer_name text not null,
-      phone text,
-      email text,
-      location text,
-      message text not null,
-      captcha_prompt text not null,
+      buyer_name varchar(${contactFormLimits.buyerNameMax}) not null check (char_length(buyer_name) between 2 and ${contactFormLimits.buyerNameMax}),
+      phone varchar(${contactFormLimits.phoneLength}) check (phone is null or char_length(phone) = ${contactFormLimits.phoneLength}),
+      email varchar(${contactFormLimits.emailMax}) check (email is null or char_length(email) <= ${contactFormLimits.emailMax}),
+      location varchar(${contactFormLimits.locationMax}) check (location is null or char_length(location) <= ${contactFormLimits.locationMax}),
+      message varchar(${contactFormLimits.messageMax}) not null check (char_length(message) between 10 and ${contactFormLimits.messageMax}),
+      captcha_prompt varchar(160) not null check (char_length(captcha_prompt) <= 160),
       created_at timestamptz not null
     );
 
@@ -112,6 +113,87 @@ async function ensureSchema() {
     create index if not exists idx_item_images_item_id on item_images(item_id);
     create index if not exists idx_leads_item_id on leads(item_id);
     create index if not exists idx_contact_submissions_created_at on contact_submissions(created_at desc);
+  `);
+
+  await query(`
+    do $$
+    begin
+      if not exists (select 1 from pg_constraint where conname = 'items_pkey') then
+        alter table items add constraint items_pkey primary key (id);
+      end if;
+      if not exists (select 1 from pg_constraint where conname = 'items_slug_key') then
+        alter table items add constraint items_slug_key unique (slug);
+      end if;
+      if not exists (select 1 from pg_constraint where conname = 'items_slug_length_check') then
+        alter table items add constraint items_slug_length_check check (char_length(slug) <= ${itemFormLimits.slugMax});
+      end if;
+      if not exists (select 1 from pg_constraint where conname = 'items_title_length_check') then
+        alter table items add constraint items_title_length_check check (char_length(title) between ${itemFormLimits.titleMin} and ${itemFormLimits.titleMax});
+      end if;
+      if not exists (select 1 from pg_constraint where conname = 'items_description_length_check') then
+        alter table items add constraint items_description_length_check check (description is null or char_length(description) <= ${itemFormLimits.descriptionMax});
+      end if;
+      if not exists (select 1 from pg_constraint where conname = 'items_category_length_check') then
+        alter table items add constraint items_category_length_check check (category is null or char_length(category) <= ${itemFormLimits.categoryMax});
+      end if;
+      if not exists (select 1 from pg_constraint where conname = 'items_condition_length_check') then
+        alter table items add constraint items_condition_length_check check (condition is null or char_length(condition) <= ${itemFormLimits.conditionMax});
+      end if;
+      if not exists (select 1 from pg_constraint where conname = 'items_location_area_length_check') then
+        alter table items add constraint items_location_area_length_check check (location_area is null or char_length(location_area) <= ${itemFormLimits.locationAreaMax});
+      end if;
+      if not exists (select 1 from pg_constraint where conname = 'items_status_check') then
+        alter table items add constraint items_status_check check (status in ('available', 'reserved', 'sold'));
+      end if;
+      if not exists (select 1 from pg_constraint where conname = 'item_images_pkey') then
+        alter table item_images add constraint item_images_pkey primary key (id);
+      end if;
+      if not exists (select 1 from pg_constraint where conname = 'item_images_item_id_fkey') then
+        alter table item_images add constraint item_images_item_id_fkey foreign key (item_id) references items(id) on delete cascade;
+      end if;
+      if not exists (select 1 from pg_constraint where conname = 'item_images_image_url_length_check') then
+        alter table item_images add constraint item_images_image_url_length_check check (char_length(image_url) <= ${itemFormLimits.imageUrlMax});
+      end if;
+      if not exists (select 1 from pg_constraint where conname = 'leads_pkey') then
+        alter table leads add constraint leads_pkey primary key (id);
+      end if;
+      if not exists (select 1 from pg_constraint where conname = 'leads_item_id_fkey') then
+        alter table leads add constraint leads_item_id_fkey foreign key (item_id) references items(id) on delete cascade;
+      end if;
+      if not exists (select 1 from pg_constraint where conname = 'leads_buyer_name_length_check') then
+        alter table leads add constraint leads_buyer_name_length_check check (char_length(buyer_name) between 2 and ${interestFormLimits.buyerNameMax});
+      end if;
+      if not exists (select 1 from pg_constraint where conname = 'leads_phone_length_check') then
+        alter table leads add constraint leads_phone_length_check check (phone is null or char_length(phone) = ${interestFormLimits.phoneLength});
+      end if;
+      if not exists (select 1 from pg_constraint where conname = 'leads_email_length_check') then
+        alter table leads add constraint leads_email_length_check check (email is null or char_length(email) <= ${interestFormLimits.emailMax});
+      end if;
+      if not exists (select 1 from pg_constraint where conname = 'leads_message_length_check') then
+        alter table leads add constraint leads_message_length_check check (message is null or char_length(message) <= ${interestFormLimits.messageMax});
+      end if;
+      if not exists (select 1 from pg_constraint where conname = 'contact_submissions_pkey') then
+        alter table contact_submissions add constraint contact_submissions_pkey primary key (id);
+      end if;
+      if not exists (select 1 from pg_constraint where conname = 'contact_submissions_buyer_name_length_check') then
+        alter table contact_submissions add constraint contact_submissions_buyer_name_length_check check (char_length(buyer_name) between 2 and ${contactFormLimits.buyerNameMax});
+      end if;
+      if not exists (select 1 from pg_constraint where conname = 'contact_submissions_phone_length_check') then
+        alter table contact_submissions add constraint contact_submissions_phone_length_check check (phone is null or char_length(phone) = ${contactFormLimits.phoneLength});
+      end if;
+      if not exists (select 1 from pg_constraint where conname = 'contact_submissions_email_length_check') then
+        alter table contact_submissions add constraint contact_submissions_email_length_check check (email is null or char_length(email) <= ${contactFormLimits.emailMax});
+      end if;
+      if not exists (select 1 from pg_constraint where conname = 'contact_submissions_location_length_check') then
+        alter table contact_submissions add constraint contact_submissions_location_length_check check (location is null or char_length(location) <= ${contactFormLimits.locationMax});
+      end if;
+      if not exists (select 1 from pg_constraint where conname = 'contact_submissions_message_length_check') then
+        alter table contact_submissions add constraint contact_submissions_message_length_check check (char_length(message) between 10 and ${contactFormLimits.messageMax});
+      end if;
+      if not exists (select 1 from pg_constraint where conname = 'contact_submissions_captcha_prompt_length_check') then
+        alter table contact_submissions add constraint contact_submissions_captcha_prompt_length_check check (char_length(captcha_prompt) <= 160);
+      end if;
+    end $$;
   `);
 }
 

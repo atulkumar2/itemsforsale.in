@@ -82,7 +82,13 @@ npm run db:up
 psql postgresql://postgres:postgres@localhost:5432/itemsforsale -f data/postgres.local.sql
 ```
 
-6. Optional: import your existing JSON data into PostgreSQL:
+6. If you already have an older local PostgreSQL database without the latest constraints, run:
+
+```bash
+npm run db:migrate:constraints
+```
+
+7. Optional: import your existing JSON data into PostgreSQL:
 
 ```bash
 npm run db:import
@@ -94,6 +100,7 @@ Useful commands:
 npm run db:up
 npm run db:down
 npm run db:logs
+npm run db:migrate:constraints
 ```
 
 Notes:

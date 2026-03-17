@@ -14,6 +14,7 @@
     "db:up": "docker compose up -d",
     "db:down": "docker compose down",
     "db:logs": "docker compose logs -f postgres",
+    "db:migrate:constraints": "node --env-file=.env.local scripts/migrate-postgres-constraints.mjs",
     "db:import": "node --env-file=.env.local scripts/import-json-to-postgres.mjs"
   },
   "dependencies": {

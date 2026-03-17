@@ -14,15 +14,38 @@ import {
 
 export const dynamic = "force-dynamic";
 
+function isPostgresUnavailable(error: unknown) {
+  if (!(error instanceof Error)) {
+    return false;
+  }
+
+  const code = "code" in error ? error.code : undefined;
+  return code === "ECONNREFUSED" || code === "ENOTFOUND" || code === "EAI_AGAIN";
+}
+
 export default async function AdminPage() {
   await requireAdminPage();
 
-  const [items, leads, contactSubmissions, systemStatus] = await Promise.all([
-    listAdminItems(),
-    listAdminLeads(),
-    listAdminContactSubmissions(),
-    getAdminSystemStatus(),
-  ]);
+  let items: Awaited<ReturnType<typeof listAdminItems>> = [];
+  let leads: Awaited<ReturnType<typeof listAdminLeads>> = [];
+  let contactSubmissions: Awaited<ReturnType<typeof listAdminContactSubmissions>> = [];
+  let systemStatus: Awaited<ReturnType<typeof getAdminSystemStatus>> = await getAdminSystemStatus();
+  let adminUnavailable = false;
+
+  try {
+    [items, leads, contactSubmissions, systemStatus] = await Promise.all([
+      listAdminItems(),
+      listAdminLeads(),
+      listAdminContactSubmissions(),
+      getAdminSystemStatus(),
+    ]);
+  } catch (error) {
+    if (!isPostgresUnavailable(error)) {
+      throw error;
+    }
+
+    adminUnavailable = true;
+  }
 
   const leadCountByItemId = leads.reduce<Record<string, number>>((acc, lead) => {
     acc[lead.itemId] = (acc[lead.itemId] ?? 0) + 1;
@@ -62,78 +85,99 @@ export default async function AdminPage() {
           </div>
         </div>
 
-        <div className="grid gap-5 md:grid-cols-4">
-          <div className="panel p-6">
-            <p className="text-sm uppercase tracking-[0.16em] text-[color:var(--muted)]">
-              Total items
+        {adminUnavailable ? (
+          <div className="panel p-8 md:p-10">
+            <p className="eyebrow">Admin unavailable</p>
+            <h2 className="display-title mt-4 text-3xl font-semibold text-stone-900">
+              PostgreSQL is currently unavailable.
+            </h2>
+            <p className="mt-4 max-w-2xl text-base leading-8 text-[color:var(--muted)]">
+              Admin inventory, leads, and contact submissions cannot be loaded until
+              the database connection is restored.
             </p>
-            <p className="display-title mt-3 text-5xl font-semibold text-stone-900">
-              {items.length}
-            </p>
-          </div>
-          <div className="panel p-6">
-            <p className="text-sm uppercase tracking-[0.16em] text-[color:var(--muted)]">
-              Leads captured
-            </p>
-            <p className="display-title mt-3 text-5xl font-semibold text-stone-900">
-              {leads.length}
-            </p>
-          </div>
-          <div className="panel p-6">
-            <p className="text-sm uppercase tracking-[0.16em] text-[color:var(--muted)]">
-              Contact submissions
-            </p>
-            <p className="display-title mt-3 text-5xl font-semibold text-stone-900">
-              {contactSubmissions.length}
-            </p>
-          </div>
-          <div className="panel p-6">
-            <p className="text-sm uppercase tracking-[0.16em] text-[color:var(--muted)]">
-              Quick status
-            </p>
-            <p className="mt-3 text-lg font-semibold text-stone-900">
-              {systemStatus.dataMode === "postgres"
-                ? systemStatus.postgres.reachable
-                  ? "PostgreSQL mode active and reachable."
-                  : "PostgreSQL mode active but currently unavailable."
-                : "JSON mode active with local filesystem uploads."}
-            </p>
-            <Link className="mt-4 inline-block text-sm text-[color:var(--primary)] hover:underline" href="/admin/system">
-              View system details
-            </Link>
-          </div>
-        </div>
-
-        <div className="panel p-6 md:p-8">
-          <div className="mb-5 flex items-center justify-between gap-4">
-            <div>
-              <h2 className="display-title text-3xl font-semibold text-stone-900">
-                Inventory
-              </h2>
-              <p className="mt-2 text-sm text-[color:var(--muted)]">
-                Edit details, upload more images, or remove an item.
-              </p>
-            </div>
-            <Link className="button-secondary" href="/api/catalogue/export">
-              Export catalogue CSV
-            </Link>
-          </div>
-          <ItemTable items={items} leadCountByItemId={leadCountByItemId} />
-        </div>
-
-        <div className="panel p-6 md:p-8">
-          <div className="mb-5 flex items-center justify-between gap-4">
-            <div>
-              <h2 className="display-title text-3xl font-semibold text-stone-900">
-                Latest leads
-              </h2>
-              <p className="mt-2 text-sm text-[color:var(--muted)]">
-                Recent buyer interest captured from public item pages.
-              </p>
+            <div className="mt-6 flex flex-wrap gap-3">
+              <Link className="button-secondary" href="/admin/system">
+                View system status
+              </Link>
+              <LogoutButton />
             </div>
           </div>
-          <LeadsTable leads={leads.slice(0, 5)} />
-        </div>
+        ) : (
+          <>
+            <div className="grid gap-5 md:grid-cols-4">
+              <div className="panel p-6">
+                <p className="text-sm uppercase tracking-[0.16em] text-[color:var(--muted)]">
+                  Total items
+                </p>
+                <p className="display-title mt-3 text-5xl font-semibold text-stone-900">
+                  {items.length}
+                </p>
+              </div>
+              <div className="panel p-6">
+                <p className="text-sm uppercase tracking-[0.16em] text-[color:var(--muted)]">
+                  Leads captured
+                </p>
+                <p className="display-title mt-3 text-5xl font-semibold text-stone-900">
+                  {leads.length}
+                </p>
+              </div>
+              <div className="panel p-6">
+                <p className="text-sm uppercase tracking-[0.16em] text-[color:var(--muted)]">
+                  Contact submissions
+                </p>
+                <p className="display-title mt-3 text-5xl font-semibold text-stone-900">
+                  {contactSubmissions.length}
+                </p>
+              </div>
+              <div className="panel p-6">
+                <p className="text-sm uppercase tracking-[0.16em] text-[color:var(--muted)]">
+                  Quick status
+                </p>
+                <p className="mt-3 text-lg font-semibold text-stone-900">
+                  {systemStatus.dataMode === "postgres"
+                    ? systemStatus.postgres.reachable
+                      ? "PostgreSQL mode active and reachable."
+                      : "PostgreSQL mode active but currently unavailable."
+                    : "JSON mode active with local filesystem uploads."}
+                </p>
+                <Link className="mt-4 inline-block text-sm text-[color:var(--primary)] hover:underline" href="/admin/system">
+                  View system details
+                </Link>
+              </div>
+            </div>
+
+            <div className="panel p-6 md:p-8">
+              <div className="mb-5 flex items-center justify-between gap-4">
+                <div>
+                  <h2 className="display-title text-3xl font-semibold text-stone-900">
+                    Inventory
+                  </h2>
+                  <p className="mt-2 text-sm text-[color:var(--muted)]">
+                    Edit details, upload more images, or remove an item.
+                  </p>
+                </div>
+                <Link className="button-secondary" href="/api/catalogue/export">
+                  Export catalogue CSV
+                </Link>
+              </div>
+              <ItemTable items={items} leadCountByItemId={leadCountByItemId} />
+            </div>
+
+            <div className="panel p-6 md:p-8">
+              <div className="mb-5 flex items-center justify-between gap-4">
+                <div>
+                  <h2 className="display-title text-3xl font-semibold text-stone-900">
+                    Latest leads
+                  </h2>
+                  <p className="mt-2 text-sm text-[color:var(--muted)]">
+                    Recent buyer interest captured from public item pages.
+                  </p>
+                </div>
+              </div>
+              <LeadsTable leads={leads.slice(0, 5)} />
+            </div>
+          </>
+        )}
       </section>
     </main>
   );

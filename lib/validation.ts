@@ -5,6 +5,7 @@ import {
   contactFormLimits,
   emailRegex,
   interestFormLimits,
+  itemFormLimits,
   itemStatuses,
   phoneRegex,
 } from "@/lib/constants";
@@ -68,15 +69,39 @@ export type AdminLoginValues = z.infer<typeof adminLoginSchema>;
 
 export const itemFormSchema = z.object({
   id: z.string().uuid().optional().or(z.literal("")),
-  title: z.string().trim().min(3, "Title is required."),
-  description: z.string().trim().max(5000, "Description is too long.").optional().or(z.literal("")),
-  category: z.string().trim().max(80, "Category is too long.").optional().or(z.literal("")),
-  condition: z.string().trim().max(80, "Condition is too long.").optional().or(z.literal("")),
+  title: z
+    .string()
+    .trim()
+    .min(itemFormLimits.titleMin, "Title is required.")
+    .max(itemFormLimits.titleMax, "Title is too long."),
+  description: z
+    .string()
+    .trim()
+    .max(itemFormLimits.descriptionMax, "Description is too long.")
+    .optional()
+    .or(z.literal("")),
+  category: z
+    .string()
+    .trim()
+    .max(itemFormLimits.categoryMax, "Category is too long.")
+    .optional()
+    .or(z.literal("")),
+  condition: z
+    .string()
+    .trim()
+    .max(itemFormLimits.conditionMax, "Condition is too long.")
+    .optional()
+    .or(z.literal("")),
   purchaseDate: optionalDateField.optional().or(z.literal("")),
-  purchasePrice: optionalNumberField.optional().or(z.literal("")),
-  expectedPrice: optionalNumberField.optional().or(z.literal("")),
+  purchasePrice: optionalNumberField.max(itemFormLimits.bidPriceMax, "Purchase price is too long.").optional().or(z.literal("")),
+  expectedPrice: optionalNumberField.max(itemFormLimits.bidPriceMax, "Expected price is too long.").optional().or(z.literal("")),
   availableFrom: optionalDateField.optional().or(z.literal("")),
-  locationArea: z.string().trim().max(120, "Location is too long.").optional().or(z.literal("")),
+  locationArea: z
+    .string()
+    .trim()
+    .max(itemFormLimits.locationAreaMax, "Location is too long.")
+    .optional()
+    .or(z.literal("")),
   status: z.enum(itemStatuses),
 });
 

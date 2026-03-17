@@ -6,7 +6,7 @@ import { useRouter } from "next/navigation";
 import { useState, useTransition } from "react";
 import { useForm } from "react-hook-form";
 
-import { itemStatuses } from "@/lib/constants";
+import { itemFormLimits, itemStatuses } from "@/lib/constants";
 import type { ItemWithImages } from "@/lib/types";
 import {
   itemFormSchema,
@@ -115,7 +115,16 @@ export function ItemForm({ item }: ItemFormProps) {
             <label className="mb-2 block text-sm font-semibold text-stone-800" htmlFor="title">
               Title
             </label>
-            <input className="field" id="title" {...register("title")} />
+            <input
+              className="field"
+              id="title"
+              maxLength={itemFormLimits.titleMax}
+              minLength={itemFormLimits.titleMin}
+              {...register("title")}
+            />
+            <p className="mt-2 text-sm text-[color:var(--muted)]">
+              {itemFormLimits.titleMin}-{itemFormLimits.titleMax} characters.
+            </p>
             {errors.title ? <p className="mt-2 text-sm text-[color:var(--danger)]">{errors.title.message}</p> : null}
           </div>
 
@@ -123,7 +132,15 @@ export function ItemForm({ item }: ItemFormProps) {
             <label className="mb-2 block text-sm font-semibold text-stone-800" htmlFor="description">
               Description
             </label>
-            <textarea className="textarea" id="description" {...register("description")} />
+            <textarea
+              className="textarea"
+              id="description"
+              maxLength={itemFormLimits.descriptionMax}
+              {...register("description")}
+            />
+            <p className="mt-2 text-sm text-[color:var(--muted)]">
+              Up to {itemFormLimits.descriptionMax} characters.
+            </p>
             {errors.description ? (
               <p className="mt-2 text-sm text-[color:var(--danger)]">{errors.description.message}</p>
             ) : null}
@@ -133,14 +150,30 @@ export function ItemForm({ item }: ItemFormProps) {
             <label className="mb-2 block text-sm font-semibold text-stone-800" htmlFor="category">
               Category
             </label>
-            <input className="field" id="category" {...register("category")} />
+            <input
+              className="field"
+              id="category"
+              maxLength={itemFormLimits.categoryMax}
+              {...register("category")}
+            />
+            <p className="mt-2 text-sm text-[color:var(--muted)]">
+              Up to {itemFormLimits.categoryMax} characters.
+            </p>
           </div>
 
           <div>
             <label className="mb-2 block text-sm font-semibold text-stone-800" htmlFor="condition">
               Condition
             </label>
-            <input className="field" id="condition" {...register("condition")} />
+            <input
+              className="field"
+              id="condition"
+              maxLength={itemFormLimits.conditionMax}
+              {...register("condition")}
+            />
+            <p className="mt-2 text-sm text-[color:var(--muted)]">
+              Up to {itemFormLimits.conditionMax} characters.
+            </p>
           </div>
 
           <div>
@@ -161,21 +194,47 @@ export function ItemForm({ item }: ItemFormProps) {
             <label className="mb-2 block text-sm font-semibold text-stone-800" htmlFor="purchasePrice">
               Purchase price
             </label>
-            <input className="field" id="purchasePrice" {...register("purchasePrice")} />
+            <input
+              className="field"
+              id="purchasePrice"
+              inputMode="decimal"
+              maxLength={itemFormLimits.bidPriceMax}
+              {...register("purchasePrice")}
+            />
+            <p className="mt-2 text-sm text-[color:var(--muted)]">
+              Up to {itemFormLimits.bidPriceMax} characters.
+            </p>
           </div>
 
           <div>
             <label className="mb-2 block text-sm font-semibold text-stone-800" htmlFor="expectedPrice">
               Expected price
             </label>
-            <input className="field" id="expectedPrice" {...register("expectedPrice")} />
+            <input
+              className="field"
+              id="expectedPrice"
+              inputMode="decimal"
+              maxLength={itemFormLimits.bidPriceMax}
+              {...register("expectedPrice")}
+            />
+            <p className="mt-2 text-sm text-[color:var(--muted)]">
+              Up to {itemFormLimits.bidPriceMax} characters.
+            </p>
           </div>
 
           <div>
             <label className="mb-2 block text-sm font-semibold text-stone-800" htmlFor="locationArea">
               Location area
             </label>
-            <input className="field" id="locationArea" {...register("locationArea")} />
+            <input
+              className="field"
+              id="locationArea"
+              maxLength={itemFormLimits.locationAreaMax}
+              {...register("locationArea")}
+            />
+            <p className="mt-2 text-sm text-[color:var(--muted)]">
+              Up to {itemFormLimits.locationAreaMax} characters.
+            </p>
           </div>
 
           <div>

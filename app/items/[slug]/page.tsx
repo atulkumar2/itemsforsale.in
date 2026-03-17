@@ -16,9 +16,36 @@ type ItemPageProps = {
   }>;
 };
 
+function isPostgresUnavailable(error: unknown) {
+  if (!(error instanceof Error)) {
+    return false;
+  }
+
+  const code = "code" in error ? error.code : undefined;
+  return code === "ECONNREFUSED" || code === "ENOTFOUND" || code === "EAI_AGAIN";
+}
+
 export async function generateMetadata({ params }: ItemPageProps): Promise<Metadata> {
   const { slug } = await params;
-  const item = await getPublicItemBySlug(slug);
+  let item = null;
+  let catalogueUnavailable = false;
+
+  try {
+    item = await getPublicItemBySlug(slug);
+  } catch (error) {
+    if (!isPostgresUnavailable(error)) {
+      throw error;
+    }
+
+    catalogueUnavailable = true;
+  }
+
+  if (catalogueUnavailable) {
+    return {
+      title: "Catalogue unavailable",
+      description: "The item catalogue is temporarily unavailable.",
+    };
+  }
 
   if (!item) {
     return {
@@ -34,7 +61,38 @@ export async function generateMetadata({ params }: ItemPageProps): Promise<Metad
 
 export default async function ItemPage({ params }: ItemPageProps) {
   const { slug } = await params;
-  const item = await getPublicItemBySlug(slug);
+  let item = null;
+  let catalogueUnavailable = false;
+
+  try {
+    item = await getPublicItemBySlug(slug);
+  } catch (error) {
+    if (!isPostgresUnavailable(error)) {
+      throw error;
+    }
+
+    catalogueUnavailable = true;
+  }
+
+  if (catalogueUnavailable) {
+    return (
+      <main className="pb-16">
+        <SiteHeader compact />
+        <section className="shell py-6 lg:py-10">
+          <div className="panel p-8 md:p-10">
+            <p className="eyebrow">Item unavailable</p>
+            <h1 className="display-title mt-4 text-4xl font-semibold text-stone-900">
+              This item page is temporarily unavailable.
+            </h1>
+            <p className="mt-4 max-w-2xl text-base leading-8 text-[color:var(--muted)]">
+              The catalogue database is currently offline, so item details cannot be
+              loaded right now. Please try again shortly.
+            </p>
+          </div>
+        </section>
+      </main>
+    );
+  }
 
   if (!item) {
     notFound();

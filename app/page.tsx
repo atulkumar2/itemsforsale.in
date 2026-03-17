@@ -25,6 +25,15 @@ type HomePageProps = {
   }>;
 };
 
+function isPostgresUnavailable(error: unknown) {
+  if (!(error instanceof Error)) {
+    return false;
+  }
+
+  const code = "code" in error ? error.code : undefined;
+  return code === "ECONNREFUSED" || code === "ENOTFOUND" || code === "EAI_AGAIN";
+}
+
 export default async function Home({ searchParams }: HomePageProps) {
   const resolvedSearchParams = (await searchParams) ?? {};
   const filters = {
@@ -33,10 +42,22 @@ export default async function Home({ searchParams }: HomePageProps) {
     status: parseItemStatus(resolvedSearchParams.status),
   };
 
-  const [items, categories] = await Promise.all([
-    listPublicItems(filters),
-    getAvailableCategories(),
-  ]);
+  let items: Awaited<ReturnType<typeof listPublicItems>> = [];
+  let categories: string[] = [];
+  let catalogueUnavailable = false;
+
+  try {
+    [items, categories] = await Promise.all([
+      listPublicItems(filters),
+      getAvailableCategories(),
+    ]);
+  } catch (error) {
+    if (!isPostgresUnavailable(error)) {
+      throw error;
+    }
+
+    catalogueUnavailable = true;
+  }
 
   return (
     <main className="pb-16">
@@ -67,9 +88,6 @@ export default async function Home({ searchParams }: HomePageProps) {
             </Link>
             <Link className="button-secondary" href="/contact-seller">
               Contact seller
-            </Link>
-            <Link className="button-secondary" href="/admin">
-              Admin dashboard
             </Link>
           </div>
         </div>
@@ -107,16 +125,36 @@ export default async function Home({ searchParams }: HomePageProps) {
       </section>
 
       <section id="listings" className="shell space-y-6">
-        <div className="panel p-5 md:p-6">
-          <FilterBar
-            categories={categories}
-            initialCategory={filters.category ?? ""}
-            initialQuery={filters.query ?? ""}
-            initialStatus={filters.status ?? ""}
-          />
-        </div>
+        {catalogueUnavailable ? (
+          <div className="panel p-8 md:p-10">
+            <p className="eyebrow">Catalogue unavailable</p>
+            <h2 className="display-title mt-4 text-3xl font-semibold text-stone-900">
+              Listings are temporarily unavailable.
+            </h2>
+            <p className="mt-4 max-w-2xl text-base leading-8 text-[color:var(--muted)]">
+              The catalogue database is currently offline. Please try again shortly or
+              use the contact page if you need to reach the seller now.
+            </p>
+            <div className="mt-6 flex flex-wrap gap-3">
+              <Link className="button-secondary" href="/contact-seller">
+                Contact seller
+              </Link>
+            </div>
+          </div>
+        ) : (
+          <>
+            <div className="panel p-5 md:p-6">
+              <FilterBar
+                categories={categories}
+                initialCategory={filters.category ?? ""}
+                initialQuery={filters.query ?? ""}
+                initialStatus={filters.status ?? ""}
+              />
+            </div>
 
-        <CatalogueView items={items} itemCount={items.length} />
+            <CatalogueView items={items} itemCount={items.length} />
+          </>
+        )}
       </section>
     </main>
   );

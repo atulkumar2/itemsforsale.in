@@ -13,6 +13,18 @@ export const itemCategories = [
   "Outdoor",
 ] as const;
 
+export const itemFormLimits = {
+  titleMin: 3,
+  titleMax: 200,
+  descriptionMax: 5000,
+  categoryMax: 80,
+  conditionMax: 80,
+  locationAreaMax: 120,
+  bidPriceMax: 14,
+  slugMax: 220,
+  imageUrlMax: 500,
+} as const;
+
 export const contactFormLimits = {
   buyerNameMax: 80,
   phoneLength: 10,
