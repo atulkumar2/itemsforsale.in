@@ -66,7 +66,7 @@ DATABASE_URL=postgresql://postgres:postgres@localhost:5432/itemsforsale
 The app auto-creates tables on first request in postgres mode, but you can also initialize manually:
 
 ```bash
-psql postgresql://postgres:postgres@localhost:5432/itemsforsale -f postgres.local.sql
+psql postgresql://postgres:postgres@localhost:5432/itemsforsale -f data/postgres.local.sql
 ```
 
 ### Existing JSON data not visible after switching to postgres mode

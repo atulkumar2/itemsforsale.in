@@ -6,7 +6,7 @@ import { Client } from "pg";
 const databaseUrl =
   process.env.DATABASE_URL ?? "postgresql://postgres:postgres@localhost:5432/itemsforsale";
 const databaseFilePath = path.join(process.cwd(), "data", "local-db.json");
-const schemaFilePath = path.join(process.cwd(), "postgres.local.sql");
+const schemaFilePath = path.join(process.cwd(), "data", "postgres.local.sql");
 
 function optionalString(value) {
   if (typeof value !== "string") {

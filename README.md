@@ -79,7 +79,7 @@ npm run db:up
 5. Optional: initialize schema manually with:
 
 ```bash
-psql postgresql://postgres:postgres@localhost:5432/itemsforsale -f postgres.local.sql
+psql postgresql://postgres:postgres@localhost:5432/itemsforsale -f data/postgres.local.sql
 ```
 
 6. Optional: import your existing JSON data into PostgreSQL:
@@ -125,7 +125,7 @@ Test files:
 ## Moving to Supabase later
 
 1. Create a Supabase project
-2. Apply `supabase.sql`
+2. Apply `data/supabase.sql`
 3. Fill in the Supabase env vars
 4. Swap the repository implementation from local storage to Supabase queries and storage operations
 5. Replace the local admin cookie flow with Supabase Auth

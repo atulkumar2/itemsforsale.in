@@ -11,7 +11,7 @@ services:
       - "5432:5432"
     volumes:
       - itemsforsale-postgres-data:/var/lib/postgresql/data
-      - ./postgres.local.sql:/docker-entrypoint-initdb.d/01-postgres.local.sql:ro
+      - ./data/postgres.local.sql:/docker-entrypoint-initdb.d/01-postgres.local.sql:ro
     healthcheck:
       test: ["CMD-SHELL", "pg_isready -U postgres -d itemsforsale"]
       interval: 5s
