@@ -49,6 +49,7 @@ Current route handlers:
 - `/api/leads`: saves item interest submissions
 - `/api/contact-submissions`: saves contact seller submissions after captcha validation
 - `/api/catalogue/export`: exports filtered catalogue rows with item links
+- `/api/admin/leads/export`: exports filtered leads as CSV
 - `/api/admin/contact-submissions/export`: exports contact submission logs as CSV
 - `/api/admin/items/*`: admin item create/update/delete flows
 - `/api/admin/login` and `/api/admin/logout`: local admin session lifecycle
@@ -103,13 +104,15 @@ Important modules:
 - `/admin`: dashboard and inventory overview
 - `/admin/items/new`: create item
 - `/admin/items/[id]/edit`: edit item
-- `/admin/leads`: review buyer interest submissions
+- `/admin/leads`: filter and review buyer interest submissions
 - `/admin/contact-submissions`: review direct contact submissions
+- `/admin/system`: runtime mode and PostgreSQL health details
 - `/admin/login`: admin authentication
 
 ### Export routes
 
 - `/api/catalogue/export`: public CSV export for filtered catalogue data
+- `/api/admin/leads/export`: admin CSV export for filtered leads
 - `/api/admin/contact-submissions/export`: admin CSV export for contact logs
 
 ## Data Model
@@ -140,6 +143,14 @@ Both local modes mirror the intended cloud-ready structure so they can later be 
 6. Admin can review submissions under `/admin/leads`.
 
 In `postgres` mode, the same repository flow writes the lead into the local PostgreSQL database instead.
+
+### Lead management flow
+
+1. Admin opens `/admin/leads`.
+2. Admin filters by `itemId` and/or text query.
+3. Repository resolves filtered leads in active data mode.
+4. Admin can export filtered leads using `/api/admin/leads/export`.
+5. Admin inventory table shows per-item lead counts and item-specific lead shortcuts.
 
 ### Contact seller flow
 
@@ -204,11 +215,13 @@ Covered areas:
 
 - captcha normalization and answer validation
 - contact form validation rules
+- interest form validation rules
 
 Test files:
 
 - `tests/contact-captcha.test.ts`
 - `tests/contact-seller-validation.test.ts`
+- `tests/interest-form-validation.test.ts`
 
 ## Migration Path
 

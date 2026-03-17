@@ -60,6 +60,13 @@ Save to database
 
 No login required
 
+Validation requirements:
+
+- phone must be exactly 10 digits and start with 6, 7, 8, or 9
+- email must match valid regex pattern
+- message minimum length required
+- validation must run on both frontend and backend
+
 ---
 
 ### Contact Seller Page
@@ -97,15 +104,21 @@ Behavior:
 - summary cards for item count, leads count, contact submission count
 - quick actions for item creation and data review
 - inventory section with export catalogue CSV action
+- quick access to system status page
 
 ### Admin Inventory
 
 - list, edit, and remove items
 - support multiple images per listing
+- show per-item lead count
+- provide quick link to leads filtered by item
 
 ### Admin Leads
 
 - view buyer interest form submissions
+- filter by item and text search
+- export filtered leads as CSV
+- show submission date and time
 
 ### Admin Contact Submissions
 
@@ -116,9 +129,11 @@ Behavior:
 ## API and Data Export
 
 - `/api/catalogue/export` exports filtered catalogue with item links
+- `/api/admin/leads/export` exports filtered leads
 - `/api/admin/contact-submissions/export` exports contact submissions log
 
 ## Quality and Testing
 
 - unit tests required for captcha validation logic
 - unit tests required for contact form schema validation rules
+- unit tests required for interest form schema validation rules

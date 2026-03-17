@@ -1,6 +1,9 @@
 # Database Schema
 
-Current runtime mode is local-first JSON storage in `data/local-db.json`.
+Current runtime modes are:
+
+- local JSON storage in `data/local-db.json`
+- local PostgreSQL storage via `DATABASE_URL` when `DATA_MODE=postgres`
 
 The schema below represents both the local data shape and the future Supabase table structure.
 
@@ -62,4 +65,5 @@ created_at timestamp
 - local file stores arrays: `items`, `itemImages`, `leads`, `contactSubmissions`
 - CSV exports are generated from stored data:
 	- catalogue export includes item links
+	- leads export supports query and item filters
 	- contact submissions export includes location and timestamp

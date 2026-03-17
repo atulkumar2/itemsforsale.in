@@ -20,6 +20,7 @@ Validation and forms
 Data and storage
 
 - Local-first JSON persistence (`data/local-db.json`) for development and launch simplicity
+- Optional local PostgreSQL persistence (`DATA_MODE=postgres`, `DATABASE_URL`) for pre-Supabase workflows
 - Local image storage in `public/uploads`
 - Supabase-ready schema for later migration (Postgres + Storage)
 
@@ -31,6 +32,7 @@ Auth
 Testing
 
 - Vitest unit tests for key validation and captcha logic
+- Interest form validation tests
 
 Hosting and deployment
 

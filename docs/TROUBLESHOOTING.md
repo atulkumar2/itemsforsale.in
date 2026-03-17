@@ -37,3 +37,58 @@ sysctl fs.inotify.max_user_instances
 - `npm run dev:turbo`: Turbopack
 
 If your machine still has watcher pressure from other apps, keep using `npm run dev`.
+
+## Local PostgreSQL mode issues
+
+### PostgreSQL unreachable in admin system status
+
+Symptoms:
+
+- `/admin/system` shows PostgreSQL as unavailable
+- data mode is set to `postgres` but pages fail to load data
+
+Checks:
+
+```bash
+npm run db:up
+npm run db:logs
+```
+
+Confirm environment values in `.env.local`:
+
+```dotenv
+DATA_MODE=postgres
+DATABASE_URL=postgresql://postgres:postgres@localhost:5432/itemsforsale
+```
+
+### Tables missing in local PostgreSQL
+
+The app auto-creates tables on first request in postgres mode, but you can also initialize manually:
+
+```bash
+psql postgresql://postgres:postgres@localhost:5432/itemsforsale -f postgres.local.sql
+```
+
+### Existing JSON data not visible after switching to postgres mode
+
+Import current JSON data:
+
+```bash
+npm run db:import
+```
+
+### Docker container cleanup/reset
+
+Stop services:
+
+```bash
+npm run db:down
+```
+
+If you need a full reset including stored PostgreSQL volume:
+
+```bash
+docker compose down -v
+npm run db:up
+npm run db:import
+```

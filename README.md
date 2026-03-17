@@ -9,10 +9,14 @@ The app now runs fully in local mode without cloud infrastructure:
 - public catalogue with search and filters
 - catalogue export to CSV with item links
 - item detail page with gallery and interest form
+- stricter public interest form validation (phone, email, message)
 - dedicated contact seller page with captcha and validation
 - admin login with local cookie session
 - admin CRUD for items
+- admin leads page with filtering and CSV export
+- inventory quick links to item-specific leads and per-item lead counts
 - admin contact submissions log with CSV export
+- admin system status page for data mode and PostgreSQL connectivity
 - local photo upload to `public/uploads`
 - data can run in JSON mode or local PostgreSQL mode
 - lead and contact submission capture stored in `data/local-db.json` or PostgreSQL depending on `DATA_MODE`
@@ -110,11 +114,13 @@ Current unit tests cover:
 
 - captcha answer normalization and validation
 - contact seller schema validation for phone, email, and message size rules
+- interest form schema validation for phone, email, and message rules
 
 Test files:
 
 - `tests/contact-captcha.test.ts`
 - `tests/contact-seller-validation.test.ts`
+- `tests/interest-form-validation.test.ts`
 
 ## Moving to Supabase later
 

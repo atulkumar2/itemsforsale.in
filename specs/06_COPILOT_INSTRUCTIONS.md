@@ -12,6 +12,7 @@ Tailwind
 Zod
 React Hook Form
 local-first JSON storage first
+optional local PostgreSQL mode before Supabase
 Supabase-ready schema and interfaces
 Vercel-ready deployment
 
@@ -31,10 +32,12 @@ Steps to generate code:
 12. add strict frontend+backend validation
 13. add CSV export endpoints where needed
 14. add tests for validators/captcha logic
-15. add error handling
-16. add loading states
-17. add SEO metadata
-18. prepare for Vercel deploy
+15. add admin filtering pages where data volume can grow
+16. add system status visibility for runtime mode and health
+17. add error handling
+18. add loading states
+19. add SEO metadata
+20. prepare for Vercel deploy
 
 Rules:
 
