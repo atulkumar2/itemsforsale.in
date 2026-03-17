@@ -1,0 +1,225 @@
+@import "tailwindcss";
+
+:root {
+  --background: #f6efe6;
+  --foreground: #1f1a17;
+  --surface: rgba(255, 250, 244, 0.88);
+  --surface-strong: #fff8f1;
+  --line: rgba(88, 66, 47, 0.14);
+  --primary: #9f4f2a;
+  --primary-strong: #7f3f21;
+  --secondary: #d8b98f;
+  --muted: #6d5d51;
+  --success: #2f6a45;
+  --warning: #9d6c18;
+  --danger: #8f392f;
+  --shadow: 0 24px 80px rgba(77, 47, 28, 0.12);
+}
+
+@theme inline {
+  --color-background: var(--background);
+  --color-foreground: var(--foreground);
+  --font-sans: var(--font-body);
+  --font-serif: var(--font-display);
+}
+
+* {
+  box-sizing: border-box;
+}
+
+html {
+  scroll-behavior: smooth;
+}
+
+body {
+  background: var(--background);
+  color: var(--foreground);
+  font-family: var(--font-body), sans-serif;
+  min-height: 100vh;
+  background-image:
+    radial-gradient(circle at top left, rgba(216, 185, 143, 0.35), transparent 24%),
+    radial-gradient(circle at top right, rgba(159, 79, 42, 0.12), transparent 28%),
+    linear-gradient(180deg, #fbf5ee 0%, #f6efe6 56%, #f0e3d4 100%);
+}
+
+a {
+  color: inherit;
+  text-decoration: none;
+}
+
+button,
+input,
+select,
+textarea {
+  font: inherit;
+}
+
+::selection {
+  background: rgba(159, 79, 42, 0.18);
+}
+
+.shell {
+  width: min(1120px, calc(100vw - 2rem));
+  margin-inline: auto;
+}
+
+.panel {
+  background: var(--surface);
+  border: 1px solid var(--line);
+  border-radius: 28px;
+  box-shadow: var(--shadow);
+  backdrop-filter: blur(16px);
+}
+
+.eyebrow {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.5rem;
+  border-radius: 999px;
+  border: 1px solid rgba(159, 79, 42, 0.16);
+  padding: 0.45rem 0.8rem;
+  font-size: 0.75rem;
+  font-weight: 700;
+  letter-spacing: 0.16em;
+  text-transform: uppercase;
+  color: var(--primary-strong);
+  background: rgba(255, 248, 241, 0.92);
+}
+
+.display-title {
+  font-family: var(--font-display), serif;
+}
+
+.field,
+.select,
+.textarea {
+  width: 100%;
+  border-radius: 18px;
+  border: 1px solid rgba(88, 66, 47, 0.15);
+  background: rgba(255, 252, 248, 0.96);
+  padding: 0.95rem 1rem;
+  color: var(--foreground);
+  transition: border-color 160ms ease, box-shadow 160ms ease, transform 160ms ease;
+}
+
+.field:focus,
+.select:focus,
+.textarea:focus {
+  outline: none;
+  border-color: rgba(159, 79, 42, 0.6);
+  box-shadow: 0 0 0 4px rgba(159, 79, 42, 0.12);
+}
+
+.textarea {
+  min-height: 130px;
+  resize: vertical;
+}
+
+.button,
+.button-secondary,
+.button-ghost,
+.button-danger {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.6rem;
+  border-radius: 999px;
+  padding: 0.9rem 1.25rem;
+  font-weight: 700;
+  transition: transform 160ms ease, opacity 160ms ease, background-color 160ms ease;
+  cursor: pointer;
+}
+
+.button:hover,
+.button-secondary:hover,
+.button-ghost:hover,
+.button-danger:hover {
+  transform: translateY(-1px);
+}
+
+.button:disabled,
+.button-secondary:disabled,
+.button-ghost:disabled,
+.button-danger:disabled {
+  opacity: 0.55;
+  cursor: not-allowed;
+  transform: none;
+}
+
+.button {
+  background: var(--primary);
+  color: white;
+}
+
+.button-secondary {
+  background: rgba(216, 185, 143, 0.32);
+  color: var(--foreground);
+  border: 1px solid rgba(88, 66, 47, 0.12);
+}
+
+.button-ghost {
+  background: rgba(255, 248, 241, 0.7);
+  border: 1px solid rgba(88, 66, 47, 0.12);
+  color: var(--foreground);
+}
+
+.button-danger {
+  background: rgba(143, 57, 47, 0.12);
+  color: var(--danger);
+  border: 1px solid rgba(143, 57, 47, 0.2);
+}
+
+.table-wrap {
+  overflow-x: auto;
+  border-radius: 24px;
+  border: 1px solid var(--line);
+}
+
+.table-wrap table {
+  width: 100%;
+  border-collapse: collapse;
+}
+
+.table-wrap th,
+.table-wrap td {
+  padding: 1rem 1.1rem;
+  text-align: left;
+  border-bottom: 1px solid rgba(88, 66, 47, 0.08);
+}
+
+.table-wrap th {
+  font-size: 0.78rem;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: var(--muted);
+}
+
+.table-wrap tr:last-child td {
+  border-bottom: none;
+}
+
+.fade-up {
+  animation: fade-up 500ms ease both;
+}
+
+@keyframes fade-up {
+  from {
+    opacity: 0;
+    transform: translateY(18px);
+  }
+
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+@media (max-width: 720px) {
+  .shell {
+    width: min(100vw - 1rem, 1120px);
+  }
+
+  .panel {
+    border-radius: 22px;
+  }
+}

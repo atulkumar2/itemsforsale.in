@@ -1,0 +1,11 @@
+<svg width="1200" height="900" viewBox="0 0 1200 900" fill="none" xmlns="http://www.w3.org/2000/svg">
+  <rect width="1200" height="900" rx="44" fill="#F4E8D8"/>
+  <circle cx="948" cy="174" r="124" fill="#E4C39B" fill-opacity="0.7"/>
+  <circle cx="252" cy="766" r="178" fill="#D4A777" fill-opacity="0.45"/>
+  <path d="M414 626C414 547.68 477.68 484 556 484H646C724.32 484 788 547.68 788 626V660H744V626C744 571.98 700.02 528 646 528H556C501.98 528 458 571.98 458 626V660H414V626Z" fill="#8A5134"/>
+  <path d="M468 344C468 286.562 514.562 240 572 240H630C687.438 240 734 286.562 734 344V472H468V344Z" fill="#A45A39"/>
+  <rect x="430" y="472" width="342" height="164" rx="42" fill="#BB6B45"/>
+  <rect x="490" y="618" width="34" height="150" rx="17" fill="#73432C"/>
+  <rect x="676" y="618" width="34" height="150" rx="17" fill="#73432C"/>
+  <text x="96" y="140" fill="#6E412A" font-family="Georgia, serif" font-size="62" font-weight="700">Fabric Lounge Chair</text>
+</svg>

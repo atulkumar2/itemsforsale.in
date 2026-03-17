@@ -1,0 +1,10 @@
+<svg width="1200" height="900" viewBox="0 0 1200 900" fill="none" xmlns="http://www.w3.org/2000/svg">
+  <rect width="1200" height="900" rx="44" fill="#EEF0EC"/>
+  <circle cx="920" cy="190" r="132" fill="#C8D2C6" fill-opacity="0.72"/>
+  <circle cx="236" cy="736" r="204" fill="#A7B4A7" fill-opacity="0.28"/>
+  <rect x="442" y="178" width="318" height="522" rx="34" fill="#F8FAF7" stroke="#748575" stroke-width="16"/>
+  <path d="M442 418H760" stroke="#748575" stroke-width="14"/>
+  <rect x="706" y="264" width="14" height="98" rx="7" fill="#748575"/>
+  <rect x="706" y="492" width="14" height="132" rx="7" fill="#748575"/>
+  <text x="96" y="140" fill="#4B5B4C" font-family="Georgia, serif" font-size="62" font-weight="700">Double Door Refrigerator</text>
+</svg>

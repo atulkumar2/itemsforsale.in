@@ -1,0 +1,83 @@
+import type { LocalDatabase } from "@/lib/types";
+
+const now = new Date().toISOString();
+
+export const localSeedDatabase: LocalDatabase = {
+  items: [
+    {
+      id: "064b9d22-f5d1-4fcb-9237-7b6ba8123401",
+      slug: "solid-wood-dining-set",
+      title: "Solid Wood Dining Set",
+      description:
+        "Six-seater dining table with matching chairs. Well kept, sturdy, and suited for compact family dining spaces.",
+      category: "Dining",
+      condition: "Very good",
+      purchaseDate: "2021-06-14",
+      purchasePrice: 42000,
+      expectedPrice: 22000,
+      availableFrom: "2026-03-20",
+      locationArea: "Indirapuram",
+      status: "available",
+      createdAt: now,
+      updatedAt: now,
+    },
+    {
+      id: "db70ad6d-73f2-4c63-8df8-516f1967f1f2",
+      slug: "fabric-lounge-chair",
+      title: "Fabric Lounge Chair",
+      description:
+        "Single accent chair in muted teal fabric. Comfortable seat depth, light wear, no structural issues.",
+      category: "Living room",
+      condition: "Good",
+      purchaseDate: "2022-02-08",
+      purchasePrice: 14500,
+      expectedPrice: 6800,
+      availableFrom: "2026-03-18",
+      locationArea: "Noida Sector 76",
+      status: "reserved",
+      createdAt: now,
+      updatedAt: now,
+    },
+    {
+      id: "ff3ec9a3-c340-4b56-a26e-fdb29d7c9028",
+      slug: "double-door-refrigerator",
+      title: "Double Door Refrigerator",
+      description:
+        "Frost-free refrigerator with stabiliser compatibility. Recently serviced and fully working before pickup.",
+      category: "Appliances",
+      condition: "Good",
+      purchaseDate: "2020-10-01",
+      purchasePrice: 31000,
+      expectedPrice: 12000,
+      availableFrom: "2026-03-15",
+      locationArea: "Vaishali",
+      status: "sold",
+      createdAt: now,
+      updatedAt: now,
+    },
+  ],
+  itemImages: [
+    {
+      id: "a81435ff-eefc-48d8-b5eb-2d8083532901",
+      itemId: "064b9d22-f5d1-4fcb-9237-7b6ba8123401",
+      imageUrl: "/placeholder-dining.svg",
+      sortOrder: 0,
+      createdAt: now,
+    },
+    {
+      id: "682d4b77-bf45-4ee4-b8ec-891fc5c31217",
+      itemId: "db70ad6d-73f2-4c63-8df8-516f1967f1f2",
+      imageUrl: "/placeholder-chair.svg",
+      sortOrder: 0,
+      createdAt: now,
+    },
+    {
+      id: "bc92f2ef-f0a4-4737-bf7f-ae3cb67dc3c0",
+      itemId: "ff3ec9a3-c340-4b56-a26e-fdb29d7c9028",
+      imageUrl: "/placeholder-fridge.svg",
+      sortOrder: 0,
+      createdAt: now,
+    },
+  ],
+  leads: [],
+};

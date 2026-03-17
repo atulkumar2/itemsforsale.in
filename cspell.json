@@ -1,0 +1,25 @@
+{
+  "version": "0.2",
+  "language": "en",
+  "useGitignore": true,
+  "files": [
+    "**/*"
+  ],
+  "ignorePaths": [
+    "node_modules/**",
+    ".next/**",
+    "dist/**",
+    "build/**",
+    ".vercel/**"
+  ],
+  "words": [
+    "inotify",
+    "itemsforsale",
+    "OLX",
+    "overengineering",
+    "pgcrypto",
+    "Supabase",
+    "Turbopack",
+    "Vercel"
+  ]
+}
