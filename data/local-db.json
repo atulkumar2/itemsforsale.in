@@ -72,5 +72,16 @@
       "createdAt": "2026-03-17T09:22:07.795Z"
     }
   ],
-  "leads": []
+  "leads": [],
+  "contactSubmissions": [
+    {
+      "id": "c044745b-8ad3-4daf-bf9d-74f180990b5a",
+      "buyerName": "Atul",
+      "phone": "8976454379",
+      "email": "ex@ex.com",
+      "message": "When can i see items?",
+      "captchaPrompt": "Which state is Bengaluru in?",
+      "createdAt": "2026-03-17T13:40:07.943Z"
+    }
+  ]
 }

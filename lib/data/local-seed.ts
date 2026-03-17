@@ -80,4 +80,5 @@ export const localSeedDatabase: LocalDatabase = {
     },
   ],
   leads: [],
+  contactSubmissions: [],
 };

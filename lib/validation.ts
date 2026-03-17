@@ -1,5 +1,6 @@
 import { z } from "zod";
 
+import { contactCaptchaChallenges } from "@/lib/contact-captcha";
 import { itemStatuses } from "@/lib/constants";
 
 const optionalNumberField = z
@@ -54,3 +55,34 @@ export const itemFormSchema = z.object({
 });
 
 export type ItemFormValues = z.infer<typeof itemFormSchema>;
+
+export const contactSellerSchema = z.object({
+  buyerName: z.string().trim().min(2, "Name is required.").max(80, "Name is too long."),
+  phone: z.string().trim().max(25, "Phone is too long.").optional().or(z.literal("")),
+  email: z
+    .string()
+    .trim()
+    .max(160, "Email is too long.")
+    .email("Enter a valid email address.")
+    .optional()
+    .or(z.literal("")),
+  message: z
+    .string()
+    .trim()
+    .min(10, "Message must be at least 10 characters.")
+    .max(1200, "Message is too long."),
+  captchaId: z
+    .string()
+    .trim()
+    .refine(
+      (value) => contactCaptchaChallenges.some((challenge) => challenge.id === value),
+      "Captcha question is invalid.",
+    ),
+  captchaAnswer: z
+    .string()
+    .trim()
+    .min(1, "Captcha answer is required.")
+    .max(80, "Captcha answer is too long."),
+});
+
+export type ContactSellerValues = z.infer<typeof contactSellerSchema>;

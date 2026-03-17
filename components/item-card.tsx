@@ -11,6 +11,15 @@ type ItemCardProps = {
 
 export function ItemCard({ item }: ItemCardProps) {
   const imageUrl = item.images[0]?.imageUrl ?? "/placeholder-chair.svg";
+  const galleryPreview =
+    item.images.length > 0
+      ? item.images.slice(0, 3)
+      : [
+          {
+            id: "fallback-1",
+            imageUrl: "/placeholder-chair.svg",
+          },
+        ];
 
   return (
     <article className="panel overflow-hidden">
@@ -24,6 +33,23 @@ export function ItemCard({ item }: ItemCardProps) {
         />
       </div>
 
+      <div className="grid grid-cols-3 gap-2 border-y border-[color:var(--line)] bg-[rgba(255,248,241,0.64)] p-2">
+        {galleryPreview.map((image) => (
+          <div
+            key={image.id}
+            className="relative aspect-[4/3] overflow-hidden rounded-xl border border-[color:var(--line)]"
+          >
+            <Image
+              src={image.imageUrl}
+              alt={`${item.title} gallery`}
+              fill
+              className="object-cover"
+              sizes="(max-width: 768px) 30vw, 10vw"
+            />
+          </div>
+        ))}
+      </div>
+
       <div className="space-y-5 p-5 md:p-6">
         <div className="flex items-start justify-between gap-3">
           <div>
@@ -33,6 +59,9 @@ export function ItemCard({ item }: ItemCardProps) {
             <h3 className="display-title mt-2 text-3xl font-semibold text-stone-900">
               {item.title}
             </h3>
+            <p className="mt-2 text-sm font-medium text-[color:var(--muted)]">
+              {item.images.length} photo{item.images.length === 1 ? "" : "s"} available
+            </p>
           </div>
           <StatusBadge status={item.status} />
         </div>

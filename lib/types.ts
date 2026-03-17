@@ -45,10 +45,21 @@ export type LeadWithItem = Lead & {
   itemSlug: string;
 };
 
+export type ContactSubmission = {
+  id: string;
+  buyerName: string;
+  phone: string | null;
+  email: string | null;
+  message: string;
+  captchaPrompt: string;
+  createdAt: string;
+};
+
 export type LocalDatabase = {
   items: Item[];
   itemImages: ItemImage[];
   leads: Lead[];
+  contactSubmissions: ContactSubmission[];
 };
 
 export type ItemFilters = {
@@ -78,4 +89,12 @@ export type SaveLeadInput = {
   email?: string;
   message?: string;
   bidPrice?: number;
+};
+
+export type SaveContactSubmissionInput = {
+  buyerName: string;
+  phone?: string;
+  email?: string;
+  message: string;
+  captchaPrompt: string;
 };

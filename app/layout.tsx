@@ -1,5 +1,6 @@
 import type { Metadata } from "next";
 import { Manrope, Playfair_Display } from "next/font/google";
+import { Footer } from "@/components/footer";
 import "./globals.css";
 
 const bodyFont = Manrope({
@@ -20,6 +21,10 @@ export const metadata: Metadata = {
   },
   description:
     "A clean personal selling board for household items, built for one seller and simple buyer enquiries.",
+  icons: {
+    icon: "/icon.svg",
+    apple: "/icon.svg",
+  },
   openGraph: {
     title: "itemsforsale.in",
     description:
@@ -38,6 +43,7 @@ export default function RootLayout({
     <html lang="en">
       <body className={`${bodyFont.variable} ${displayFont.variable} antialiased`}>
         {children}
+        <Footer />
       </body>
     </html>
   );

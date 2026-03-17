@@ -1,16 +1,23 @@
 import "server-only";
 
 import {
+  createContactSubmission,
   createLead,
   deleteItem,
   getItemById,
   getItemBySlug,
   listCategories,
+  listContactSubmissions,
   listItems,
   listLeads,
   saveItem,
 } from "@/lib/data/local-store";
-import type { ItemFilters, SaveItemInput, SaveLeadInput } from "@/lib/types";
+import type {
+  ItemFilters,
+  SaveContactSubmissionInput,
+  SaveItemInput,
+  SaveLeadInput,
+} from "@/lib/types";
 
 export async function listPublicItems(filters: ItemFilters) {
   return listItems(filters);
@@ -46,4 +53,12 @@ export async function listAdminLeads() {
 
 export async function getAvailableCategories() {
   return listCategories();
+}
+
+export async function submitContactSubmission(input: SaveContactSubmissionInput) {
+  return createContactSubmission(input);
+}
+
+export async function listAdminContactSubmissions() {
+  return listContactSubmissions();
 }

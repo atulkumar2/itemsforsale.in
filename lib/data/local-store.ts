@@ -5,6 +5,7 @@ import path from "node:path";
 
 import { localSeedDatabase } from "@/lib/data/local-seed";
 import type {
+  ContactSubmission,
   Item,
   ItemFilters,
   ItemImage,
@@ -12,6 +13,7 @@ import type {
   Lead,
   LeadWithItem,
   LocalDatabase,
+  SaveContactSubmissionInput,
   SaveItemInput,
   SaveLeadInput,
 } from "@/lib/types";
@@ -36,7 +38,14 @@ async function ensureLocalDatabase() {
 async function readDatabase(): Promise<LocalDatabase> {
   await ensureLocalDatabase();
   const raw = await readFile(databaseFilePath, "utf8");
-  return JSON.parse(raw) as LocalDatabase;
+  const parsed = JSON.parse(raw) as Partial<LocalDatabase>;
+
+  return {
+    items: parsed.items ?? [],
+    itemImages: parsed.itemImages ?? [],
+    leads: parsed.leads ?? [],
+    contactSubmissions: parsed.contactSubmissions ?? [],
+  };
 }
 
 async function writeDatabase(database: LocalDatabase) {
@@ -174,6 +183,32 @@ export async function listLeads() {
         itemTitle: item?.title ?? "Deleted item",
       } satisfies LeadWithItem;
     });
+}
+
+export async function createContactSubmission(input: SaveContactSubmissionInput) {
+  const database = await readDatabase();
+  const submission: ContactSubmission = {
+    id: crypto.randomUUID(),
+    buyerName: input.buyerName,
+    phone: normaliseOptionalString(input.phone) ?? null,
+    email: normaliseOptionalString(input.email) ?? null,
+    message: normaliseOptionalString(input.message) ?? "",
+    captchaPrompt: input.captchaPrompt,
+    createdAt: new Date().toISOString(),
+  };
+
+  database.contactSubmissions.unshift(submission);
+  await writeDatabase(database);
+
+  return submission;
+}
+
+export async function listContactSubmissions() {
+  const database = await readDatabase();
+
+  return database.contactSubmissions
+    .slice()
+    .sort((left, right) => right.createdAt.localeCompare(left.createdAt));
 }
 
 export async function saveItem(input: SaveItemInput, files: File[]) {

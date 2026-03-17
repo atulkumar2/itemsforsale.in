@@ -1,0 +1,44 @@
+<svg viewBox="0 0 200 200" xmlns="http://www.w3.org/2000/svg">
+  <!-- Background circle -->
+  <circle cx="100" cy="100" r="100" fill="#9f4f2a"/>
+  
+  <!-- Inner lighter circle -->
+  <circle cx="100" cy="100" r="90" fill="none" stroke="#d8b98f" stroke-width="3"/>
+  
+  <!-- Storefront/Cabinet shape -->
+  <!-- Left door -->
+  <rect x="35" y="55" width="25" height="60" fill="#d8b98f" rx="2"/>
+  <circle cx="55" cy="85" r="2" fill="#9f4f2a"/>
+  
+  <!-- Right door -->
+  <rect x="140" y="55" width="25" height="60" fill="#d8b98f" rx="2"/>
+  <circle cx="155" cy="85" r="2" fill="#9f4f2a"/>
+  
+  <!-- Center display/shelf -->
+  <rect x="65" y="55" width="70" height="60" fill="#f5f5f5" rx="2"/>
+  
+  <!-- Shelf dividers -->
+  <line x1="65" y1="72" x2="135" y2="72" stroke="#d8b98f" stroke-width="2"/>
+  <line x1="65" y1="89" x2="135" y2="89" stroke="#d8b98f" stroke-width="2"/>
+  
+  <!-- Items on shelves - simplified squares -->
+  <rect x="72" y="58" width="10" height="10" fill="#9f4f2a" rx="1"/>
+  <rect x="88" y="58" width="10" height="10" fill="#d8b98f" rx="1"/>
+  <rect x="104" y="58" width="10" height="10" fill="#9f4f2a" rx="1"/>
+  <rect x="120" y="58" width="10" height="10" fill="#d8b98f" rx="1"/>
+  
+  <rect x="72" y="75" width="10" height="10" fill="#d8b98f" rx="1"/>
+  <rect x="88" y="75" width="10" height="10" fill="#9f4f2a" rx="1"/>
+  <rect x="104" y="75" width="10" height="10" fill="#d8b98f" rx="1"/>
+  <rect x="120" y="75" width="10" height="10" fill="#9f4f2a" rx="1"/>
+  
+  <!-- Window top -->
+  <path d="M 60 50 L 140 50 L 140 55 L 60 55 Z" fill="#d8b98f"/>
+  
+  <!-- Base/Stand -->
+  <rect x="55" y="120" width="90" height="6" fill="#9f4f2a" rx="1"/>
+  
+  <!-- Price tag flag -->
+  <path d="M 145 115 L 165 105 L 160 120 Z" fill="#d8b98f" stroke="#9f4f2a" stroke-width="1.5"/>
+  <circle cx="155" cy="110" r="3" fill="#9f4f2a"/>
+</svg>

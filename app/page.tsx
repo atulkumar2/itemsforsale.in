@@ -1,7 +1,7 @@
 import Link from "next/link";
 
 import { FilterBar } from "@/components/filter-bar";
-import { ItemCard } from "@/components/item-card";
+import { CatalogueView } from "@/components/catalogue-view";
 import { SiteHeader } from "@/components/site-header";
 import {
   getAvailableCategories,
@@ -10,6 +10,12 @@ import {
 import { parseItemStatus } from "@/lib/utils";
 
 export const dynamic = "force-dynamic";
+
+const sellerAddress =
+  "Pioneer Wood winds Apartment, 1st Main, 3rd Cross, BTM 4th Stage, Near Bus Stop, SBI Colony, Devarachiknahalli, Bommanahalli, Bengaluru, Karnataka 560076";
+const sellerMapsLink = "https://maps.app.goo.gl/dnveXLxu6jniBJHv6";
+const sellerMapEmbed =
+  "https://www.google.com/maps?q=Pioneer%20Wood%20winds%20Apartment%2C%201st%20Main%2C%203rd%20Cross%2C%20BTM%204th%20Stage%2C%20Near%20Bus%20Stop%2C%20SBI%20Colony%2C%20Devarachiknahalli%2C%20Bommanahalli%2C%20Bengaluru%2C%20Karnataka%20560076&output=embed";
 
 type HomePageProps = {
   searchParams?: Promise<{
@@ -37,12 +43,20 @@ export default async function Home({ searchParams }: HomePageProps) {
       <SiteHeader />
       <section className="shell grid gap-8 py-6 lg:grid-cols-[1.2fr_0.8fr] lg:py-12">
         <div className="fade-up flex flex-col gap-6">
-          <span className="eyebrow">Personal selling board</span>
+          <span className="eyebrow">Household items for sale</span>
           <div className="space-y-5">
-            <h1 className="display-title max-w-3xl text-5xl leading-tight font-semibold text-stone-900 md:text-7xl">
-              Household items, presented clearly and sold without marketplace
-              noise.
-            </h1>
+            <h5 className="display-title max-w-3xl text-5xl leading-tight font-semibold text-stone-900 md:text-7xl">
+              Household items for sale in April 2026. 
+            </h5>
+            <p className="max-w-2xl text-lg leading-8 text-[color:var(--muted)]">
+              To be sold by April 30th or marked sold/removed if unavailable sooner.
+            </p>
+            <p className="max-w-2xl text-lg leading-8 text-[color:var(--muted)]">
+              Distance from various places --
+            </p>
+            <p className="max-w-2xl text-lg leading-8 text-[color:var(--muted)]">
+              Silk Board Junctions - 3 km. Electronic City - 10 km. HSR Layout - 5 km. Koramangala - 6 km. Jayanagar - 7 km. BTM Layout - 4 km.
+            </p>
             <p className="max-w-2xl text-lg leading-8 text-[color:var(--muted)]">
               Browse available, reserved, and sold items, inspect photos and
               history, then send a direct interest or bid request to the seller.
@@ -52,6 +66,9 @@ export default async function Home({ searchParams }: HomePageProps) {
             <Link className="button" href="#listings">
               Browse items
             </Link>
+            <Link className="button-secondary" href="/contact-seller">
+              Contact seller
+            </Link>
             <Link className="button-secondary" href="/admin">
               Admin dashboard
             </Link>
@@ -59,24 +76,33 @@ export default async function Home({ searchParams }: HomePageProps) {
         </div>
 
         <div className="panel fade-up overflow-hidden p-6 md:p-8">
-          <div className="grid gap-6 sm:grid-cols-2">
-            <div>
-              <p className="text-sm uppercase tracking-[0.18em] text-[color:var(--muted)]">
-                Current focus
-              </p>
-              <p className="mt-3 text-3xl font-semibold text-stone-900">
-                Simple, fast, low-maintenance sales flow
-              </p>
-            </div>
-            <div className="rounded-[24px] bg-[rgba(159,79,42,0.08)] p-5">
-              <p className="text-sm text-[color:var(--muted)]">Included in MVP</p>
-              <ul className="mt-4 space-y-3 text-sm text-stone-800">
-                <li>Public item listing with search and filters</li>
-                <li>Detailed item pages with photos and pricing</li>
-                <li>Lead capture without buyer login</li>
-                <li>Admin CRUD and local-first photo upload</li>
-              </ul>
-            </div>
+          <div className="space-y-4">
+            <p className="eyebrow">Seller location</p>
+            <h2 className="display-title text-3xl font-semibold text-stone-900">
+              Visit or inspect pickup point on map
+            </h2>
+            <p className="text-sm leading-7 text-[color:var(--muted)]">
+              {sellerAddress}
+            </p>
+            <a
+              className="button-secondary"
+              href={sellerMapsLink}
+              target="_blank"
+              rel="noreferrer"
+            >
+              Open in Google Maps
+            </a>
+          </div>
+
+          <div className="mt-5 overflow-hidden rounded-[24px] border border-[color:var(--line)]">
+            <iframe
+              title="Seller location map"
+              src={sellerMapEmbed}
+              width="100%"
+              height="280"
+              loading="lazy"
+              referrerPolicy="no-referrer-when-downgrade"
+            />
           </div>
         </div>
       </section>
@@ -91,40 +117,7 @@ export default async function Home({ searchParams }: HomePageProps) {
           />
         </div>
 
-        <div className="flex items-center justify-between gap-4 px-1">
-          <div>
-            <h2 className="display-title text-3xl font-semibold text-stone-900">
-              Active catalogue
-            </h2>
-            <p className="mt-2 text-sm text-[color:var(--muted)]">
-              {items.length} item{items.length === 1 ? "" : "s"} matching the
-              current view.
-            </p>
-          </div>
-        </div>
-
-        {items.length === 0 ? (
-          <div className="panel p-10 text-center">
-            <p className="display-title text-3xl font-semibold text-stone-900">
-              No items match those filters.
-            </p>
-            <p className="mt-3 text-[color:var(--muted)]">
-              Clear the search or select a different status or category.
-            </p>
-          </div>
-        ) : (
-          <div className="grid gap-5 md:grid-cols-2 xl:grid-cols-3">
-            {items.map((item, index) => (
-              <div
-                key={item.id}
-                className="fade-up"
-                style={{ animationDelay: `${index * 60}ms` }}
-              >
-                <ItemCard item={item} />
-              </div>
-            ))}
-          </div>
-        )}
+        <CatalogueView items={items} itemCount={items.length} />
       </section>
     </main>
   );

@@ -5,14 +5,22 @@ import { LeadsTable } from "@/components/admin/leads-table";
 import { LogoutButton } from "@/components/admin/logout-button";
 import { SiteHeader } from "@/components/site-header";
 import { requireAdminPage } from "@/lib/auth";
-import { listAdminItems, listAdminLeads } from "@/lib/data/repository";
+import {
+  listAdminContactSubmissions,
+  listAdminItems,
+  listAdminLeads,
+} from "@/lib/data/repository";
 
 export const dynamic = "force-dynamic";
 
 export default async function AdminPage() {
   await requireAdminPage();
 
-  const [items, leads] = await Promise.all([listAdminItems(), listAdminLeads()]);
+  const [items, leads, contactSubmissions] = await Promise.all([
+    listAdminItems(),
+    listAdminLeads(),
+    listAdminContactSubmissions(),
+  ]);
 
   return (
     <main className="pb-16">
@@ -37,11 +45,14 @@ export default async function AdminPage() {
             <Link className="button-secondary" href="/admin/leads">
               View all leads
             </Link>
+            <Link className="button-secondary" href="/admin/contact-submissions">
+              Contact submissions
+            </Link>
             <LogoutButton />
           </div>
         </div>
 
-        <div className="grid gap-5 md:grid-cols-3">
+        <div className="grid gap-5 md:grid-cols-4">
           <div className="panel p-6">
             <p className="text-sm uppercase tracking-[0.16em] text-[color:var(--muted)]">
               Total items
@@ -56,6 +67,14 @@ export default async function AdminPage() {
             </p>
             <p className="display-title mt-3 text-5xl font-semibold text-stone-900">
               {leads.length}
+            </p>
+          </div>
+          <div className="panel p-6">
+            <p className="text-sm uppercase tracking-[0.16em] text-[color:var(--muted)]">
+              Contact submissions
+            </p>
+            <p className="display-title mt-3 text-5xl font-semibold text-stone-900">
+              {contactSubmissions.length}
             </p>
           </div>
           <div className="panel p-6">
