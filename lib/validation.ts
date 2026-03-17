@@ -4,6 +4,7 @@ import { contactCaptchaChallenges } from "@/lib/contact-captcha";
 import {
   contactFormLimits,
   emailRegex,
+  interestFormLimits,
   itemStatuses,
   phoneRegex,
 } from "@/lib/constants";
@@ -24,16 +25,36 @@ const optionalDateField = z
 
 export const interestFormSchema = z.object({
   itemId: z.string().uuid("Item reference is invalid."),
-  buyerName: z.string().trim().min(2, "Name is required."),
-  phone: z.string().trim().max(40, "Phone is too long.").optional().or(z.literal("")),
+  buyerName: z
+    .string()
+    .trim()
+    .min(2, "Name is required.")
+    .max(interestFormLimits.buyerNameMax, "Name is too long."),
+  phone: z
+    .string()
+    .trim()
+    .regex(phoneRegex, "Phone must be exactly 10 digits and start with 6, 7, 8, or 9."),
   email: z
     .string()
     .trim()
-    .email("Enter a valid email address.")
+    .max(interestFormLimits.emailMax, "Email is too long.")
+    .regex(emailRegex, "Enter a valid email address.")
     .optional()
     .or(z.literal("")),
-  message: z.string().trim().max(1000, "Message is too long.").optional().or(z.literal("")),
-  bidPrice: optionalNumberField.optional().or(z.literal("")),
+  message: z
+    .string()
+    .trim()
+    .min(10, "Message must be at least 10 characters.")
+    .max(interestFormLimits.messageMax, "Message is too long."),
+  bidPrice: z
+    .string()
+    .trim()
+    .max(interestFormLimits.bidPriceMax, "Bid price is too long.")
+    .refine((value) => value === "" || (!Number.isNaN(Number(value)) && Number(value) >= 0), {
+      message: "Enter a valid non-negative number.",
+    })
+    .optional()
+    .or(z.literal("")),
 });
 
 export type InterestFormValues = z.infer<typeof interestFormSchema>;

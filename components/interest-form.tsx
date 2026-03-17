@@ -5,6 +5,7 @@ import { useRouter } from "next/navigation";
 import { useState, useTransition } from "react";
 import { useForm } from "react-hook-form";
 
+import { emailRegex, interestFormLimits, phoneRegex } from "@/lib/constants";
 import {
   interestFormSchema,
   type InterestFormValues,
@@ -78,7 +79,12 @@ export function InterestForm({ itemId, itemTitle }: InterestFormProps) {
         <label className="mb-2 block text-sm font-semibold text-stone-800" htmlFor="buyerName">
           Name
         </label>
-        <input className="field" id="buyerName" {...register("buyerName")} />
+        <input
+          className="field"
+          id="buyerName"
+          maxLength={interestFormLimits.buyerNameMax}
+          {...register("buyerName")}
+        />
         {errors.buyerName ? (
           <p className="mt-2 text-sm text-[color:var(--danger)]">{errors.buyerName.message}</p>
         ) : null}
@@ -89,7 +95,16 @@ export function InterestForm({ itemId, itemTitle }: InterestFormProps) {
           <label className="mb-2 block text-sm font-semibold text-stone-800" htmlFor="phone">
             Phone
           </label>
-          <input className="field" id="phone" {...register("phone")} />
+          <input
+            className="field"
+            id="phone"
+            maxLength={interestFormLimits.phoneLength}
+            minLength={interestFormLimits.phoneLength}
+            inputMode="numeric"
+            pattern={phoneRegex.source}
+            placeholder="10-digit mobile number"
+            {...register("phone")}
+          />
           {errors.phone ? (
             <p className="mt-2 text-sm text-[color:var(--danger)]">{errors.phone.message}</p>
           ) : null}
@@ -99,7 +114,13 @@ export function InterestForm({ itemId, itemTitle }: InterestFormProps) {
           <label className="mb-2 block text-sm font-semibold text-stone-800" htmlFor="email">
             Email
           </label>
-          <input className="field" id="email" {...register("email")} />
+          <input
+            className="field"
+            id="email"
+            maxLength={interestFormLimits.emailMax}
+            pattern={emailRegex.source}
+            {...register("email")}
+          />
           {errors.email ? (
             <p className="mt-2 text-sm text-[color:var(--danger)]">{errors.email.message}</p>
           ) : null}
@@ -110,7 +131,14 @@ export function InterestForm({ itemId, itemTitle }: InterestFormProps) {
         <label className="mb-2 block text-sm font-semibold text-stone-800" htmlFor="bidPrice">
           Bid price
         </label>
-        <input className="field" id="bidPrice" {...register("bidPrice")} placeholder="Optional" />
+        <input
+          className="field"
+          id="bidPrice"
+          inputMode="numeric"
+          maxLength={interestFormLimits.bidPriceMax}
+          {...register("bidPrice")}
+          placeholder="Optional"
+        />
         {errors.bidPrice ? (
           <p className="mt-2 text-sm text-[color:var(--danger)]">{errors.bidPrice.message}</p>
         ) : null}
@@ -120,7 +148,12 @@ export function InterestForm({ itemId, itemTitle }: InterestFormProps) {
         <label className="mb-2 block text-sm font-semibold text-stone-800" htmlFor="message">
           Message
         </label>
-        <textarea className="textarea" id="message" {...register("message")} />
+        <textarea
+          className="textarea"
+          id="message"
+          maxLength={interestFormLimits.messageMax}
+          {...register("message")}
+        />
         {errors.message ? (
           <p className="mt-2 text-sm text-[color:var(--danger)]">{errors.message.message}</p>
         ) : null}

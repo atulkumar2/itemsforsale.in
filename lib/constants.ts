@@ -22,6 +22,14 @@ export const contactFormLimits = {
   captchaAnswerMax: 80,
 } as const;
 
+export const interestFormLimits = {
+  buyerNameMax: 80,
+  phoneLength: 10,
+  emailMax: 160,
+  messageMax: 1000,
+  bidPriceMax: 9,
+} as const;
+
 export const phoneRegex = /^[6-9]\d{9}$/;
 
 export const emailRegex = /^[A-Za-z0-9._%+-]+@[A-Za-z0-9.-]+\.[A-Za-z]{2,}$/;

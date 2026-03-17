@@ -1,0 +1,718 @@
+import "server-only";
+
+import { mkdir, writeFile } from "node:fs/promises";
+import path from "node:path";
+
+import { Pool, type PoolClient, type QueryResultRow } from "pg";
+
+import { getDatabaseUrl } from "@/lib/env";
+import { localSeedDatabase } from "@/lib/data/local-seed";
+import type {
+  ContactSubmission,
+  Item,
+  ItemFilters,
+  ItemImage,
+  ItemStatus,
+  ItemWithImages,
+  Lead,
+  LeadFilters,
+  LeadWithItem,
+  SaveContactSubmissionInput,
+  SaveItemInput,
+  SaveLeadInput,
+} from "@/lib/types";
+import { getFileExtension, normaliseOptionalString, slugify } from "@/lib/utils";
+
+const uploadsRootPath = path.join(process.cwd(), "public", "uploads");
+
+let pool: Pool | null = null;
+let bootstrapPromise: Promise<void> | null = null;
+
+function getPool() {
+  if (!pool) {
+    pool = new Pool({
+      connectionString: getDatabaseUrl(),
+    });
+  }
+
+  return pool;
+}
+
+async function query<T extends QueryResultRow>(text: string, values: unknown[] = []) {
+  return getPool().query<T>(text, values);
+}
+
+async function withTransaction<T>(run: (client: PoolClient) => Promise<T>) {
+  const client = await getPool().connect();
+
+  try {
+    await client.query("begin");
+    const result = await run(client);
+    await client.query("commit");
+    return result;
+  } catch (error) {
+    await client.query("rollback");
+    throw error;
+  } finally {
+    client.release();
+  }
+}
+
+async function ensureSchema() {
+  await query(`
+    create table if not exists items (
+      id uuid primary key,
+      slug text not null unique,
+      title text not null,
+      description text,
+      category text,
+      condition text,
+      purchase_date date,
+      purchase_price numeric(12,2),
+      expected_price numeric(12,2),
+      available_from date,
+      location_area text,
+      status text not null check (status in ('available', 'reserved', 'sold')),
+      created_at timestamptz not null,
+      updated_at timestamptz not null
+    );
+
+    create table if not exists item_images (
+      id uuid primary key,
+      item_id uuid not null references items(id) on delete cascade,
+      image_url text not null,
+      sort_order int not null default 0,
+      created_at timestamptz not null
+    );
+
+    create table if not exists leads (
+      id uuid primary key,
+      item_id uuid not null references items(id) on delete cascade,
+      buyer_name text not null,
+      phone text,
+      email text,
+      message text,
+      bid_price numeric(12,2),
+      created_at timestamptz not null
+    );
+
+    create table if not exists contact_submissions (
+      id uuid primary key,
+      buyer_name text not null,
+      phone text,
+      email text,
+      location text,
+      message text not null,
+      captcha_prompt text not null,
+      created_at timestamptz not null
+    );
+
+    create index if not exists idx_items_status on items(status);
+    create index if not exists idx_items_category on items(category);
+    create index if not exists idx_item_images_item_id on item_images(item_id);
+    create index if not exists idx_leads_item_id on leads(item_id);
+    create index if not exists idx_contact_submissions_created_at on contact_submissions(created_at desc);
+  `);
+}
+
+async function seedIfEmpty() {
+  const countResult = await query<{ count: string }>("select count(*)::text as count from items");
+  const count = Number(countResult.rows[0]?.count ?? "0");
+
+  if (count > 0) {
+    return;
+  }
+
+  await withTransaction(async (client) => {
+    for (const item of localSeedDatabase.items) {
+      await client.query(
+        `insert into items (
+          id, slug, title, description, category, condition, purchase_date,
+          purchase_price, expected_price, available_from, location_area,
+          status, created_at, updated_at
+        ) values (
+          $1, $2, $3, $4, $5, $6, $7,
+          $8, $9, $10, $11,
+          $12, $13, $14
+        )`,
+        [
+          item.id,
+          item.slug,
+          item.title,
+          item.description,
+          item.category,
+          item.condition,
+          item.purchaseDate,
+          item.purchasePrice,
+          item.expectedPrice,
+          item.availableFrom,
+          item.locationArea,
+          item.status,
+          item.createdAt,
+          item.updatedAt,
+        ],
+      );
+    }
+
+    for (const image of localSeedDatabase.itemImages) {
+      await client.query(
+        `insert into item_images (id, item_id, image_url, sort_order, created_at)
+         values ($1, $2, $3, $4, $5)`,
+        [image.id, image.itemId, image.imageUrl, image.sortOrder, image.createdAt],
+      );
+    }
+  });
+}
+
+async function ensurePostgresReady() {
+  if (!bootstrapPromise) {
+    bootstrapPromise = (async () => {
+      await ensureSchema();
+      await seedIfEmpty();
+    })();
+  }
+
+  return bootstrapPromise;
+}
+
+export async function checkPostgresConnection() {
+  try {
+    await ensurePostgresReady();
+    await query<{ ok: number }>("select 1 as ok");
+
+    return {
+      reachable: true,
+      error: null,
+    };
+  } catch (error) {
+    return {
+      reachable: false,
+      error: error instanceof Error ? error.message : "Unknown PostgreSQL error.",
+    };
+  }
+}
+
+function parseDbNumber(value: number | string | null) {
+  if (value === null || value === undefined) {
+    return null;
+  }
+
+  const parsed = typeof value === "number" ? value : Number(value);
+  return Number.isFinite(parsed) ? parsed : null;
+}
+
+function toIsoString(value: string | Date | null) {
+  if (!value) {
+    return null;
+  }
+
+  return value instanceof Date ? value.toISOString() : new Date(value).toISOString();
+}
+
+type ItemRow = {
+  id: string;
+  slug: string;
+  title: string;
+  description: string | null;
+  category: string | null;
+  condition: string | null;
+  purchase_date: string | null;
+  purchase_price: number | string | null;
+  expected_price: number | string | null;
+  available_from: string | null;
+  location_area: string | null;
+  status: ItemStatus;
+  created_at: string | Date;
+  updated_at: string | Date;
+};
+
+type ItemImageRow = {
+  id: string;
+  item_id: string;
+  image_url: string;
+  sort_order: number;
+  created_at: string | Date;
+};
+
+type LeadRow = {
+  id: string;
+  item_id: string;
+  buyer_name: string;
+  phone: string | null;
+  email: string | null;
+  message: string | null;
+  bid_price: number | string | null;
+  created_at: string | Date;
+  item_title: string | null;
+  item_slug: string | null;
+};
+
+type ContactSubmissionRow = {
+  id: string;
+  buyer_name: string;
+  phone: string | null;
+  email: string | null;
+  location: string | null;
+  message: string;
+  captcha_prompt: string;
+  created_at: string | Date;
+};
+
+function mapItemRow(row: ItemRow): Item {
+  return {
+    id: row.id,
+    slug: row.slug,
+    title: row.title,
+    description: row.description,
+    category: row.category,
+    condition: row.condition,
+    purchaseDate: row.purchase_date,
+    purchasePrice: parseDbNumber(row.purchase_price),
+    expectedPrice: parseDbNumber(row.expected_price),
+    availableFrom: row.available_from,
+    locationArea: row.location_area,
+    status: row.status,
+    createdAt: toIsoString(row.created_at) ?? new Date().toISOString(),
+    updatedAt: toIsoString(row.updated_at) ?? new Date().toISOString(),
+  };
+}
+
+function mapImageRow(row: ItemImageRow): ItemImage {
+  return {
+    id: row.id,
+    itemId: row.item_id,
+    imageUrl: row.image_url,
+    sortOrder: row.sort_order,
+    createdAt: toIsoString(row.created_at) ?? new Date().toISOString(),
+  };
+}
+
+function mapLeadRow(row: LeadRow): LeadWithItem {
+  return {
+    id: row.id,
+    itemId: row.item_id,
+    buyerName: row.buyer_name,
+    phone: row.phone,
+    email: row.email,
+    message: row.message,
+    bidPrice: parseDbNumber(row.bid_price),
+    createdAt: toIsoString(row.created_at) ?? new Date().toISOString(),
+    itemTitle: row.item_title ?? "Deleted item",
+    itemSlug: row.item_slug ?? "",
+  };
+}
+
+function mapContactSubmissionRow(row: ContactSubmissionRow): ContactSubmission {
+  return {
+    id: row.id,
+    buyerName: row.buyer_name,
+    phone: row.phone,
+    email: row.email,
+    location: row.location,
+    message: row.message,
+    captchaPrompt: row.captcha_prompt,
+    createdAt: toIsoString(row.created_at) ?? new Date().toISOString(),
+  };
+}
+
+async function fetchImagesForItems(itemIds: string[]) {
+  if (itemIds.length === 0) {
+    return [] as ItemImage[];
+  }
+
+  const imageResult = await query<ItemImageRow>(
+    `select id, item_id, image_url, sort_order, created_at
+     from item_images
+     where item_id = any($1::uuid[])
+     order by sort_order asc, created_at asc`,
+    [itemIds],
+  );
+
+  return imageResult.rows.map(mapImageRow);
+}
+
+function hydrateItems(items: Item[], images: ItemImage[]): ItemWithImages[] {
+  return items.map((item) => ({
+    ...item,
+    images: images.filter((image) => image.itemId === item.id),
+  }));
+}
+
+async function ensureUniqueSlug(title: string, currentItemId?: string) {
+  const baseSlug = slugify(title) || "item";
+  let candidate = baseSlug;
+  let suffix = 2;
+
+  while (true) {
+    const result = await query<{ id: string }>(
+      `select id from items where slug = $1 and ($2::uuid is null or id <> $2::uuid) limit 1`,
+      [candidate, currentItemId ?? null],
+    );
+
+    if (result.rows.length === 0) {
+      return candidate;
+    }
+
+    candidate = `${baseSlug}-${suffix}`;
+    suffix += 1;
+  }
+}
+
+async function storeUploadedImages(itemId: string, files: File[]) {
+  if (files.length === 0) {
+    return [] as ItemImage[];
+  }
+
+  await mkdir(path.join(uploadsRootPath, itemId), { recursive: true });
+
+  const uploadedImages = await Promise.all(
+    files.map(async (file, index) => {
+      const extension = getFileExtension(file.name);
+      const fileName = `${Date.now()}-${index}.${extension}`;
+      const relativePath = path.posix.join("/uploads", itemId, fileName);
+      const outputPath = path.join(uploadsRootPath, itemId, fileName);
+      const bytes = Buffer.from(await file.arrayBuffer());
+      const createdAt = new Date().toISOString();
+
+      await writeFile(outputPath, bytes);
+
+      return {
+        id: crypto.randomUUID(),
+        itemId,
+        imageUrl: relativePath,
+        sortOrder: index,
+        createdAt,
+      } satisfies ItemImage;
+    }),
+  );
+
+  return uploadedImages;
+}
+
+export async function listItems(filters: ItemFilters = {}) {
+  await ensurePostgresReady();
+
+  const clauses: string[] = [];
+  const values: unknown[] = [];
+
+  if (filters.query) {
+    values.push(`%${filters.query.toLowerCase()}%`);
+    clauses.push(`lower(title) like $${values.length}`);
+  }
+
+  if (filters.status) {
+    values.push(filters.status);
+    clauses.push(`status = $${values.length}`);
+  }
+
+  if (filters.category) {
+    values.push(filters.category.toLowerCase());
+    clauses.push(`lower(category) = $${values.length}`);
+  }
+
+  const where = clauses.length > 0 ? `where ${clauses.join(" and ")}` : "";
+
+  const itemResult = await query<ItemRow>(
+    `select id, slug, title, description, category, condition, purchase_date,
+            purchase_price, expected_price, available_from, location_area,
+            status, created_at, updated_at
+     from items
+     ${where}
+     order by created_at desc`,
+    values,
+  );
+
+  const items = itemResult.rows.map(mapItemRow);
+  const images = await fetchImagesForItems(items.map((item) => item.id));
+
+  return hydrateItems(items, images);
+}
+
+export async function getItemBySlug(slug: string) {
+  await ensurePostgresReady();
+  const itemResult = await query<ItemRow>(
+    `select id, slug, title, description, category, condition, purchase_date,
+            purchase_price, expected_price, available_from, location_area,
+            status, created_at, updated_at
+     from items where slug = $1 limit 1`,
+    [slug],
+  );
+
+  const row = itemResult.rows[0];
+  if (!row) {
+    return null;
+  }
+
+  const item = mapItemRow(row);
+  const images = await fetchImagesForItems([item.id]);
+  return hydrateItems([item], images)[0] ?? null;
+}
+
+export async function getItemById(id: string) {
+  await ensurePostgresReady();
+  const itemResult = await query<ItemRow>(
+    `select id, slug, title, description, category, condition, purchase_date,
+            purchase_price, expected_price, available_from, location_area,
+            status, created_at, updated_at
+     from items where id = $1 limit 1`,
+    [id],
+  );
+
+  const row = itemResult.rows[0];
+  if (!row) {
+    return null;
+  }
+
+  const item = mapItemRow(row);
+  const images = await fetchImagesForItems([item.id]);
+  return hydrateItems([item], images)[0] ?? null;
+}
+
+export async function listCategories() {
+  await ensurePostgresReady();
+  const result = await query<{ category: string | null }>(
+    `select distinct category from items where category is not null order by category asc`,
+  );
+
+  return result.rows
+    .map((row) => row.category)
+    .filter((value): value is string => Boolean(value));
+}
+
+export async function createLead(input: SaveLeadInput) {
+  await ensurePostgresReady();
+  const lead: Lead = {
+    id: crypto.randomUUID(),
+    itemId: input.itemId,
+    buyerName: input.buyerName,
+    phone: normaliseOptionalString(input.phone) ?? null,
+    email: normaliseOptionalString(input.email) ?? null,
+    message: normaliseOptionalString(input.message) ?? null,
+    bidPrice: input.bidPrice ?? null,
+    createdAt: new Date().toISOString(),
+  };
+
+  await query(
+    `insert into leads (id, item_id, buyer_name, phone, email, message, bid_price, created_at)
+     values ($1, $2, $3, $4, $5, $6, $7, $8)`,
+    [
+      lead.id,
+      lead.itemId,
+      lead.buyerName,
+      lead.phone,
+      lead.email,
+      lead.message,
+      lead.bidPrice,
+      lead.createdAt,
+    ],
+  );
+
+  return lead;
+}
+
+export async function listLeads(filters: LeadFilters = {}) {
+  await ensurePostgresReady();
+  const clauses: string[] = [];
+  const values: unknown[] = [];
+
+  if (filters.itemId) {
+    values.push(filters.itemId);
+    clauses.push(`l.item_id = $${values.length}`);
+  }
+
+  if (filters.query) {
+    values.push(`%${filters.query.toLowerCase()}%`);
+    clauses.push(`(
+      lower(l.buyer_name) like $${values.length}
+      or coalesce(lower(l.phone), '') like $${values.length}
+      or coalesce(lower(l.email), '') like $${values.length}
+      or coalesce(lower(l.message), '') like $${values.length}
+      or coalesce(lower(i.title), '') like $${values.length}
+    )`);
+  }
+
+  const where = clauses.length > 0 ? `where ${clauses.join(" and ")}` : "";
+  const result = await query<LeadRow>(
+    `select
+        l.id,
+        l.item_id,
+        l.buyer_name,
+        l.phone,
+        l.email,
+        l.message,
+        l.bid_price,
+        l.created_at,
+        i.title as item_title,
+        i.slug as item_slug
+      from leads l
+      left join items i on i.id = l.item_id
+      ${where}
+      order by l.created_at desc`,
+    values,
+  );
+
+  return result.rows.map(mapLeadRow);
+}
+
+export async function createContactSubmission(input: SaveContactSubmissionInput) {
+  await ensurePostgresReady();
+  const submission: ContactSubmission = {
+    id: crypto.randomUUID(),
+    buyerName: input.buyerName,
+    phone: normaliseOptionalString(input.phone) ?? null,
+    email: normaliseOptionalString(input.email) ?? null,
+    location: normaliseOptionalString(input.location) ?? null,
+    message: normaliseOptionalString(input.message) ?? "",
+    captchaPrompt: input.captchaPrompt,
+    createdAt: new Date().toISOString(),
+  };
+
+  await query(
+    `insert into contact_submissions (
+        id, buyer_name, phone, email, location, message, captcha_prompt, created_at
+      ) values ($1, $2, $3, $4, $5, $6, $7, $8)`,
+    [
+      submission.id,
+      submission.buyerName,
+      submission.phone,
+      submission.email,
+      submission.location,
+      submission.message,
+      submission.captchaPrompt,
+      submission.createdAt,
+    ],
+  );
+
+  return submission;
+}
+
+export async function listContactSubmissions() {
+  await ensurePostgresReady();
+  const result = await query<ContactSubmissionRow>(
+    `select id, buyer_name, phone, email, location, message, captcha_prompt, created_at
+     from contact_submissions
+     order by created_at desc`,
+  );
+
+  return result.rows.map(mapContactSubmissionRow);
+}
+
+export async function saveItem(input: SaveItemInput, files: File[]) {
+  await ensurePostgresReady();
+  const existingItem = input.id ? await getItemById(input.id) : null;
+  const itemId = existingItem?.id ?? crypto.randomUUID();
+  const now = new Date().toISOString();
+  const slug = await ensureUniqueSlug(input.title, existingItem?.id);
+
+  const nextItem: Item = {
+    id: itemId,
+    slug,
+    title: input.title,
+    description: normaliseOptionalString(input.description) ?? null,
+    category: normaliseOptionalString(input.category) ?? null,
+    condition: normaliseOptionalString(input.condition) ?? null,
+    purchaseDate: normaliseOptionalString(input.purchaseDate) ?? null,
+    purchasePrice: input.purchasePrice ?? null,
+    expectedPrice: input.expectedPrice ?? null,
+    availableFrom: normaliseOptionalString(input.availableFrom) ?? null,
+    locationArea: normaliseOptionalString(input.locationArea) ?? null,
+    status: input.status,
+    createdAt: existingItem?.createdAt ?? now,
+    updatedAt: now,
+  };
+
+  const uploadedImages = await storeUploadedImages(itemId, files);
+
+  await withTransaction(async (client) => {
+    if (existingItem) {
+      await client.query(
+        `update items set
+          slug = $2,
+          title = $3,
+          description = $4,
+          category = $5,
+          condition = $6,
+          purchase_date = $7,
+          purchase_price = $8,
+          expected_price = $9,
+          available_from = $10,
+          location_area = $11,
+          status = $12,
+          updated_at = $13
+         where id = $1`,
+        [
+          nextItem.id,
+          nextItem.slug,
+          nextItem.title,
+          nextItem.description,
+          nextItem.category,
+          nextItem.condition,
+          nextItem.purchaseDate,
+          nextItem.purchasePrice,
+          nextItem.expectedPrice,
+          nextItem.availableFrom,
+          nextItem.locationArea,
+          nextItem.status,
+          nextItem.updatedAt,
+        ],
+      );
+    } else {
+      await client.query(
+        `insert into items (
+          id, slug, title, description, category, condition, purchase_date,
+          purchase_price, expected_price, available_from, location_area,
+          status, created_at, updated_at
+        ) values (
+          $1, $2, $3, $4, $5, $6, $7,
+          $8, $9, $10, $11,
+          $12, $13, $14
+        )`,
+        [
+          nextItem.id,
+          nextItem.slug,
+          nextItem.title,
+          nextItem.description,
+          nextItem.category,
+          nextItem.condition,
+          nextItem.purchaseDate,
+          nextItem.purchasePrice,
+          nextItem.expectedPrice,
+          nextItem.availableFrom,
+          nextItem.locationArea,
+          nextItem.status,
+          nextItem.createdAt,
+          nextItem.updatedAt,
+        ],
+      );
+    }
+
+    if (uploadedImages.length > 0) {
+      const countResult = await client.query<{ count: string }>(
+        `select count(*)::text as count from item_images where item_id = $1`,
+        [itemId],
+      );
+      const offset = Number(countResult.rows[0]?.count ?? "0");
+
+      for (const [index, image] of uploadedImages.entries()) {
+        await client.query(
+          `insert into item_images (id, item_id, image_url, sort_order, created_at)
+           values ($1, $2, $3, $4, $5)`,
+          [
+            image.id,
+            image.itemId,
+            image.imageUrl,
+            offset + index,
+            image.createdAt,
+          ],
+        );
+      }
+    }
+  });
+
+  return getItemById(itemId);
+}
+
+export async function deleteItem(itemId: string) {
+  await ensurePostgresReady();
+  await query(`delete from items where id = $1`, [itemId]);
+}

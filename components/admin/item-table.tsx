@@ -6,9 +6,10 @@ import { formatCurrency, formatDate } from "@/lib/utils";
 
 type ItemTableProps = {
   items: ItemWithImages[];
+  leadCountByItemId?: Record<string, number>;
 };
 
-export function ItemTable({ items }: ItemTableProps) {
+export function ItemTable({ items, leadCountByItemId = {} }: ItemTableProps) {
   if (items.length === 0) {
     return <p className="text-sm text-[color:var(--muted)]">No items created yet.</p>;
   }
@@ -31,6 +32,9 @@ export function ItemTable({ items }: ItemTableProps) {
               <td>
                 <div className="font-semibold text-stone-900">{item.title}</div>
                 <div className="mt-1 text-sm text-[color:var(--muted)]">{item.category || "General"}</div>
+                <div className="mt-2 text-xs font-semibold text-[color:var(--primary)]">
+                  {leadCountByItemId[item.id] ?? 0} lead{(leadCountByItemId[item.id] ?? 0) === 1 ? "" : "s"}
+                </div>
               </td>
               <td>
                 <StatusBadge status={item.status} />
@@ -41,6 +45,9 @@ export function ItemTable({ items }: ItemTableProps) {
                 <div className="flex flex-wrap gap-3">
                   <Link className="button-ghost" href={`/items/${item.slug}`}>
                     View
+                  </Link>
+                  <Link className="button-ghost" href={`/admin/leads?itemId=${item.id}`}>
+                    Leads
                   </Link>
                   <Link className="button-secondary" href={`/admin/items/${item.id}/edit`}>
                     Edit

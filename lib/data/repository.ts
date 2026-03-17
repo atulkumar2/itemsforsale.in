@@ -1,5 +1,7 @@
 import "server-only";
 
+import { getDataMode, getDatabaseUrl } from "@/lib/env";
+
 import {
   createContactSubmission,
   createLead,
@@ -12,53 +14,111 @@ import {
   listLeads,
   saveItem,
 } from "@/lib/data/local-store";
+import {
+  createContactSubmission as createContactSubmissionPostgres,
+  createLead as createLeadPostgres,
+  checkPostgresConnection,
+  deleteItem as deleteItemPostgres,
+  getItemById as getItemByIdPostgres,
+  getItemBySlug as getItemBySlugPostgres,
+  listCategories as listCategoriesPostgres,
+  listContactSubmissions as listContactSubmissionsPostgres,
+  listItems as listItemsPostgres,
+  listLeads as listLeadsPostgres,
+  saveItem as saveItemPostgres,
+} from "@/lib/data/postgres-store";
 import type {
   ItemFilters,
+  LeadFilters,
   SaveContactSubmissionInput,
   SaveItemInput,
   SaveLeadInput,
 } from "@/lib/types";
 
 export async function listPublicItems(filters: ItemFilters) {
-  return listItems(filters);
+  return getDataMode() === "postgres" ? listItemsPostgres(filters) : listItems(filters);
 }
 
 export async function getPublicItemBySlug(slug: string) {
-  return getItemBySlug(slug);
+  return getDataMode() === "postgres" ? getItemBySlugPostgres(slug) : getItemBySlug(slug);
 }
 
 export async function submitLead(input: SaveLeadInput) {
-  return createLead(input);
+  return getDataMode() === "postgres" ? createLeadPostgres(input) : createLead(input);
 }
 
 export async function listAdminItems() {
-  return listItems();
+  return getDataMode() === "postgres" ? listItemsPostgres() : listItems();
 }
 
 export async function getAdminItemById(id: string) {
-  return getItemById(id);
+  return getDataMode() === "postgres" ? getItemByIdPostgres(id) : getItemById(id);
 }
 
 export async function saveAdminItem(input: SaveItemInput, files: File[]) {
-  return saveItem(input, files);
+  return getDataMode() === "postgres" ? saveItemPostgres(input, files) : saveItem(input, files);
 }
 
 export async function deleteAdminItem(itemId: string) {
-  return deleteItem(itemId);
+  return getDataMode() === "postgres" ? deleteItemPostgres(itemId) : deleteItem(itemId);
 }
 
-export async function listAdminLeads() {
-  return listLeads();
+export async function listAdminLeads(filters: LeadFilters = {}) {
+  return getDataMode() === "postgres" ? listLeadsPostgres(filters) : listLeads(filters);
 }
 
 export async function getAvailableCategories() {
-  return listCategories();
+  return getDataMode() === "postgres" ? listCategoriesPostgres() : listCategories();
 }
 
 export async function submitContactSubmission(input: SaveContactSubmissionInput) {
-  return createContactSubmission(input);
+  return getDataMode() === "postgres"
+    ? createContactSubmissionPostgres(input)
+    : createContactSubmission(input);
 }
 
 export async function listAdminContactSubmissions() {
-  return listContactSubmissions();
+  return getDataMode() === "postgres"
+    ? listContactSubmissionsPostgres()
+    : listContactSubmissions();
+}
+
+export async function getAdminSystemStatus() {
+  const dataMode = getDataMode();
+  const isPostgresMode = dataMode === "postgres";
+
+  let databaseTarget: {
+    host: string | null;
+    port: string | null;
+    database: string | null;
+  } | null = null;
+
+  if (isPostgresMode) {
+    try {
+      const databaseUrl = new URL(getDatabaseUrl());
+      databaseTarget = {
+        host: databaseUrl.hostname || null,
+        port: databaseUrl.port || "5432",
+        database: databaseUrl.pathname.replace(/^\//, "") || null,
+      };
+    } catch {
+      databaseTarget = {
+        host: null,
+        port: null,
+        database: null,
+      };
+    }
+  }
+
+  const postgres = isPostgresMode
+    ? await checkPostgresConnection()
+    : { reachable: null, error: null };
+
+  return {
+    dataMode,
+    persistence: isPostgresMode ? "postgres" : "json",
+    uploadsStorage: "filesystem",
+    databaseTarget,
+    postgres,
+  };
 }

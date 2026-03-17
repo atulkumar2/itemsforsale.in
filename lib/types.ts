@@ -69,6 +69,11 @@ export type ItemFilters = {
   status?: ItemStatus;
 };
 
+export type LeadFilters = {
+  itemId?: string;
+  query?: string;
+};
+
 export type SaveItemInput = {
   id?: string;
   title: string;

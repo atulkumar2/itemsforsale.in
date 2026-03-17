@@ -1,7 +1,7 @@
 import Link from "next/link";
 
 import type { LeadWithItem } from "@/lib/types";
-import { formatCurrency, formatDate } from "@/lib/utils";
+import { formatCurrency, formatDateTime } from "@/lib/utils";
 
 type LeadsTableProps = {
   leads: LeadWithItem[];
@@ -46,7 +46,7 @@ export function LeadsTable({ leads }: LeadsTableProps) {
               <td className="max-w-xs text-sm text-[color:var(--muted)]">
                 {lead.message || "No message"}
               </td>
-              <td>{formatDate(lead.createdAt)}</td>
+              <td>{formatDateTime(lead.createdAt)}</td>
             </tr>
           ))}
         </tbody>

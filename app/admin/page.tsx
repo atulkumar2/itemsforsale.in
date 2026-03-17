@@ -6,6 +6,7 @@ import { LogoutButton } from "@/components/admin/logout-button";
 import { SiteHeader } from "@/components/site-header";
 import { requireAdminPage } from "@/lib/auth";
 import {
+  getAdminSystemStatus,
   listAdminContactSubmissions,
   listAdminItems,
   listAdminLeads,
@@ -16,11 +17,17 @@ export const dynamic = "force-dynamic";
 export default async function AdminPage() {
   await requireAdminPage();
 
-  const [items, leads, contactSubmissions] = await Promise.all([
+  const [items, leads, contactSubmissions, systemStatus] = await Promise.all([
     listAdminItems(),
     listAdminLeads(),
     listAdminContactSubmissions(),
+    getAdminSystemStatus(),
   ]);
+
+  const leadCountByItemId = leads.reduce<Record<string, number>>((acc, lead) => {
+    acc[lead.itemId] = (acc[lead.itemId] ?? 0) + 1;
+    return acc;
+  }, {});
 
   return (
     <main className="pb-16">
@@ -33,8 +40,8 @@ export default async function AdminPage() {
               Manage inventory, photos, and leads
             </h1>
             <p className="mt-3 max-w-2xl text-[color:var(--muted)]">
-              This local-first build stores catalogue updates in a JSON data file
-              so the full workflow can be tested before switching to Supabase.
+              This local-first build supports JSON or PostgreSQL storage so the
+              full workflow can be tested before switching to Supabase.
             </p>
           </div>
 
@@ -47,6 +54,9 @@ export default async function AdminPage() {
             </Link>
             <Link className="button-secondary" href="/admin/contact-submissions">
               Contact submissions
+            </Link>
+            <Link className="button-secondary" href="/admin/system">
+              System status
             </Link>
             <LogoutButton />
           </div>
@@ -82,8 +92,15 @@ export default async function AdminPage() {
               Quick status
             </p>
             <p className="mt-3 text-lg font-semibold text-stone-900">
-              Local mode active, Supabase-ready structure preserved.
+              {systemStatus.dataMode === "postgres"
+                ? systemStatus.postgres.reachable
+                  ? "PostgreSQL mode active and reachable."
+                  : "PostgreSQL mode active but currently unavailable."
+                : "JSON mode active with local filesystem uploads."}
             </p>
+            <Link className="mt-4 inline-block text-sm text-[color:var(--primary)] hover:underline" href="/admin/system">
+              View system details
+            </Link>
           </div>
         </div>
 
@@ -101,7 +118,7 @@ export default async function AdminPage() {
               Export catalogue CSV
             </Link>
           </div>
-          <ItemTable items={items} />
+          <ItemTable items={items} leadCountByItemId={leadCountByItemId} />
         </div>
 
         <div className="panel p-6 md:p-8">

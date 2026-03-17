@@ -10,6 +10,10 @@ export function getDataMode() {
   return process.env.DATA_MODE ?? "local";
 }
 
+export function getDatabaseUrl() {
+  return process.env.DATABASE_URL ?? "postgresql://postgres:postgres@localhost:5432/itemsforsale";
+}
+
 export function getAdminEmail() {
   return process.env.ADMIN_EMAIL ?? "admin@example.com";
 }

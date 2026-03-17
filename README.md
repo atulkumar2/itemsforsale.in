@@ -14,7 +14,8 @@ The app now runs fully in local mode without cloud infrastructure:
 - admin CRUD for items
 - admin contact submissions log with CSV export
 - local photo upload to `public/uploads`
-- lead and contact submission capture stored in `data/local-db.json`
+- data can run in JSON mode or local PostgreSQL mode
+- lead and contact submission capture stored in `data/local-db.json` or PostgreSQL depending on `DATA_MODE`
 
 This keeps the project testable before moving the same shape to Supabase.
 
@@ -58,6 +59,48 @@ NEXT_ALLOWED_DEV_ORIGINS=192.168.1.21,localhost
 - admin login defaults come from `.env.local`
 - uploaded images are written to `public/uploads`
 
+## Local PostgreSQL mode
+
+The app already uses local filesystem storage for uploaded images. If you want a local database closer to the future Supabase model before switching to Supabase, use PostgreSQL mode.
+
+1. Start PostgreSQL with Docker Compose:
+
+```bash
+npm run db:up
+```
+
+2. Copy `.env.example` to `.env.local` if not already done
+3. Set `DATA_MODE=postgres`
+4. Set `DATABASE_URL=postgresql://postgres:postgres@localhost:5432/itemsforsale`
+5. Optional: initialize schema manually with:
+
+```bash
+psql postgresql://postgres:postgres@localhost:5432/itemsforsale -f postgres.local.sql
+```
+
+6. Optional: import your existing JSON data into PostgreSQL:
+
+```bash
+npm run db:import
+```
+
+Useful commands:
+
+```bash
+npm run db:up
+npm run db:down
+npm run db:logs
+```
+
+Notes:
+
+- the app auto-creates tables on first request in `postgres` mode
+- seed data is inserted automatically if the `items` table is empty
+- uploaded images still remain in `public/uploads`
+- switching back to `DATA_MODE=local` returns to JSON-backed storage
+- Docker Compose file: `docker-compose.yml`
+- JSON import script: `scripts/import-json-to-postgres.mjs`
+
 ## Testing
 
 - Run all tests: `npm run test`
@@ -89,3 +132,4 @@ Test files:
 - `specs/04_DATABASE.md`
 - `specs/05_MVP_SCOPE.md`
 - `specs/06_COPILOT_INSTRUCTIONS.md`
+- `docs/ARCHITECTURE.md`

@@ -1,0 +1,22 @@
+services:
+  postgres:
+    image: postgres:16-alpine
+    container_name: itemsforsale-postgres
+    restart: unless-stopped
+    environment:
+      POSTGRES_DB: itemsforsale
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: postgres
+    ports:
+      - "5432:5432"
+    volumes:
+      - itemsforsale-postgres-data:/var/lib/postgresql/data
+      - ./postgres.local.sql:/docker-entrypoint-initdb.d/01-postgres.local.sql:ro
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U postgres -d itemsforsale"]
+      interval: 5s
+      timeout: 5s
+      retries: 10
+
+volumes:
+  itemsforsale-postgres-data:

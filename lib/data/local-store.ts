@@ -11,6 +11,7 @@ import type {
   ItemImage,
   ItemWithImages,
   Lead,
+  LeadFilters,
   LeadWithItem,
   LocalDatabase,
   SaveContactSubmissionInput,
@@ -167,13 +168,31 @@ export async function createLead(input: SaveLeadInput) {
   return lead;
 }
 
-export async function listLeads() {
+export async function listLeads(filters: LeadFilters = {}) {
   const database = await readDatabase();
   const itemsById = new Map(database.items.map((item) => [item.id, item]));
 
   return database.leads
     .slice()
     .sort((left, right) => right.createdAt.localeCompare(left.createdAt))
+    .filter((lead) => {
+      const item = itemsById.get(lead.itemId);
+      const matchesItemId = filters.itemId ? lead.itemId === filters.itemId : true;
+      const query = filters.query?.toLowerCase();
+      const haystack = [
+        lead.buyerName,
+        lead.phone,
+        lead.email,
+        lead.message,
+        item?.title,
+      ]
+        .filter(Boolean)
+        .join(" ")
+        .toLowerCase();
+      const matchesQuery = query ? haystack.includes(query) : true;
+
+      return matchesItemId && matchesQuery;
+    })
     .map((lead) => {
       const item = itemsById.get(lead.itemId);
 

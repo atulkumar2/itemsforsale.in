@@ -38,10 +38,22 @@ create table if not exists public.leads (
   created_at timestamptz not null default now()
 );
 
+create table if not exists public.contact_submissions (
+  id uuid primary key default gen_random_uuid(),
+  buyer_name text not null,
+  phone text,
+  email text,
+  location text,
+  message text not null,
+  captcha_prompt text not null,
+  created_at timestamptz not null default now()
+);
+
 create index if not exists idx_items_status on public.items(status);
 create index if not exists idx_items_category on public.items(category);
 create index if not exists idx_leads_item_id on public.leads(item_id);
 create index if not exists idx_item_images_item_id on public.item_images(item_id);
+create index if not exists idx_contact_submissions_created_at on public.contact_submissions(created_at desc);
 
 -- updated_at trigger
 create or replace function public.set_updated_at()
@@ -64,6 +76,7 @@ execute function public.set_updated_at();
 alter table public.items enable row level security;
 alter table public.item_images enable row level security;
 alter table public.leads enable row level security;
+alter table public.contact_submissions enable row level security;
 
 -- Public can read only available items
 drop policy if exists "Public can read items" on public.items;
@@ -95,6 +108,13 @@ for insert
 to anon, authenticated
 with check (true);
 
+drop policy if exists "Public can create contact submissions" on public.contact_submissions;
+create policy "Public can create contact submissions"
+on public.contact_submissions
+for insert
+to anon, authenticated
+with check (true);
+
 -- Admin policies
 -- Replace auth.email() check later with a proper role model if needed
 drop policy if exists "Admin full access items" on public.items;
@@ -116,6 +136,14 @@ with check (auth.email() = current_setting('request.jwt.claim.email', true));
 drop policy if exists "Admin full access leads" on public.leads;
 create policy "Admin full access leads"
 on public.leads
+for all
+to authenticated
+using (auth.email() = current_setting('request.jwt.claim.email', true))
+with check (auth.email() = current_setting('request.jwt.claim.email', true));
+
+drop policy if exists "Admin full access contact_submissions" on public.contact_submissions;
+create policy "Admin full access contact_submissions"
+on public.contact_submissions
 for all
 to authenticated
 using (auth.email() = current_setting('request.jwt.claim.email', true))
