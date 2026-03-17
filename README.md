@@ -42,10 +42,10 @@ To make that persistent across reboots, add these values to `/etc/sysctl.conf` o
 
 For a complete Linux troubleshooting guide, see [docs/TROUBLESHOOTING.md](docs/TROUBLESHOOTING.md).
 
-When accessing the dev server from another device on the same LAN (for example Windows), set `NEXT_ALLOWED_DEV_ORIGINS` in `.env.local` to include the LAN URL(s), for example:
+When accessing the dev server from another device on the same LAN (for example Windows), set NEXT_ALLOWED_DEV_ORIGINS in .env.local to include hostnames (not full URLs), for example:
 
 ```bash
-NEXT_ALLOWED_DEV_ORIGINS=http://192.168.1.21:3000,http://192.168.1.21:3001
+NEXT_ALLOWED_DEV_ORIGINS=192.168.1.21,localhost
 ```
 
 ## Local defaults
