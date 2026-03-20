@@ -55,14 +55,14 @@ export default async function AdminPage() {
   return (
     <main className="pb-16">
       <SiteHeader compact />
-      <section className="shell space-y-6 py-6 md:py-10">
-        <div className="panel flex flex-col gap-6 p-6 md:flex-row md:items-end md:justify-between md:p-8">
+      <section className="shell space-y-5 py-6 md:py-8">
+        <div className="panel flex flex-col gap-5 p-5 md:flex-row md:items-end md:justify-between md:p-6">
           <div>
             <p className="eyebrow">Admin dashboard</p>
-            <h1 className="display-title mt-4 text-5xl font-semibold text-stone-900">
+            <h1 className="display-title mt-3 text-4xl font-semibold text-stone-900 md:text-[2.6rem]">
               Manage inventory, photos, and leads
             </h1>
-            <p className="mt-3 max-w-2xl text-[color:var(--muted)]">
+            <p className="mt-2 max-w-2xl text-sm leading-7 text-[color:var(--muted)] md:text-base">
               This local-first build supports JSON or PostgreSQL storage so the
               full workflow can be tested before switching to Supabase.
             </p>
@@ -72,26 +72,17 @@ export default async function AdminPage() {
             <Link className="button" href="/admin/items/new">
               Add item
             </Link>
-            <Link className="button-secondary" href="/admin/leads">
-              View all leads
-            </Link>
-            <Link className="button-secondary" href="/admin/contact-submissions">
-              Contact submissions
-            </Link>
-            <Link className="button-secondary" href="/admin/system">
-              System status
-            </Link>
             <LogoutButton />
           </div>
         </div>
 
         {adminUnavailable ? (
-          <div className="panel p-8 md:p-10">
+          <div className="panel p-6 md:p-8">
             <p className="eyebrow">Admin unavailable</p>
-            <h2 className="display-title mt-4 text-3xl font-semibold text-stone-900">
+            <h2 className="display-title mt-3 text-2xl font-semibold text-stone-900">
               PostgreSQL is currently unavailable.
             </h2>
-            <p className="mt-4 max-w-2xl text-base leading-8 text-[color:var(--muted)]">
+            <p className="mt-3 max-w-2xl text-sm leading-7 text-[color:var(--muted)] md:text-base">
               Admin inventory, leads, and contact submissions cannot be loaded until
               the database connection is restored.
             </p>
@@ -104,36 +95,36 @@ export default async function AdminPage() {
           </div>
         ) : (
           <>
-            <div className="grid gap-5 md:grid-cols-4">
-              <div className="panel p-6">
+            <div className="grid gap-4 md:grid-cols-4">
+              <div className="panel p-5">
                 <p className="text-sm uppercase tracking-[0.16em] text-[color:var(--muted)]">
                   Total items
                 </p>
-                <p className="display-title mt-3 text-5xl font-semibold text-stone-900">
+                <p className="display-title mt-2 text-4xl font-semibold text-stone-900">
                   {items.length}
                 </p>
               </div>
-              <div className="panel p-6">
+              <div className="panel p-5">
                 <p className="text-sm uppercase tracking-[0.16em] text-[color:var(--muted)]">
                   Leads captured
                 </p>
-                <p className="display-title mt-3 text-5xl font-semibold text-stone-900">
+                <p className="display-title mt-2 text-4xl font-semibold text-stone-900">
                   {leads.length}
                 </p>
               </div>
-              <div className="panel p-6">
+              <div className="panel p-5">
                 <p className="text-sm uppercase tracking-[0.16em] text-[color:var(--muted)]">
                   Contact submissions
                 </p>
-                <p className="display-title mt-3 text-5xl font-semibold text-stone-900">
+                <p className="display-title mt-2 text-4xl font-semibold text-stone-900">
                   {contactSubmissions.length}
                 </p>
               </div>
-              <div className="panel p-6">
+              <div className="panel p-5">
                 <p className="text-sm uppercase tracking-[0.16em] text-[color:var(--muted)]">
                   Quick status
                 </p>
-                <p className="mt-3 text-lg font-semibold text-stone-900">
+                <p className="mt-2 text-base font-semibold text-stone-900">
                   {systemStatus.dataMode === "postgres"
                     ? systemStatus.postgres.reachable
                       ? "PostgreSQL mode active and reachable."
@@ -146,10 +137,51 @@ export default async function AdminPage() {
               </div>
             </div>
 
-            <div className="panel p-6 md:p-8">
-              <div className="mb-5 flex items-center justify-between gap-4">
+            <div className="grid gap-4 md:grid-cols-3">
+              <Link
+                className="panel block p-5 transition hover:-translate-y-0.5 hover:border-[color:var(--primary)]"
+                href="/admin/leads"
+              >
+                <p className="text-sm uppercase tracking-[0.16em] text-[color:var(--muted)]">
+                  Leads
+                </p>
+                <p className="mt-2 text-xl font-semibold text-stone-900">View all leads</p>
+                <p className="mt-2 text-sm leading-6 text-[color:var(--muted)]">
+                  Review buyer bids, expected prices, and recent interest across items.
+                </p>
+              </Link>
+
+              <Link
+                className="panel block p-5 transition hover:-translate-y-0.5 hover:border-[color:var(--primary)]"
+                href="/admin/contact-submissions"
+              >
+                <p className="text-sm uppercase tracking-[0.16em] text-[color:var(--muted)]">
+                  Contact
+                </p>
+                <p className="mt-2 text-xl font-semibold text-stone-900">Contact submissions</p>
+                <p className="mt-2 text-sm leading-6 text-[color:var(--muted)]">
+                  Check direct-contact requests submitted from the public contact page.
+                </p>
+              </Link>
+
+              <Link
+                className="panel block p-5 transition hover:-translate-y-0.5 hover:border-[color:var(--primary)]"
+                href="/admin/system"
+              >
+                <p className="text-sm uppercase tracking-[0.16em] text-[color:var(--muted)]">
+                  System
+                </p>
+                <p className="mt-2 text-xl font-semibold text-stone-900">System status</p>
+                <p className="mt-2 text-sm leading-6 text-[color:var(--muted)]">
+                  Inspect the active data mode, upload storage, and PostgreSQL reachability.
+                </p>
+              </Link>
+            </div>
+
+            <div className="panel p-5 md:p-6">
+              <div className="mb-4 flex items-center justify-between gap-4">
                 <div>
-                  <h2 className="display-title text-3xl font-semibold text-stone-900">
+                  <h2 className="display-title text-2xl font-semibold text-stone-900">
                     Inventory
                   </h2>
                   <p className="mt-2 text-sm text-[color:var(--muted)]">
@@ -163,10 +195,10 @@ export default async function AdminPage() {
               <ItemTable items={items} leadCountByItemId={leadCountByItemId} />
             </div>
 
-            <div className="panel p-6 md:p-8">
-              <div className="mb-5 flex items-center justify-between gap-4">
+            <div className="panel p-5 md:p-6">
+              <div className="mb-4 flex items-center justify-between gap-4">
                 <div>
-                  <h2 className="display-title text-3xl font-semibold text-stone-900">
+                  <h2 className="display-title text-2xl font-semibold text-stone-900">
                     Latest leads
                   </h2>
                   <p className="mt-2 text-sm text-[color:var(--muted)]">

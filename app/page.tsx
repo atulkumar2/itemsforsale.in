@@ -62,23 +62,23 @@ export default async function Home({ searchParams }: HomePageProps) {
   return (
     <main className="pb-16">
       <SiteHeader />
-      <section className="shell grid gap-8 py-6 lg:grid-cols-[1.2fr_0.8fr] lg:py-12">
-        <div className="fade-up flex flex-col gap-6">
+      <section className="shell grid gap-6 py-6 lg:grid-cols-[1.2fr_0.8fr] lg:py-10">
+        <div className="fade-up flex flex-col gap-5">
           <span className="eyebrow">Household items for sale</span>
-          <div className="space-y-5">
-            <h5 className="display-title max-w-3xl text-5xl leading-tight font-semibold text-stone-900 md:text-7xl">
+          <div className="space-y-4">
+            <h5 className="display-title max-w-3xl text-4xl leading-tight font-semibold text-stone-900 md:text-6xl">
               Household items for sale in April 2026. 
             </h5>
-            <p className="max-w-2xl text-lg leading-8 text-[color:var(--muted)]">
+            <p className="max-w-2xl text-base leading-7 text-[color:var(--muted)]">
               To be sold by April 30th or marked sold/removed if unavailable sooner.
             </p>
-            <p className="max-w-2xl text-lg leading-8 text-[color:var(--muted)]">
+            <p className="max-w-2xl text-base leading-7 text-[color:var(--muted)]">
               Distance from various places --
             </p>
-            <p className="max-w-2xl text-lg leading-8 text-[color:var(--muted)]">
+            <p className="max-w-2xl text-base leading-7 text-[color:var(--muted)]">
               Silk Board Junctions - 3 km. Electronic City - 10 km. HSR Layout - 5 km. Koramangala - 6 km. Jayanagar - 7 km. BTM Layout - 4 km.
             </p>
-            <p className="max-w-2xl text-lg leading-8 text-[color:var(--muted)]">
+            <p className="max-w-2xl text-base leading-7 text-[color:var(--muted)]">
               Browse available items, inspect photos and details, then send a direct interest or bid request to the seller.
             </p>
           </div>
@@ -92,10 +92,10 @@ export default async function Home({ searchParams }: HomePageProps) {
           </div>
         </div>
 
-        <div className="panel fade-up overflow-hidden p-6 md:p-8">
-          <div className="space-y-4">
+        <div className="panel fade-up overflow-hidden p-5 md:p-6">
+          <div className="space-y-3">
             <p className="eyebrow">Seller location</p>
-            <h2 className="display-title text-3xl font-semibold text-stone-900">
+            <h2 className="display-title text-2xl font-semibold text-stone-900">
               Visit or inspect pickup point on map
             </h2>
             <p className="text-sm leading-7 text-[color:var(--muted)]">

@@ -14,14 +14,14 @@ export default async function AdminSystemPage() {
   return (
     <main className="pb-16">
       <SiteHeader compact />
-      <section className="shell space-y-6 py-6 md:py-10">
-        <div className="panel flex flex-col gap-4 p-6 md:flex-row md:items-end md:justify-between md:p-8">
+      <section className="shell space-y-5 py-6 md:py-8">
+        <div className="panel flex flex-col gap-4 p-5 md:flex-row md:items-end md:justify-between md:p-6">
           <div>
             <p className="eyebrow">System status</p>
-            <h1 className="display-title mt-4 text-5xl font-semibold text-stone-900">
+            <h1 className="display-title mt-3 text-4xl font-semibold text-stone-900 md:text-[2.6rem]">
               Runtime health
             </h1>
-            <p className="mt-3 max-w-2xl text-[color:var(--muted)]">
+            <p className="mt-2 max-w-2xl text-sm leading-7 text-[color:var(--muted)] md:text-base">
               Check which storage mode is active and whether the local PostgreSQL
               connection is currently reachable.
             </p>
@@ -34,39 +34,39 @@ export default async function AdminSystemPage() {
           </div>
         </div>
 
-        <div className="grid gap-5 md:grid-cols-2 xl:grid-cols-4">
-          <div className="panel p-6">
+        <div className="grid gap-4 md:grid-cols-2 xl:grid-cols-4">
+          <div className="panel p-5">
             <p className="text-sm uppercase tracking-[0.16em] text-[color:var(--muted)]">
               Data mode
             </p>
-            <p className="display-title mt-3 text-4xl font-semibold text-stone-900">
+            <p className="display-title mt-2 text-3xl font-semibold text-stone-900">
               {status.dataMode}
             </p>
           </div>
 
-          <div className="panel p-6">
+          <div className="panel p-5">
             <p className="text-sm uppercase tracking-[0.16em] text-[color:var(--muted)]">
               Persistence
             </p>
-            <p className="display-title mt-3 text-4xl font-semibold text-stone-900">
+            <p className="display-title mt-2 text-3xl font-semibold text-stone-900">
               {status.persistence}
             </p>
           </div>
 
-          <div className="panel p-6">
+          <div className="panel p-5">
             <p className="text-sm uppercase tracking-[0.16em] text-[color:var(--muted)]">
               Upload storage
             </p>
-            <p className="display-title mt-3 text-4xl font-semibold text-stone-900">
+            <p className="display-title mt-2 text-3xl font-semibold text-stone-900">
               {status.uploadsStorage}
             </p>
           </div>
 
-          <div className="panel p-6">
+          <div className="panel p-5">
             <p className="text-sm uppercase tracking-[0.16em] text-[color:var(--muted)]">
               PostgreSQL
             </p>
-            <p className="mt-3 text-lg font-semibold text-stone-900">
+            <p className="mt-2 text-base font-semibold text-stone-900">
               {status.postgres.reachable === null
                 ? "Inactive in current mode"
                 : status.postgres.reachable
@@ -79,16 +79,16 @@ export default async function AdminSystemPage() {
           </div>
         </div>
 
-        <div className="panel p-6 md:p-8">
-          <h2 className="display-title text-3xl font-semibold text-stone-900">
+        <div className="panel p-5 md:p-6">
+          <h2 className="display-title text-2xl font-semibold text-stone-900">
             Connection details
           </h2>
-          <div className="mt-5 grid gap-4 md:grid-cols-3">
+          <div className="mt-4 grid gap-4 md:grid-cols-3">
             <div>
               <p className="text-sm uppercase tracking-[0.16em] text-[color:var(--muted)]">
                 Host
               </p>
-              <p className="mt-2 text-lg font-semibold text-stone-900">
+              <p className="mt-2 text-base font-semibold text-stone-900">
                 {status.databaseTarget?.host ?? "Not in postgres mode"}
               </p>
             </div>
@@ -96,7 +96,7 @@ export default async function AdminSystemPage() {
               <p className="text-sm uppercase tracking-[0.16em] text-[color:var(--muted)]">
                 Port
               </p>
-              <p className="mt-2 text-lg font-semibold text-stone-900">
+              <p className="mt-2 text-base font-semibold text-stone-900">
                 {status.databaseTarget?.port ?? "Not in postgres mode"}
               </p>
             </div>
@@ -104,7 +104,7 @@ export default async function AdminSystemPage() {
               <p className="text-sm uppercase tracking-[0.16em] text-[color:var(--muted)]">
                 Database
               </p>
-              <p className="mt-2 text-lg font-semibold text-stone-900">
+              <p className="mt-2 text-base font-semibold text-stone-900">
                 {status.databaseTarget?.database ?? "Not in postgres mode"}
               </p>
             </div>

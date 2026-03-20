@@ -110,13 +110,13 @@ export function ContactSellerForm({ initialChallenge }: ContactSellerFormProps) 
   }
 
   return (
-    <div className="panel p-6 md:p-8">
-      <h2 className="display-title text-3xl font-semibold text-stone-900">Contact Seller</h2>
+    <div className="panel p-5 md:p-6">
+      <h2 className="display-title text-2xl font-semibold text-stone-900">Contact Seller</h2>
       <p className="mt-2 text-sm text-[color:var(--muted)]">
         Fill a quick enquiry and solve one simple question to verify you are human.
       </p>
 
-      <form className="mt-6 space-y-4" onSubmit={handleSubmit(onSubmit)}>
+      <form className="mt-5 space-y-4" onSubmit={handleSubmit(onSubmit)}>
         <div>
           <label className="mb-2 block text-sm font-semibold text-stone-800" htmlFor="contact-name">
             Name
@@ -203,7 +203,7 @@ export function ContactSellerForm({ initialChallenge }: ContactSellerFormProps) 
           ) : null}
         </div>
 
-        <div className="rounded-2xl border border-[color:var(--line)] bg-[color:var(--bg-secondary)] p-4">
+        <div className="rounded-2xl border border-[color:var(--line)] bg-[color:var(--bg-secondary)] p-3.5 md:p-4">
           <p className="text-xs uppercase tracking-[0.18em] text-[color:var(--muted)]">Captcha check</p>
       <p className="mt-2 text-sm font-semibold text-stone-900">
         {challenge?.prompt ?? "Loading captcha..."}
@@ -241,7 +241,7 @@ export function ContactSellerForm({ initialChallenge }: ContactSellerFormProps) 
       </form>
 
       {success ? (
-        <div className="mt-6 rounded-2xl border border-[color:var(--line)] bg-white p-5">
+        <div className="mt-5 rounded-2xl border border-[color:var(--line)] bg-white p-4 md:p-5">
           <p className="text-sm font-semibold text-stone-900">Direct contact options</p>
           <p className="mt-2 text-sm text-[color:var(--muted)]">Phone: {sellerContact.phone}</p>
           <p className="text-sm text-[color:var(--muted)]">Email: {sellerContact.email}</p>

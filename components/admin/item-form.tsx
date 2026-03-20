@@ -296,6 +296,9 @@ export function ItemForm({ item }: ItemFormProps) {
           <button className="button" disabled={isPending} type="submit">
             {isPending ? "Saving..." : item ? "Save changes" : "Create item"}
           </button>
+          <button className="button-secondary" disabled={isPending} onClick={() => router.back()} type="button">
+            Cancel
+          </button>
           {item ? (
             <button className="button-danger" disabled={isPending} onClick={handleDelete} type="button">
               Delete item

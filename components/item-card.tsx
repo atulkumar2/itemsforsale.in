@@ -53,13 +53,13 @@ export function ItemCard({ item, isSelected = false, onToggleSelection }: ItemCa
         ))}
       </div>
 
-      <div className="space-y-5 p-5 md:p-6">
+      <div className="space-y-4 p-4 md:p-5">
         <div className="flex items-start justify-between gap-3">
           <div>
             <p className="text-sm uppercase tracking-[0.14em] text-[color:var(--muted)]">
               {item.category || "General"}
             </p>
-            <h3 className="display-title mt-2 text-3xl font-semibold text-stone-900">
+            <h3 className="display-title mt-2 text-2xl font-semibold text-stone-900">
               {item.title}
             </h3>
             <p className="mt-2 text-sm font-medium text-[color:var(--muted)]">

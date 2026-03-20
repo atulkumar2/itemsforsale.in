@@ -9,14 +9,14 @@ export default function ContactSellerPage() {
     <main className="pb-16">
       <SiteHeader />
 
-      <section className="shell py-6 md:py-10">
-        <div className="mx-auto max-w-3xl space-y-6">
+      <section className="shell py-6 md:py-8">
+        <div className="mx-auto max-w-3xl space-y-5">
           <div className="fade-up">
             <span className="eyebrow">Contact seller</span>
-            <h1 className="display-title mt-3 text-4xl font-semibold text-stone-900 md:text-5xl">
+            <h1 className="display-title mt-3 text-3xl font-semibold text-stone-900 md:text-4xl">
               Reach out directly
             </h1>
-            <p className="mt-3 text-[color:var(--muted)]">
+            <p className="mt-2 text-sm leading-7 text-[color:var(--muted)] md:text-base">
               Before showing direct contact details, we ask one tiny captcha question
               to reduce spam and bot submissions.
             </p>

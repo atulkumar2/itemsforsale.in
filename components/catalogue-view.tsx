@@ -52,7 +52,7 @@ export function CatalogueView({ items, itemCount }: CatalogueViewProps) {
     <>
       <div className="flex items-center justify-between gap-4 px-1">
         <div>
-          <h2 className="display-title text-3xl font-semibold text-stone-900">
+          <h2 className="display-title text-2xl font-semibold text-stone-900">
             Active catalogue
           </h2>
           <p className="mt-2 text-sm text-[color:var(--muted)]">
