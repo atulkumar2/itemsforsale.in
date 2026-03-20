@@ -14,5 +14,6 @@
             "database": "itemsforsale",
             "username": "postgres"
         }
-    ]
+    ],
+    "semgrep.scan.onlyGitDirty": false
 }
