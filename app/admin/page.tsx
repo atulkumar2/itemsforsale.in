@@ -56,23 +56,20 @@ export default async function AdminPage() {
     <main className="pb-16">
       <SiteHeader compact />
       <section className="shell space-y-5 py-6 md:py-8">
-        <div className="panel flex flex-col gap-5 p-5 md:flex-row md:items-end md:justify-between md:p-6">
-          <div>
+        <div className="panel p-5 md:p-6">
+          <div className="flex flex-wrap items-center justify-between gap-3">
             <p className="eyebrow">Admin dashboard</p>
-            <h1 className="display-title mt-3 text-4xl font-semibold text-stone-900 md:text-[2.6rem]">
+            <div className="flex flex-wrap gap-3">
+              <Link className="button" href="/admin/items/new">
+                Add item
+              </Link>
+              <LogoutButton />
+            </div>
+          </div>
+          <div className="mt-3">
+            <h1 className="display-title text-4xl font-semibold text-stone-900 md:text-[2.6rem]">
               Manage inventory, photos, and leads
             </h1>
-            <p className="mt-2 max-w-2xl text-sm leading-7 text-[color:var(--muted)] md:text-base">
-              This local-first build supports JSON or PostgreSQL storage so the
-              full workflow can be tested before switching to Supabase.
-            </p>
-          </div>
-
-          <div className="flex flex-wrap gap-3">
-            <Link className="button" href="/admin/items/new">
-              Add item
-            </Link>
-            <LogoutButton />
           </div>
         </div>
 

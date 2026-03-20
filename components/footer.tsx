@@ -1,9 +1,7 @@
 import Link from "next/link";
 import Image from "next/image";
 
-const sellerAddress =
-  "Pioneer Wood winds Apartment, 1st Main, 3rd Cross, BTM 4th Stage, Near Bus Stop, SBI Colony, Devarachiknahalli, Bommanahalli, Bengaluru, Karnataka 560076";
-const sellerMapsLink = "https://maps.app.goo.gl/dnveXLxu6jniBJHv6";
+import { sellerAddress, sellerMapsLink } from "@/lib/seller";
 
 export function Footer() {
   return (
@@ -37,7 +35,7 @@ export function Footer() {
               Browse items
             </Link>
             <Link
-              href="/contact-seller"
+              href="/about-seller"
               className="text-[color:var(--muted)] hover:text-stone-900"
             >
               Contact seller

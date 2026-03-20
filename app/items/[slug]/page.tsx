@@ -1,4 +1,5 @@
 import type { Metadata } from "next";
+import Link from "next/link";
 import { notFound } from "next/navigation";
 
 import { ItemGallery } from "@/components/item-gallery";
@@ -157,7 +158,13 @@ export default async function ItemPage({ params }: ItemPageProps) {
               <div className="rounded-[18px] bg-[rgba(255,248,241,0.84)] p-3 sm:col-span-2">
                 <dt className="text-sm text-[color:var(--muted)]">Location</dt>
                 <dd className="mt-1 font-semibold text-stone-900">
-                  {item.locationArea || "Location not listed"}
+                  {item.locationArea ? (
+                    item.locationArea
+                  ) : (
+                    <Link className="text-[color:var(--primary)] hover:underline" href="/about-seller">
+                      See seller location and contact details
+                    </Link>
+                  )}
                 </dd>
               </div>
             </dl>

@@ -7,15 +7,10 @@ import {
   getAvailableCategories,
   listPublicItems,
 } from "@/lib/data/repository";
+import { sellerAddress, sellerMapEmbed, sellerMapsLink } from "@/lib/seller";
 import { parseItemStatus } from "@/lib/utils";
 
 export const dynamic = "force-dynamic";
-
-const sellerAddress =
-  "Pioneer Wood winds Apartment, 1st Main, 3rd Cross, BTM 4th Stage, Near Bus Stop, SBI Colony, Devarachiknahalli, Bommanahalli, Bengaluru, Karnataka 560076";
-const sellerMapsLink = "https://maps.app.goo.gl/dnveXLxu6jniBJHv6";
-const sellerMapEmbed =
-  "https://www.google.com/maps?q=Pioneer%20Wood%20winds%20Apartment%2C%201st%20Main%2C%203rd%20Cross%2C%20BTM%204th%20Stage%2C%20Near%20Bus%20Stop%2C%20SBI%20Colony%2C%20Devarachiknahalli%2C%20Bommanahalli%2C%20Bengaluru%2C%20Karnataka%20560076&output=embed";
 
 type HomePageProps = {
   searchParams?: Promise<{
@@ -86,7 +81,7 @@ export default async function Home({ searchParams }: HomePageProps) {
             <Link className="button" href="#listings">
               Browse items
             </Link>
-            <Link className="button-secondary" href="/contact-seller">
+            <Link className="button-secondary" href="/about-seller">
               Contact seller
             </Link>
           </div>
@@ -133,10 +128,10 @@ export default async function Home({ searchParams }: HomePageProps) {
             </h2>
             <p className="mt-4 max-w-2xl text-base leading-8 text-[color:var(--muted)]">
               The catalogue database is currently offline. Please try again shortly or
-              use the contact page if you need to reach the seller now.
+              use the seller page if you need to reach the seller now.
             </p>
             <div className="mt-6 flex flex-wrap gap-3">
-              <Link className="button-secondary" href="/contact-seller">
+              <Link className="button-secondary" href="/about-seller">
                 Contact seller
               </Link>
             </div>
