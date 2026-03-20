@@ -7,9 +7,11 @@ import { formatCurrency, formatDate } from "@/lib/utils";
 
 type ItemCardProps = {
   item: ItemWithImages;
+  isSelected?: boolean;
+  onToggleSelection?: (itemId: string) => void;
 };
 
-export function ItemCard({ item }: ItemCardProps) {
+export function ItemCard({ item, isSelected = false, onToggleSelection }: ItemCardProps) {
   const imageUrl = item.images[0]?.imageUrl ?? "/placeholder-chair.svg";
   const galleryPreview =
     item.images.length > 0
@@ -63,7 +65,20 @@ export function ItemCard({ item }: ItemCardProps) {
               {item.images.length} photo{item.images.length === 1 ? "" : "s"} available
             </p>
           </div>
-          <StatusBadge status={item.status} />
+          <div className="flex flex-col items-end gap-3">
+            <StatusBadge status={item.status} />
+            {onToggleSelection ? (
+              <label className="flex cursor-pointer items-center gap-2 text-sm font-medium text-stone-900">
+                <input
+                  checked={isSelected}
+                  className="h-4 w-4 accent-[color:var(--primary)]"
+                  onChange={() => onToggleSelection(item.id)}
+                  type="checkbox"
+                />
+                Select
+              </label>
+            ) : null}
+          </div>
         </div>
 
         <dl className="grid gap-3 text-sm text-stone-800 sm:grid-cols-2">

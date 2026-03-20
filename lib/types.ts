@@ -97,6 +97,14 @@ export type SaveLeadInput = {
   bidPrice?: number;
 };
 
+export type SaveBulkLeadInput = {
+  itemIds: string[];
+  buyerName: string;
+  phone?: string;
+  email?: string;
+  message?: string;
+};
+
 export type SaveContactSubmissionInput = {
   buyerName: string;
   phone?: string;

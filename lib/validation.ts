@@ -68,6 +68,44 @@ export const interestFormSchema = z.object({
 
 export type InterestFormValues = z.infer<typeof interestFormSchema>;
 
+export const bulkInterestFormSchema = z.object({
+  itemIds: z
+    .array(z.string().uuid("Item reference is invalid."))
+    .min(1, "Select at least one item."),
+  buyerName: z
+    .string()
+    .trim()
+    .min(2, "Name is required.")
+    .max(interestFormLimits.buyerNameMax, "Name is too long."),
+  phone: z
+    .string()
+    .trim()
+    .regex(phoneRegex, "Phone must be exactly 10 digits and start with 6, 7, 8, or 9."),
+  email: z
+    .string()
+    .trim()
+    .max(interestFormLimits.emailMax, "Email is too long.")
+    .regex(emailRegex, "Enter a valid email address.")
+    .optional()
+    .or(z.literal("")),
+  message: z
+    .string()
+    .trim()
+    .min(10, "Message must be at least 10 characters.")
+    .max(interestFormLimits.messageMax, "Message is too long."),
+  captchaToken: z
+    .string()
+    .trim()
+    .min(1, "Captcha token is required."),
+  captchaAnswer: z
+    .string()
+    .trim()
+    .min(1, "Captcha answer is required.")
+    .max(contactFormLimits.captchaAnswerMax, "Captcha answer is too long."),
+});
+
+export type BulkInterestFormValues = z.infer<typeof bulkInterestFormSchema>;
+
 export const adminLoginSchema = z.object({
   email: z.string().trim().email("Enter the admin email."),
   password: z.string().min(6, "Password must be at least 6 characters."),

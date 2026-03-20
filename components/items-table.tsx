@@ -7,14 +7,23 @@ import { StatusBadge } from "./status-badge";
 
 type ItemsTableProps = {
   items: ItemWithImages[];
+  selectedItemIds?: string[];
+  onToggleSelection?: (itemId: string) => void;
 };
 
-export function ItemsTable({ items }: ItemsTableProps) {
+export function ItemsTable({
+  items,
+  selectedItemIds = [],
+  onToggleSelection,
+}: ItemsTableProps) {
   return (
     <div className="overflow-x-auto rounded-lg border border-[color:var(--line)]">
       <table className="w-full text-sm">
         <thead className="bg-[color:var(--bg-secondary)] border-b border-[color:var(--line)]">
           <tr>
+            <th className="px-4 py-3 text-left font-semibold text-stone-900">
+              Select
+            </th>
             <th className="px-4 py-3 text-left font-semibold text-stone-900">
               Item
             </th>
@@ -41,6 +50,16 @@ export function ItemsTable({ items }: ItemsTableProps) {
               key={item.id}
               className="border-b border-[color:var(--line)] hover:bg-[color:var(--bg-secondary)] transition-colors"
             >
+              <td className="px-4 py-3">
+                {onToggleSelection ? (
+                  <input
+                    checked={selectedItemIds.includes(item.id)}
+                    className="h-4 w-4 accent-[color:var(--primary)]"
+                    onChange={() => onToggleSelection(item.id)}
+                    type="checkbox"
+                  />
+                ) : null}
+              </td>
               <td className="px-4 py-3">
                 <Link
                   href={`/items/${item.slug}`}
