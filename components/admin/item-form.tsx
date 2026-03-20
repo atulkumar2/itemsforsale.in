@@ -17,12 +17,12 @@ type ItemFormProps = {
   item?: ItemWithImages | null;
 };
 
-function toDateInputValue(value: string | null | undefined) {
+function toDateInputValue(value: string | Date | null | undefined) {
   if (!value) {
     return "";
   }
 
-  const trimmed = value.trim();
+  const trimmed = value instanceof Date ? value.toISOString() : value.trim();
   const dateOnlyMatch = trimmed.match(/^\d{4}-\d{2}-\d{2}/);
   return dateOnlyMatch ? dateOnlyMatch[0] : "";
 }
