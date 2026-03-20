@@ -8,7 +8,7 @@ export const metadata: Metadata = {
     "Learn what itemsforsale.in is, why it exists, and where to find the public repository.",
 };
 
-const repoUrl = "https://github.com/atulkamble/itemsforsale.in";
+const repoUrl = "https://github.com/atulkumar2/itemsforsale.in";
 const siteUrl = "https://itemsforsale.in";
 
 export default function AboutPage() {

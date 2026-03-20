@@ -80,12 +80,12 @@ export function Footer() {
         <p className="mt-2 text-xs text-[color:var(--muted)]">
           Repository:{" "}
           <a
-            href="https://github.com/atulkamble/itemsforsale.in"
+            href="https://github.com/atulkumar2/itemsforsale.in"
             target="_blank"
             rel="noreferrer"
             className="hover:text-stone-900 hover:underline"
           >
-            github.com/atulkamble/itemsforsale.in
+            github.com/atulkumar2/itemsforsale.in
           </a>
         </p>
       </div>
