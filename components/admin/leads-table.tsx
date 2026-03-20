@@ -19,6 +19,7 @@ export function LeadsTable({ leads }: LeadsTableProps) {
           <tr>
             <th>Buyer</th>
             <th>Item</th>
+            <th>Expected</th>
             <th>Bid</th>
             <th>Message</th>
             <th>Submitted</th>
@@ -45,6 +46,7 @@ export function LeadsTable({ leads }: LeadsTableProps) {
                   <span>{lead.itemTitle}</span>
                 )}
               </td>
+              <td>{formatCurrency(lead.itemExpectedPrice)}</td>
               <td>{formatCurrency(lead.bidPrice)}</td>
               <td className="max-w-xs text-sm text-[color:var(--muted)]">
                 {lead.message || "No message"}

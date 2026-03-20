@@ -59,6 +59,9 @@ export function CatalogueView({ items, itemCount }: CatalogueViewProps) {
             {itemCount} item{itemCount === 1 ? "" : "s"} matching the
             current view.
           </p>
+          <p className="mt-2 text-sm text-[color:var(--muted)]">
+            Open any item to show interest in a single listing, or select multiple items here and submit one combined enquiry.
+          </p>
         </div>
 
         <div className="flex flex-wrap items-center gap-2">

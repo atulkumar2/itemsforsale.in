@@ -348,6 +348,7 @@ type LeadRow = {
   message: string | null;
   bid_price: number | string | null;
   created_at: string | Date;
+  item_expected_price: number | string | null;
   item_title: string | null;
   item_slug: string | null;
 };
@@ -404,6 +405,7 @@ function mapLeadRow(row: LeadRow): LeadWithItem {
     message: row.message,
     bidPrice: parseDbNumber(row.bid_price),
     createdAt: toIsoString(row.created_at) ?? new Date().toISOString(),
+    itemExpectedPrice: parseDbNumber(row.item_expected_price),
     itemTitle: row.item_title ?? "Deleted item",
     itemSlug: row.item_slug ?? "",
   };
@@ -657,6 +659,7 @@ export async function listLeads(filters: LeadFilters = {}) {
         l.message,
         l.bid_price,
         l.created_at,
+        i.expected_price as item_expected_price,
         i.title as item_title,
         i.slug as item_slug
       from leads l

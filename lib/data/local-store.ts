@@ -204,6 +204,7 @@ export async function listLeads(filters: LeadFilters = {}) {
 
       return {
         ...lead,
+        itemExpectedPrice: item?.expectedPrice ?? null,
         itemSlug: item?.slug ?? "",
         itemTitle: item?.title ?? "Deleted item",
       } satisfies LeadWithItem;

@@ -43,6 +43,7 @@ export type ItemWithImages = Item & {
 };
 
 export type LeadWithItem = Lead & {
+  itemExpectedPrice: number | null;
   itemTitle: string;
   itemSlug: string;
 };

@@ -1,14 +1,13 @@
+import "server-only";
+
 import sharp from "sharp";
+
+import { imageUploadLimits } from "@/lib/constants";
 
 const allowedImageTypes = {
   "image/jpeg": "jpg",
   "image/png": "png",
   "image/webp": "webp",
-} as const;
-
-export const imageUploadLimits = {
-  maxFiles: 8,
-  maxFileSizeBytes: 5 * 1024 * 1024,
 } as const;
 
 export const processedImageSettings = {

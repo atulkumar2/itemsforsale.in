@@ -13,12 +13,13 @@ import {
 } from "@/lib/validation";
 
 type InterestFormProps = {
+  initialBidPrice?: string;
   initialChallenge: ContactCaptchaChallenge;
   itemId: string;
   itemTitle: string;
 };
 
-export function InterestForm({ initialChallenge, itemId, itemTitle }: InterestFormProps) {
+export function InterestForm({ initialBidPrice = "", initialChallenge, itemId, itemTitle }: InterestFormProps) {
   const router = useRouter();
   const [challenge, setChallenge] = useState<ContactCaptchaChallenge | null>(initialChallenge);
   const [isPending, startTransition] = useTransition();
@@ -33,7 +34,7 @@ export function InterestForm({ initialChallenge, itemId, itemTitle }: InterestFo
   } = useForm<InterestFormValues>({
     resolver: zodResolver(interestFormSchema),
     defaultValues: {
-      bidPrice: "",
+      bidPrice: initialBidPrice,
       buyerName: "",
       captchaAnswer: "",
       captchaToken: initialChallenge.token,
@@ -84,7 +85,7 @@ export function InterestForm({ initialChallenge, itemId, itemTitle }: InterestFo
       }
 
       reset({
-        bidPrice: "",
+        bidPrice: initialBidPrice,
         buyerName: "",
         captchaAnswer: "",
         captchaToken: "",
@@ -182,7 +183,7 @@ export function InterestForm({ initialChallenge, itemId, itemTitle }: InterestFo
           inputMode="numeric"
           maxLength={interestFormLimits.bidPriceMax}
           {...register("bidPrice")}
-          placeholder="Optional"
+          placeholder={initialBidPrice ? undefined : "Optional"}
         />
         {errors.bidPrice ? (
           <p className="mt-2 text-sm text-[color:var(--danger)]">{errors.bidPrice.message}</p>

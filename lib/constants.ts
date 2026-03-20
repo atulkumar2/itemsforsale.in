@@ -26,6 +26,11 @@ export const itemFormLimits = {
   thumbnailUrlMax: 500,
 } as const;
 
+export const imageUploadLimits = {
+  maxFiles: 8,
+  maxFileSizeBytes: 5 * 1024 * 1024,
+} as const;
+
 export const contactFormLimits = {
   buyerNameMax: 80,
   phoneLength: 10,

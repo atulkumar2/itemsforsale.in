@@ -177,6 +177,7 @@ export default async function ItemPage({ params }: ItemPageProps) {
 
             <div className="mt-6">
               <InterestForm
+                initialBidPrice={item.expectedPrice?.toString() ?? ""}
                 initialChallenge={initialChallenge}
                 itemId={item.id}
                 itemTitle={item.title}

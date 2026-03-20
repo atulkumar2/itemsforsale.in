@@ -6,9 +6,8 @@ import { useRouter } from "next/navigation";
 import { useState, useTransition } from "react";
 import { useForm } from "react-hook-form";
 
-import { itemFormLimits, itemStatuses } from "@/lib/constants";
+import { imageUploadLimits, itemFormLimits, itemStatuses } from "@/lib/constants";
 import type { ItemWithImages } from "@/lib/types";
-import { imageUploadLimits } from "@/lib/upload-security";
 import {
   itemFormSchema,
   type ItemFormValues,
