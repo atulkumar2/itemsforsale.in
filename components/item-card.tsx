@@ -20,6 +20,7 @@ export function ItemCard({ item, isSelected = false, onToggleSelection }: ItemCa
           {
             id: "fallback-1",
             imageUrl: "/placeholder-chair.svg",
+            thumbnailUrl: "/placeholder-chair.svg",
           },
         ];
 
@@ -42,7 +43,7 @@ export function ItemCard({ item, isSelected = false, onToggleSelection }: ItemCa
             className="relative aspect-[4/3] overflow-hidden rounded-xl border border-[color:var(--line)]"
           >
             <Image
-              src={image.imageUrl}
+              src={image.thumbnailUrl ?? image.imageUrl}
               alt={`${item.title} gallery`}
               fill
               className="object-cover"

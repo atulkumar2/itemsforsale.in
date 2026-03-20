@@ -296,7 +296,7 @@ export function ItemForm({ item }: ItemFormProps) {
               item.images.map((image) => (
                 <div key={image.id} className="overflow-hidden rounded-[22px] border border-[color:var(--line)] bg-white">
                   <div className="relative aspect-[4/3]">
-                    <Image src={image.imageUrl} alt={item.title} fill className="object-cover" sizes="33vw" />
+                    <Image src={image.thumbnailUrl ?? image.imageUrl} alt={item.title} fill className="object-cover" sizes="33vw" />
                   </div>
                 </div>
               ))

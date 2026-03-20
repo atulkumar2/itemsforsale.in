@@ -1,7 +1,7 @@
 import type { Metadata } from "next";
-import Image from "next/image";
 import { notFound } from "next/navigation";
 
+import { ItemGallery } from "@/components/item-gallery";
 import { InterestForm } from "@/components/interest-form";
 import { SiteHeader } from "@/components/site-header";
 import { issueContactCaptchaChallenge } from "@/lib/contact-captcha-store";
@@ -99,7 +99,6 @@ export default async function ItemPage({ params }: ItemPageProps) {
     notFound();
   }
 
-  const heroImage = item.images[0]?.imageUrl ?? "/placeholder-chair.svg";
   const initialChallenge = issueContactCaptchaChallenge();
 
   return (
@@ -107,38 +106,7 @@ export default async function ItemPage({ params }: ItemPageProps) {
       <SiteHeader compact />
       <section className="shell grid gap-6 py-6 lg:grid-cols-[1.1fr_0.9fr] lg:py-10">
         <div className="panel overflow-hidden">
-          <div className="relative aspect-[4/3] w-full bg-[rgba(216,185,143,0.18)]">
-            <Image
-              src={heroImage}
-              alt={item.title}
-              fill
-              className="object-cover"
-              sizes="(max-width: 1024px) 100vw, 60vw"
-            />
-          </div>
-
-          <div className="grid gap-3 p-4 md:grid-cols-3 md:p-6">
-            {item.images.length > 0 ? (
-              item.images.map((image) => (
-                <div
-                  key={image.id}
-                  className="relative aspect-[4/3] overflow-hidden rounded-[22px] border border-[color:var(--line)] bg-[rgba(216,185,143,0.16)]"
-                >
-                  <Image
-                    src={image.imageUrl}
-                    alt={`${item.title} image`}
-                    fill
-                    className="object-cover"
-                    sizes="(max-width: 768px) 100vw, 20vw"
-                  />
-                </div>
-              ))
-            ) : (
-              <div className="rounded-[22px] border border-dashed border-[color:var(--line)] p-6 text-sm text-[color:var(--muted)] md:col-span-3">
-                No images uploaded yet for this item.
-              </div>
-            )}
-          </div>
+          <ItemGallery item={item} />
         </div>
 
         <div className="space-y-6">

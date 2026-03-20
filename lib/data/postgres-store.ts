@@ -23,7 +23,7 @@ import type {
   SaveLeadInput,
 } from "@/lib/types";
 import { normaliseOptionalString, slugify } from "@/lib/utils";
-import { getSafeImageExtension } from "@/lib/upload-security";
+import { processUploadedImage } from "@/lib/upload-security";
 
 const uploadsRootPath = path.join(process.cwd(), "public", "uploads");
 
@@ -83,6 +83,7 @@ async function ensureSchema() {
       id uuid primary key,
       item_id uuid not null references items(id) on delete cascade,
       image_url varchar(${itemFormLimits.imageUrlMax}) not null check (char_length(image_url) <= ${itemFormLimits.imageUrlMax}),
+      thumbnail_url varchar(${itemFormLimits.thumbnailUrlMax}) check (thumbnail_url is null or char_length(thumbnail_url) <= ${itemFormLimits.thumbnailUrlMax}),
       sort_order int not null default 0,
       created_at timestamptz not null
     );
@@ -154,6 +155,15 @@ async function ensureSchema() {
       end if;
       if not exists (select 1 from pg_constraint where conname = 'item_images_image_url_length_check') then
         alter table item_images add constraint item_images_image_url_length_check check (char_length(image_url) <= ${itemFormLimits.imageUrlMax});
+      end if;
+      if not exists (
+        select 1 from information_schema.columns
+        where table_schema = 'public' and table_name = 'item_images' and column_name = 'thumbnail_url'
+      ) then
+        alter table item_images add column thumbnail_url varchar(${itemFormLimits.thumbnailUrlMax});
+      end if;
+      if not exists (select 1 from pg_constraint where conname = 'item_images_thumbnail_url_length_check') then
+        alter table item_images add constraint item_images_thumbnail_url_length_check check (thumbnail_url is null or char_length(thumbnail_url) <= ${itemFormLimits.thumbnailUrlMax});
       end if;
       if not exists (select 1 from pg_constraint where conname = 'leads_pkey') then
         alter table leads add constraint leads_pkey primary key (id);
@@ -239,9 +249,9 @@ async function seedIfEmpty() {
 
     for (const image of localSeedDatabase.itemImages) {
       await client.query(
-        `insert into item_images (id, item_id, image_url, sort_order, created_at)
-         values ($1, $2, $3, $4, $5)`,
-        [image.id, image.itemId, image.imageUrl, image.sortOrder, image.createdAt],
+        `insert into item_images (id, item_id, image_url, thumbnail_url, sort_order, created_at)
+         values ($1, $2, $3, $4, $5, $6)`,
+        [image.id, image.itemId, image.imageUrl, image.thumbnailUrl ?? null, image.sortOrder, image.createdAt],
       );
     }
   });
@@ -313,6 +323,7 @@ type ItemImageRow = {
   id: string;
   item_id: string;
   image_url: string;
+  thumbnail_url: string | null;
   sort_order: number;
   created_at: string | Date;
 };
@@ -365,6 +376,7 @@ function mapImageRow(row: ItemImageRow): ItemImage {
     id: row.id,
     itemId: row.item_id,
     imageUrl: row.image_url,
+    thumbnailUrl: row.thumbnail_url,
     sortOrder: row.sort_order,
     createdAt: toIsoString(row.created_at) ?? new Date().toISOString(),
   };
@@ -404,7 +416,7 @@ async function fetchImagesForItems(itemIds: string[]) {
   }
 
   const imageResult = await query<ItemImageRow>(
-    `select id, item_id, image_url, sort_order, created_at
+    `select id, item_id, image_url, thumbnail_url, sort_order, created_at
      from item_images
      where item_id = any($1::uuid[])
      order by sort_order asc, created_at asc`,
@@ -450,19 +462,23 @@ async function storeUploadedImages(itemId: string, files: File[]) {
 
   const uploadedImages = await Promise.all(
     files.map(async (file, index) => {
-      const extension = getSafeImageExtension(file) ?? "bin";
-      const fileName = `${Date.now()}-${index}.${extension}`;
+      const processedImage = await processUploadedImage(file);
+      const fileName = `${Date.now()}-${index}.${processedImage.display.extension}`;
+      const thumbnailFileName = `${Date.now()}-${index}-thumb.${processedImage.thumbnail.extension}`;
       const relativePath = path.posix.join("/uploads", itemId, fileName);
+      const thumbnailRelativePath = path.posix.join("/uploads", itemId, thumbnailFileName);
       const outputPath = path.join(uploadsRootPath, itemId, fileName);
-      const bytes = Buffer.from(await file.arrayBuffer());
+      const thumbnailOutputPath = path.join(uploadsRootPath, itemId, thumbnailFileName);
       const createdAt = new Date().toISOString();
 
-      await writeFile(outputPath, bytes);
+      await writeFile(outputPath, processedImage.display.bytes);
+      await writeFile(thumbnailOutputPath, processedImage.thumbnail.bytes);
 
       return {
         id: crypto.randomUUID(),
         itemId,
         imageUrl: relativePath,
+        thumbnailUrl: thumbnailRelativePath,
         sortOrder: index,
         createdAt,
       } satisfies ItemImage;
@@ -778,12 +794,13 @@ export async function saveItem(input: SaveItemInput, files: File[]) {
 
       for (const [index, image] of uploadedImages.entries()) {
         await client.query(
-          `insert into item_images (id, item_id, image_url, sort_order, created_at)
-           values ($1, $2, $3, $4, $5)`,
+          `insert into item_images (id, item_id, image_url, thumbnail_url, sort_order, created_at)
+           values ($1, $2, $3, $4, $5, $6)`,
           [
             image.id,
             image.itemId,
             image.imageUrl,
+            image.thumbnailUrl ?? null,
             offset + index,
             image.createdAt,
           ],

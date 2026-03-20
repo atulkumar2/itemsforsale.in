@@ -23,6 +23,7 @@ export const itemFormLimits = {
   bidPriceMax: 14,
   slugMax: 220,
   imageUrlMax: 500,
+  thumbnailUrlMax: 500,
 } as const;
 
 export const contactFormLimits = {

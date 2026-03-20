@@ -22,7 +22,7 @@ import {
   normaliseOptionalString,
   slugify,
 } from "@/lib/utils";
-import { getSafeImageExtension } from "@/lib/upload-security";
+import { processUploadedImage } from "@/lib/upload-security";
 
 const databaseFilePath = path.join(process.cwd(), "data", "local-db.json");
 const uploadsRootPath = path.join(process.cwd(), "public", "uploads");
@@ -91,18 +91,22 @@ async function storeUploadedImages(itemId: string, files: File[]) {
 
   const uploadedImages = await Promise.all(
     files.map(async (file, index) => {
-      const extension = getSafeImageExtension(file) ?? "bin";
-      const fileName = `${Date.now()}-${index}.${extension}`;
+      const processedImage = await processUploadedImage(file);
+      const fileName = `${Date.now()}-${index}.${processedImage.display.extension}`;
+      const thumbnailFileName = `${Date.now()}-${index}-thumb.${processedImage.thumbnail.extension}`;
       const relativePath = path.posix.join("/uploads", itemId, fileName);
+      const thumbnailRelativePath = path.posix.join("/uploads", itemId, thumbnailFileName);
       const outputPath = path.join(uploadsRootPath, itemId, fileName);
-      const bytes = Buffer.from(await file.arrayBuffer());
+      const thumbnailOutputPath = path.join(uploadsRootPath, itemId, thumbnailFileName);
 
-      await writeFile(outputPath, bytes);
+      await writeFile(outputPath, processedImage.display.bytes);
+      await writeFile(thumbnailOutputPath, processedImage.thumbnail.bytes);
 
       return {
         id: crypto.randomUUID(),
         itemId,
         imageUrl: relativePath,
+        thumbnailUrl: thumbnailRelativePath,
         sortOrder: index,
         createdAt: new Date().toISOString(),
       } satisfies ItemImage;

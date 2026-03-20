@@ -54,25 +54,34 @@ export async function POST(request: Request) {
     );
   }
 
-  const savedItem = await saveAdminItem(
-    {
-      id: normaliseOptionalString(parsed.data.id),
-      title: parsed.data.title,
-      description: parsed.data.description,
-      category: parsed.data.category,
-      condition: parsed.data.condition,
-      purchaseDate: parseOptionalDate(parsed.data.purchaseDate),
-      purchasePrice: parseOptionalNumber(parsed.data.purchasePrice),
-      expectedPrice: parseOptionalNumber(parsed.data.expectedPrice),
-      availableFrom: parseOptionalDate(parsed.data.availableFrom),
-      locationArea: parsed.data.locationArea,
-      status: parsed.data.status,
-    },
-    files,
-  );
+  try {
+    const savedItem = await saveAdminItem(
+      {
+        id: normaliseOptionalString(parsed.data.id),
+        title: parsed.data.title,
+        description: parsed.data.description,
+        category: parsed.data.category,
+        condition: parsed.data.condition,
+        purchaseDate: parseOptionalDate(parsed.data.purchaseDate),
+        purchasePrice: parseOptionalNumber(parsed.data.purchasePrice),
+        expectedPrice: parseOptionalNumber(parsed.data.expectedPrice),
+        availableFrom: parseOptionalDate(parsed.data.availableFrom),
+        locationArea: parsed.data.locationArea,
+        status: parsed.data.status,
+      },
+      files,
+    );
 
-  return NextResponse.json({
-    itemId: savedItem?.id,
-    message: "Item saved successfully.",
-  });
+    return NextResponse.json({
+      itemId: savedItem?.id,
+      message: "Item saved successfully.",
+    });
+  } catch (error) {
+    return NextResponse.json(
+      {
+        error: error instanceof Error ? error.message : "Unable to process uploaded image.",
+      },
+      { status: 400 },
+    );
+  }
 }

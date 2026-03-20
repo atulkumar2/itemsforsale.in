@@ -1,3 +1,5 @@
+import sharp from "sharp";
+
 const allowedImageTypes = {
   "image/jpeg": "jpg",
   "image/png": "png",
@@ -7,6 +9,21 @@ const allowedImageTypes = {
 export const imageUploadLimits = {
   maxFiles: 8,
   maxFileSizeBytes: 5 * 1024 * 1024,
+} as const;
+
+export const processedImageSettings = {
+  display: {
+    format: "webp",
+    maxWidth: 1600,
+    maxHeight: 1600,
+    quality: 72,
+  },
+  thumbnail: {
+    format: "webp",
+    maxWidth: 480,
+    maxHeight: 480,
+    quality: 64,
+  },
 } as const;
 
 export function validateImageUploads(files: File[]) {
@@ -27,4 +44,42 @@ export function validateImageUploads(files: File[]) {
 
 export function getSafeImageExtension(file: File) {
   return allowedImageTypes[file.type as keyof typeof allowedImageTypes] ?? null;
+}
+
+export async function processUploadedImage(file: File) {
+  const input = Buffer.from(await file.arrayBuffer());
+  const baseImage = sharp(input, { failOn: "error" }).rotate();
+  const display = await baseImage
+    .clone()
+    .resize({
+      width: processedImageSettings.display.maxWidth,
+      height: processedImageSettings.display.maxHeight,
+      fit: "inside",
+      withoutEnlargement: true,
+    })
+    .webp({ quality: processedImageSettings.display.quality })
+    .toBuffer();
+  const thumbnail = await baseImage
+    .clone()
+    .resize({
+      width: processedImageSettings.thumbnail.maxWidth,
+      height: processedImageSettings.thumbnail.maxHeight,
+      fit: "inside",
+      withoutEnlargement: true,
+    })
+    .webp({ quality: processedImageSettings.thumbnail.quality })
+    .toBuffer();
+
+  return {
+    display: {
+      bytes: display,
+      extension: processedImageSettings.display.format,
+      mimeType: "image/webp" as const,
+    },
+    thumbnail: {
+      bytes: thumbnail,
+      extension: processedImageSettings.thumbnail.format,
+      mimeType: "image/webp" as const,
+    },
+  };
 }

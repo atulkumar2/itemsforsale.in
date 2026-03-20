@@ -21,6 +21,7 @@ export type ItemImage = {
   id: string;
   itemId: string;
   imageUrl: string;
+  thumbnailUrl?: string | null;
   sortOrder: number;
   createdAt: string;
 };
