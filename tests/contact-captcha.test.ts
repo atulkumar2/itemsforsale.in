@@ -1,12 +1,28 @@
-import { describe, expect, it } from "vitest";
+import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 
 import { normalizeCaptchaAnswer } from "@/lib/contact-captcha";
 import {
   issueContactCaptchaChallenge,
   verifyContactCaptchaChallenge,
 } from "@/lib/contact-captcha-store";
+import { signJsonToken } from "@/lib/crypto-tokens";
 
 describe("contact captcha", () => {
+  const originalSecret = process.env.CONTACT_CAPTCHA_SECRET;
+
+  beforeEach(() => {
+    process.env.CONTACT_CAPTCHA_SECRET = "test-captcha-secret";
+  });
+
+  afterEach(() => {
+    if (originalSecret === undefined) {
+      delete process.env.CONTACT_CAPTCHA_SECRET;
+    } else {
+      process.env.CONTACT_CAPTCHA_SECRET = originalSecret;
+    }
+    vi.useRealTimers();
+  });
+
   it("normalizes extra spaces and casing", () => {
     expect(normalizeCaptchaAnswer("  New   DELHI  ")).toBe("new delhi");
   });
@@ -57,5 +73,34 @@ describe("contact captcha", () => {
 
     expect(verifyContactCaptchaChallenge("invalid-token", "12")).toBeNull();
     expect(verifyContactCaptchaChallenge(`${challenge.token}tampered`, "12")).toBeNull();
+  });
+
+  it("rejects expired challenge tokens", () => {
+    vi.useFakeTimers();
+    vi.setSystemTime(new Date("2026-03-20T10:00:00.000Z"));
+
+    const token = signJsonToken(
+      {
+        challengeId: "math-7-plus-5",
+        nonce: "nonce-1",
+        issuedAt: Date.now() - (30 * 60 * 1000 + 1),
+      },
+      "test-captcha-secret",
+    );
+
+    expect(verifyContactCaptchaChallenge(token, "12")).toBeNull();
+  });
+
+  it("rejects tokens signed with a different captcha secret", () => {
+    const token = signJsonToken(
+      {
+        challengeId: "math-7-plus-5",
+        nonce: "nonce-1",
+        issuedAt: Date.now(),
+      },
+      "other-secret",
+    );
+
+    expect(verifyContactCaptchaChallenge(token, "12")).toBeNull();
   });
 });

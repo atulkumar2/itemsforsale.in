@@ -1,5 +1,3 @@
-import "server-only";
-
 type RateLimitBucket = {
   count: number;
   resetAt: number;
@@ -62,4 +60,8 @@ export function checkRateLimit(request: Request, options: RateLimitOptions) {
     allowed: true,
     retryAfterSeconds: Math.max(1, Math.ceil((existing.resetAt - now) / 1000)),
   };
+}
+
+export function resetRateLimitBucketsForTests() {
+  buckets.clear();
 }
