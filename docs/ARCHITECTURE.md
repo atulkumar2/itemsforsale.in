@@ -1,5 +1,23 @@
 # Architecture
 
+## Table of Contents
+
+- [Overview](#overview)
+- [How To Read This Repo](#how-to-read-this-repo)
+- [Goals and Constraints](#goals-and-constraints)
+- [Runtime Topology](#runtime-topology)
+- [Layered Design](#layered-design)
+- [Routing Structure](#routing-structure)
+- [Data Model](#data-model)
+- [Persistence Modes](#persistence-modes)
+- [Core Request Flows](#core-request-flows)
+- [Authentication Model](#authentication-model)
+- [Security Boundaries and Trust Model](#security-boundaries-and-trust-model)
+- [File and Image Handling](#file-and-image-handling)
+- [Runtime Status and Observability](#runtime-status-and-observability)
+- [Testing Strategy](#testing-strategy)
+- [Migration Path](#migration-path)
+
 ## Overview
 
 `itemsforsale.in` is a local-first Next.js App Router application for a single seller to publish household items, accept buyer enquiries, and manage submissions from an authenticated admin area.

@@ -1,5 +1,20 @@
 # Troubleshooting
 
+## Table of Contents
+
+- [Troubleshooting](#troubleshooting)
+  - [Table of Contents](#table-of-contents)
+  - [Linux: OS file watch limit reached / ENOSPC](#linux-os-file-watch-limit-reached--enospc)
+    - [Quick fix (current session)](#quick-fix-current-session)
+    - [Persistent fix (recommended)](#persistent-fix-recommended)
+    - [Verify values](#verify-values)
+    - [Dev scripts in this repo](#dev-scripts-in-this-repo)
+  - [Local PostgreSQL mode issues](#local-postgresql-mode-issues)
+    - [PostgreSQL unreachable in admin system status](#postgresql-unreachable-in-admin-system-status)
+    - [Tables missing in local PostgreSQL](#tables-missing-in-local-postgresql)
+    - [Existing JSON data not visible after switching to postgres mode](#existing-json-data-not-visible-after-switching-to-postgres-mode)
+    - [Docker container cleanup/reset](#docker-container-cleanupreset)
+
 ## Linux: OS file watch limit reached / ENOSPC
 
 Symptoms while running development server:

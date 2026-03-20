@@ -1,5 +1,25 @@
 # Attack Surface Review
 
+## Table of Contents
+
+- [Purpose](#purpose)
+- [What an attacker wants](#what-an-attacker-wants)
+- [Main entry points](#main-entry-points)
+- [Attack surface by area](#attack-surface-by-area)
+- [1. Public form abuse](#1-public-form-abuse)
+- [2. Admin login attacks](#2-admin-login-attacks)
+- [3. Admin upload abuse](#3-admin-upload-abuse)
+- [4. CSV export abuse](#4-csv-export-abuse)
+- [5. Environment and deployment misconfiguration](#5-environment-and-deployment-misconfiguration)
+- [6. Supabase policy mistakes](#6-supabase-policy-mistakes)
+- [7. Session and cookie attacks](#7-session-and-cookie-attacks)
+- [8. Denial of service and resource exhaustion](#8-denial-of-service-and-resource-exhaustion)
+- [Attacker profiles](#attacker-profiles)
+- [Current security posture summary](#current-security-posture-summary)
+- [Highest-priority remaining work before Supabase + Vercel](#highest-priority-remaining-work-before-supabase--vercel)
+- [Practical checklist before launch](#practical-checklist-before-launch)
+- [Related documents](#related-documents)
+
 ## Purpose
 
 This document explains how someone might realistically try to attack `itemsforsale.in`, what parts of the system are exposed, what defenses already exist, and what still needs hardening before a public Supabase + Vercel deployment.

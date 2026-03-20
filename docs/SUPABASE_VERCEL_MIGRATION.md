@@ -1,5 +1,19 @@
 # Supabase + Vercel Migration Runbook
 
+## Table of Contents
+
+- [Goal](#goal)
+- [Preflight (Before Starting)](#preflight-before-starting)
+- [Step 1: Prepare Supabase Database](#step-1-prepare-supabase-database)
+- [Step 2: Move Existing Data](#step-2-move-existing-data)
+- [Step 3: Add Supabase Runtime Mode in App](#step-3-add-supabase-runtime-mode-in-app)
+- [Step 4: Image Storage Migration](#step-4-image-storage-migration)
+- [Step 5: Set Environment Variables](#step-5-set-environment-variables)
+- [Step 6: Deploy to Vercel](#step-6-deploy-to-vercel)
+- [Step 7: Security Follow-up (Do Not Skip)](#step-7-security-follow-up-do-not-skip)
+- [Tomorrow Quick Checklist](#tomorrow-quick-checklist)
+- [Rollback Plan](#rollback-plan)
+
 This checklist is for moving the app from local/local-postgres mode to Supabase + Vercel.
 
 ## Goal
