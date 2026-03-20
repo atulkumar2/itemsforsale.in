@@ -157,37 +157,39 @@ export function InterestForm({ initialBidPrice = "", initialChallenge, itemId, i
         </div>
       </div>
 
-      <div>
-        <label className="mb-2 block text-sm font-semibold text-stone-800" htmlFor="location">
-          Your location (optional)
-        </label>
-        <input
-          className="field"
-          id="location"
-          maxLength={contactFormLimits.locationMax}
-          placeholder="Area / locality"
-          {...register("location")}
-        />
-        {errors.location ? (
-          <p className="mt-2 text-sm text-[color:var(--danger)]">{errors.location.message}</p>
-        ) : null}
-      </div>
+      <div className="grid gap-3 sm:grid-cols-[minmax(0,1.3fr)_minmax(0,0.7fr)]">
+        <div>
+          <label className="mb-2 block text-sm font-semibold text-stone-800" htmlFor="location">
+            Your location (optional)
+          </label>
+          <input
+            className="field"
+            id="location"
+            maxLength={contactFormLimits.locationMax}
+            placeholder="Area / locality"
+            {...register("location")}
+          />
+          {errors.location ? (
+            <p className="mt-2 text-sm text-[color:var(--danger)]">{errors.location.message}</p>
+          ) : null}
+        </div>
 
-      <div>
-        <label className="mb-2 block text-sm font-semibold text-stone-800" htmlFor="bidPrice">
-          Bid price
-        </label>
-        <input
-          className="field"
-          id="bidPrice"
-          inputMode="numeric"
-          maxLength={interestFormLimits.bidPriceMax}
-          {...register("bidPrice")}
-          placeholder={initialBidPrice ? undefined : "Optional"}
-        />
-        {errors.bidPrice ? (
-          <p className="mt-2 text-sm text-[color:var(--danger)]">{errors.bidPrice.message}</p>
-        ) : null}
+        <div>
+          <label className="mb-2 block text-sm font-semibold text-stone-800" htmlFor="bidPrice">
+            Bid price
+          </label>
+          <input
+            className="field"
+            id="bidPrice"
+            inputMode="numeric"
+            maxLength={interestFormLimits.bidPriceMax}
+            {...register("bidPrice")}
+            placeholder={initialBidPrice ? undefined : "Optional"}
+          />
+          {errors.bidPrice ? (
+            <p className="mt-2 text-sm text-[color:var(--danger)]">{errors.bidPrice.message}</p>
+          ) : null}
+        </div>
       </div>
 
       <div>

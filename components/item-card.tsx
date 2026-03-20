@@ -59,7 +59,7 @@ export function ItemCard({ item, isSelected = false, onToggleSelection }: ItemCa
             <p className="text-sm uppercase tracking-[0.14em] text-[color:var(--muted)]">
               {item.category || "General"}
             </p>
-            <h3 className="display-title mt-1.5 text-[2rem] font-semibold leading-tight text-stone-900">
+            <h3 className="display-title mt-1.5 text-[1.55rem] font-semibold leading-tight text-stone-900 md:text-[1.75rem]">
               {item.title}
             </h3>
           </div>
