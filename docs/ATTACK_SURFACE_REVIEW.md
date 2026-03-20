@@ -46,6 +46,7 @@ The current public and protected entry points are:
 ### Public browser pages
 
 - `/`
+- `/about-seller`
 - `/show-interest`
 - `/items/[slug]`
 - `/contact-seller`

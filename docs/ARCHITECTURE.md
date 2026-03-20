@@ -51,6 +51,7 @@ Examples:
 
 - `app/page.tsx`
 - `app/items/[slug]/page.tsx`
+- `app/about-seller/page.tsx`
 - `components/interest-form.tsx`
 - `components/contact-seller-form.tsx`
 - `components/admin/item-form.tsx`
@@ -155,7 +156,7 @@ Located mainly in `app/` and `components/`.
 
 Responsibilities:
 
-- render public catalogue, item detail, and contact pages
+- render public catalogue, item detail, seller-info/contact, and admin pages
 - render admin dashboard, admin tables, forms, and system status views
 - provide client-side form UX through React Hook Form
 - submit writes to route handlers instead of talking to persistence directly
@@ -164,9 +165,10 @@ Responsibilities:
 Representative files:
 
 - `app/page.tsx`: public catalogue entry point
+- `app/about-seller/page.tsx`: merged seller information, map, distances, and contact flow
 - `app/show-interest/page.tsx`: multi-item interest page
 - `app/items/[slug]/page.tsx`: item details and interest flow
-- `app/contact-seller/page.tsx`: server-rendered initial captcha challenge and contact form
+- `app/contact-seller/page.tsx`: redirect shim to the merged seller page
 - `app/admin/page.tsx`: admin landing view
 - `app/admin/leads/page.tsx`: lead review UI
 - `app/admin/contact-submissions/page.tsx`: contact submission review UI
@@ -303,6 +305,11 @@ Design choice:
   - status/category filtering
   - multi-select interest flow
   - CSV export entry point
+- `/about-seller`
+  - seller information page
+  - pickup location map
+  - distance reference table
+  - merged contact form
 - `/show-interest`
   - multi-item interest form
 - `/items/[slug]`
@@ -310,8 +317,7 @@ Design choice:
   - gallery rendering with clickable thumbnails
   - interest submission
 - `/contact-seller`
-  - direct contact form
-  - initial captcha challenge bootstrap
+  - compatibility redirect to `/about-seller`
 
 ### Admin routes
 
@@ -368,7 +374,7 @@ Represents interest submitted from an item detail page or the multi-item selecti
 
 ### ContactSubmission
 
-Represents direct contact intent from the contact page:
+Represents direct contact intent from the merged seller/contact page:
 
 - buyer identity/contact fields
 - location
@@ -462,9 +468,9 @@ Tradeoffs:
 7. Repository creates one lead per selected item.
 8. Admin reviews the resulting records in the normal leads view.
 
-### Contact seller flow
+### Seller contact flow
 
-1. Server renders `/contact-seller` with an initial signed captcha challenge.
+1. Server renders `/about-seller` with an initial signed captcha challenge.
 2. Client submits form data plus the signed captcha token.
 3. `/api/contact-submissions` verifies captcha configuration in production.
 4. Server applies rate limiting.
@@ -604,11 +610,13 @@ The current automated coverage uses Vitest with a node test environment.
 - rate-limit state behavior
 - route-level `429` and `503` responses for critical API protections
 - catalogue export abuse protections
+- one disposable PostgreSQL-backed end-to-end admin create/edit image flow
 
 ### Test categories
 
 - pure unit tests for helpers in `lib/`
 - route-level tests with mocked collaborators for API behavior
+- disposable integration/E2E scripts in `scripts/e2e/` that boot the real app against a temporary PostgreSQL container
 
 This is a good fit for the current codebase because most important logic lives in small modules and route handlers with clear dependencies.
 

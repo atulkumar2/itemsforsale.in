@@ -37,7 +37,7 @@ The app currently runs fully in local mode without cloud infrastructure:
 - public catalogue with search, filters, grid/table views, and CSV export
 - homepage multi-select flow that lets buyers choose multiple items and submit one combined interest request
 - item detail page with gallery, thumbnail switching, and single-item interest form
-- dedicated contact seller page with server-issued human-check questions
+- merged seller page with address, map, distance table, and server-issued human-check contact form
 - public catalogue export with CSV hardening and rate limiting
 - admin login with signed cookie session and human check
 - admin CRUD for items
@@ -59,6 +59,7 @@ This keeps the project usable locally while preserving a path to Supabase and Ve
 - [docs/SUPABASE_VERCEL_MIGRATION.md](docs/SUPABASE_VERCEL_MIGRATION.md): migration checklist for moving to Supabase and Vercel
 - [docs/TROUBLESHOOTING.md](docs/TROUBLESHOOTING.md): development environment and local runtime troubleshooting
 - [docs/security-review-20260320-090536.md](docs/security-review-20260320-090536.md): saved security review report
+- [scripts/e2e/README.md](scripts/e2e/README.md): disposable end-to-end test scenarios and coverage plan
 
 ## Local Setup
 
@@ -232,6 +233,7 @@ Current automated coverage includes:
 - schema validation for single-item interest, multi-item interest, and contact seller flows
 - route-level `429` and `503` responses for admin login and contact submission protections
 - route-level `429` responses for lead submission, multi-item lead submission, and public catalogue export protections
+- disposable PostgreSQL-backed end-to-end admin create/edit flow via `npm run test:e2e:postgres-admin`
 
 Current test files:
 
@@ -249,6 +251,17 @@ Current test files:
 - `tests/leads-route.test.ts`
 - `tests/rate-limit.test.ts`
 - `tests/upload-security.test.ts`
+
+End-to-end flow:
+
+- `npm run test:e2e:postgres-admin`
+  - starts a temporary PostgreSQL container on a non-default port
+  - applies local DDL and seed data
+  - boots the app in postgres mode
+  - logs in as admin through the real HTTP flow
+  - creates an item with 3 images
+  - edits the item, removes an image, adds another image, and verifies DB/files/public rendering
+  - tears down the app process, test uploads, and the temporary container
 
 ## Moving To Supabase Later
 
