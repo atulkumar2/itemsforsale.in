@@ -8,6 +8,12 @@ import { setTimeout as delay } from "node:timers/promises";
 
 import { Client, types } from "pg";
 import sharp from "sharp";
+import {
+  killProcessListeningOnPort,
+  log,
+  removeContainerIfExists,
+  runCommand,
+} from "./helpers.mjs";
 
 // Configure pg to return DATE columns as strings instead of Date objects
 // Type OID 1082 is DATE type in PostgreSQL
@@ -30,100 +36,9 @@ const rootDir = process.cwd();
 let appProcess = null;
 let createdItemId = null;
 
-function log(message) {
-  process.stdout.write(`[e2e] ${message}\n`);
-}
-
-function runCommand(command, args, options = {}) {
-  return new Promise((resolve, reject) => {
-    const child = spawn(command, args, {
-      cwd: rootDir,
-      stdio: ["ignore", "pipe", "pipe"],
-      ...options,
-    });
-
-    let stdout = "";
-    let stderr = "";
-
-    child.stdout?.on("data", (chunk) => {
-      stdout += chunk.toString();
-    });
-
-    child.stderr?.on("data", (chunk) => {
-      stderr += chunk.toString();
-    });
-
-    child.on("error", reject);
-    child.on("close", (code) => {
-      if (code === 0) {
-        resolve({ stdout, stderr });
-        return;
-      }
-
-      reject(
-        new Error(
-          `${command} ${args.join(" ")} failed with code ${code}\nstdout:\n${stdout}\nstderr:\n${stderr}`,
-        ),
-      );
-    });
-  });
-}
-
-async function removeContainerIfExists() {
-  try {
-    await runCommand("docker", ["rm", "-f", containerName]);
-  } catch {
-    // Ignore missing container.
-  }
-}
-
-async function killProcessListeningOnPort(port) {
-  if (process.platform === "win32") {
-    try {
-      await runCommand("cmd.exe", [
-        "/d",
-        "/s",
-        "/c",
-        `for /f "tokens=5" %a in ('netstat -aon ^| findstr :${String(port)} ^| findstr LISTENING') do taskkill /PID %a /F`,
-      ]);
-    } catch {
-      // Ignore missing listeners and command failures during cleanup
-    }
-    return;
-  }
-
-  try {
-    const { stdout } = await runCommand("sh", [
-      "-lc",
-      `lsof -ti:${String(port)} 2>/dev/null || true`,
-    ]);
-
-    const pids = stdout
-      .split("\n")
-      .map((line) => line.trim())
-      .filter(Boolean)
-      .map((line) => Number(line))
-      .filter((pid) => Number.isInteger(pid) && pid > 0);
-
-    for (const pid of pids) {
-      if (pid === process.pid || pid === process.ppid) {
-        continue;
-      }
-
-      try {
-        process.kill(pid, "SIGKILL");
-      } catch {
-        // Ignore race conditions where process exits between lookup and kill
-      }
-    }
-  } catch {
-    // Ignore missing listeners and command failures during cleanup
-  }
-}
-
 async function ensureDockerAvailable() {
   try {
-    await runCommand("docker", ["info"]);
+    await runCommand("docker", ["info"], { cwd: rootDir });
   } catch (error) {
     throw new Error(
       "Docker is not available. Start Docker Desktop (or another Docker daemon) and retry this end-to-end test.",
@@ -133,7 +48,7 @@ async function ensureDockerAvailable() {
 }
 
 async function startPostgresContainer() {
-  await removeContainerIfExists();
+  await removeContainerIfExists(containerName, rootDir);
   log(`Starting disposable Postgres container ${containerName} on port ${postgresPort}`);
   await runCommand("docker", [
     "run",
@@ -150,7 +65,7 @@ async function startPostgresContainer() {
     "-p",
     `${postgresPort}:5432`,
     "postgres:16-alpine",
-  ]);
+  ], { cwd: rootDir });
 }
 
 async function waitForPostgres() {
@@ -554,15 +469,15 @@ async function cleanup() {
   }
 
   log(`Ensuring app process on port ${appPort} is stopped`);
-  await killProcessListeningOnPort(appPort);
+  await killProcessListeningOnPort(appPort, { cwd: rootDir });
 
-  await removeContainerIfExists();
+  await removeContainerIfExists(containerName, rootDir);
 }
 
 async function preflightCleanup() {
   log("Cleaning up any stray Docker containers from previous runs");
   try {
-    await runCommand("docker", ["rm", "-f", containerName]);
+    await runCommand("docker", ["rm", "-f", containerName], { cwd: rootDir });
   } catch {
     // Ignore cleanup errors during preflight
   }
@@ -570,7 +485,7 @@ async function preflightCleanup() {
   if (process.platform !== "win32") {
     log("Stopping stray next dev processes");
     try {
-      await runCommand("sh", ["-lc", "pkill -f 'next dev' || true"]);
+      await runCommand("sh", ["-lc", "pkill -f 'next dev' || true"], { cwd: rootDir });
     } catch {
       // Ignore if no matching process is running
     }
@@ -583,7 +498,7 @@ async function preflightCleanup() {
   }
 
   log(`Cleaning up any stale app process on port ${appPort}`);
-  await killProcessListeningOnPort(appPort);
+  await killProcessListeningOnPort(appPort, { cwd: rootDir });
 }
 
 async function main() {
