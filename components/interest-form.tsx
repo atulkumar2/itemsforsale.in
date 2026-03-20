@@ -102,7 +102,7 @@ export function InterestForm({ initialBidPrice = "", initialChallenge, itemId, i
   }
 
   return (
-    <form className="space-y-4" onSubmit={handleSubmit(onSubmit)}>
+    <form className="space-y-3.5" onSubmit={handleSubmit(onSubmit)}>
       <input type="hidden" {...register("itemId")} value={itemId} />
 
       <div>
@@ -120,7 +120,7 @@ export function InterestForm({ initialBidPrice = "", initialChallenge, itemId, i
         ) : null}
       </div>
 
-      <div className="grid gap-4 sm:grid-cols-2">
+      <div className="grid gap-3 sm:grid-cols-2">
         <div>
           <label className="mb-2 block text-sm font-semibold text-stone-800" htmlFor="phone">
             Phone
@@ -205,15 +205,15 @@ export function InterestForm({ initialBidPrice = "", initialChallenge, itemId, i
         ) : null}
       </div>
 
-      <div className="rounded-2xl border border-[color:var(--line)] bg-[color:var(--bg-secondary)] p-4">
+      <div className="rounded-2xl border border-[color:var(--line)] bg-[color:var(--bg-secondary)] p-3 md:p-3.5">
         <p className="text-xs uppercase tracking-[0.18em] text-[color:var(--muted)]">Captcha check</p>
-        <p className="mt-2 text-sm font-semibold text-stone-900">
+        <p className="mt-1.5 text-sm font-semibold text-stone-900">
           {challenge?.prompt ?? "Loading captcha..."}
         </p>
         <input type="hidden" {...register("captchaToken")} />
 
-        <div className="mt-3 flex flex-col gap-3 sm:flex-row">
-          <select className="field" disabled={!challenge} {...register("captchaAnswer")}>
+        <div className="mt-2.5 grid grid-cols-[minmax(0,1fr)_auto] gap-2">
+          <select className="field min-w-0" disabled={!challenge} {...register("captchaAnswer")}>
             <option value="">Select the correct answer</option>
             {(challenge?.options ?? []).map((option) => (
               <option key={option} value={option}>
@@ -223,10 +223,25 @@ export function InterestForm({ initialBidPrice = "", initialChallenge, itemId, i
           </select>
           <button
             type="button"
-            className="button-ghost"
+            aria-label="Load new question"
+            className="inline-flex h-12 w-12 items-center justify-center rounded-full border border-[color:var(--line)] bg-white text-[color:var(--primary)] transition hover:border-[color:var(--primary)] hover:text-stone-900"
             onClick={() => void refreshChallenge()}
           >
-            New question
+            <svg aria-hidden="true" className="h-4 w-4" fill="none" viewBox="0 0 24 24">
+              <path
+                d="M20 12a8 8 0 1 1-2.34-5.66"
+                stroke="currentColor"
+                strokeLinecap="round"
+                strokeWidth="1.8"
+              />
+              <path
+                d="M20 4v4h-4"
+                stroke="currentColor"
+                strokeLinecap="round"
+                strokeLinejoin="round"
+                strokeWidth="1.8"
+              />
+            </svg>
           </button>
         </div>
         {errors.captchaAnswer ? (

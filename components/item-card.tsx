@@ -26,7 +26,7 @@ export function ItemCard({ item, isSelected = false, onToggleSelection }: ItemCa
 
   return (
     <article className="panel overflow-hidden">
-      <div className="relative aspect-[4/3] bg-[rgba(216,185,143,0.18)]">
+      <div className="relative aspect-[16/10] bg-[rgba(216,185,143,0.18)]">
         <Image
           src={imageUrl}
           alt={item.title}
@@ -36,11 +36,11 @@ export function ItemCard({ item, isSelected = false, onToggleSelection }: ItemCa
         />
       </div>
 
-      <div className="grid grid-cols-3 gap-2 border-y border-[color:var(--line)] bg-[rgba(255,248,241,0.64)] p-2">
+      <div className="grid grid-cols-3 gap-1.5 border-y border-[color:var(--line)] bg-[rgba(255,248,241,0.64)] p-1.5">
         {galleryPreview.map((image) => (
           <div
             key={image.id}
-            className="relative aspect-[4/3] overflow-hidden rounded-xl border border-[color:var(--line)]"
+            className="relative aspect-[4/3] overflow-hidden rounded-lg border border-[color:var(--line)]"
           >
             <Image
               src={image.thumbnailUrl ?? image.imageUrl}
@@ -53,18 +53,15 @@ export function ItemCard({ item, isSelected = false, onToggleSelection }: ItemCa
         ))}
       </div>
 
-      <div className="space-y-4 p-4 md:p-5">
+      <div className="space-y-3 p-4">
         <div className="flex items-start justify-between gap-3">
           <div>
             <p className="text-sm uppercase tracking-[0.14em] text-[color:var(--muted)]">
               {item.category || "General"}
             </p>
-            <h3 className="display-title mt-2 text-2xl font-semibold text-stone-900">
+            <h3 className="display-title mt-1.5 text-[2rem] font-semibold leading-tight text-stone-900">
               {item.title}
             </h3>
-            <p className="mt-2 text-sm font-medium text-[color:var(--muted)]">
-              {item.images.length} photo{item.images.length === 1 ? "" : "s"} available
-            </p>
           </div>
           <div className="flex flex-col items-end gap-3">
             <StatusBadge status={item.status} />
@@ -82,14 +79,10 @@ export function ItemCard({ item, isSelected = false, onToggleSelection }: ItemCa
           </div>
         </div>
 
-        <dl className="grid gap-3 text-sm text-stone-800 sm:grid-cols-2">
+        <dl className="grid gap-x-4 gap-y-2 text-sm text-stone-800 sm:grid-cols-2">
           <div>
             <dt className="text-[color:var(--muted)]">Expected price</dt>
             <dd className="mt-1 font-semibold">{formatCurrency(item.expectedPrice)}</dd>
-          </div>
-          <div>
-            <dt className="text-[color:var(--muted)]">Purchase date</dt>
-            <dd className="mt-1 font-semibold">{formatDate(item.purchaseDate)}</dd>
           </div>
           <div>
             <dt className="text-[color:var(--muted)]">Available from</dt>

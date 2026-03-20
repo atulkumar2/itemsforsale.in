@@ -96,31 +96,40 @@ export default async function AdminPage() {
         ) : (
           <>
             <div className="grid gap-4 md:grid-cols-4">
-              <div className="panel p-5">
+              <a className="panel block p-5 transition hover:-translate-y-0.5 hover:border-[color:var(--primary)]" href="#inventory">
                 <p className="text-sm uppercase tracking-[0.16em] text-[color:var(--muted)]">
                   Total items
                 </p>
                 <p className="display-title mt-2 text-4xl font-semibold text-stone-900">
                   {items.length}
                 </p>
-              </div>
-              <div className="panel p-5">
+              </a>
+              <Link
+                className="panel block p-5 transition hover:-translate-y-0.5 hover:border-[color:var(--primary)]"
+                href="/admin/leads"
+              >
                 <p className="text-sm uppercase tracking-[0.16em] text-[color:var(--muted)]">
                   Leads captured
                 </p>
                 <p className="display-title mt-2 text-4xl font-semibold text-stone-900">
                   {leads.length}
                 </p>
-              </div>
-              <div className="panel p-5">
+              </Link>
+              <Link
+                className="panel block p-5 transition hover:-translate-y-0.5 hover:border-[color:var(--primary)]"
+                href="/admin/contact-submissions"
+              >
                 <p className="text-sm uppercase tracking-[0.16em] text-[color:var(--muted)]">
                   Contact submissions
                 </p>
                 <p className="display-title mt-2 text-4xl font-semibold text-stone-900">
                   {contactSubmissions.length}
                 </p>
-              </div>
-              <div className="panel p-5">
+              </Link>
+              <Link
+                className="panel block p-5 transition hover:-translate-y-0.5 hover:border-[color:var(--primary)]"
+                href="/admin/system"
+              >
                 <p className="text-sm uppercase tracking-[0.16em] text-[color:var(--muted)]">
                   Quick status
                 </p>
@@ -131,54 +140,11 @@ export default async function AdminPage() {
                       : "PostgreSQL mode active but currently unavailable."
                     : "JSON mode active with local filesystem uploads."}
                 </p>
-                <Link className="mt-4 inline-block text-sm text-[color:var(--primary)] hover:underline" href="/admin/system">
-                  View system details
-                </Link>
-              </div>
-            </div>
-
-            <div className="grid gap-4 md:grid-cols-3">
-              <Link
-                className="panel block p-5 transition hover:-translate-y-0.5 hover:border-[color:var(--primary)]"
-                href="/admin/leads"
-              >
-                <p className="text-sm uppercase tracking-[0.16em] text-[color:var(--muted)]">
-                  Leads
-                </p>
-                <p className="mt-2 text-xl font-semibold text-stone-900">View all leads</p>
-                <p className="mt-2 text-sm leading-6 text-[color:var(--muted)]">
-                  Review buyer bids, expected prices, and recent interest across items.
-                </p>
-              </Link>
-
-              <Link
-                className="panel block p-5 transition hover:-translate-y-0.5 hover:border-[color:var(--primary)]"
-                href="/admin/contact-submissions"
-              >
-                <p className="text-sm uppercase tracking-[0.16em] text-[color:var(--muted)]">
-                  Contact
-                </p>
-                <p className="mt-2 text-xl font-semibold text-stone-900">Contact submissions</p>
-                <p className="mt-2 text-sm leading-6 text-[color:var(--muted)]">
-                  Check direct-contact requests submitted from the public contact page.
-                </p>
-              </Link>
-
-              <Link
-                className="panel block p-5 transition hover:-translate-y-0.5 hover:border-[color:var(--primary)]"
-                href="/admin/system"
-              >
-                <p className="text-sm uppercase tracking-[0.16em] text-[color:var(--muted)]">
-                  System
-                </p>
-                <p className="mt-2 text-xl font-semibold text-stone-900">System status</p>
-                <p className="mt-2 text-sm leading-6 text-[color:var(--muted)]">
-                  Inspect the active data mode, upload storage, and PostgreSQL reachability.
-                </p>
+                <p className="mt-4 text-sm text-[color:var(--primary)]">View system details</p>
               </Link>
             </div>
 
-            <div className="panel p-5 md:p-6">
+            <div id="inventory" className="panel p-5 md:p-6">
               <div className="mb-4 flex items-center justify-between gap-4">
                 <div>
                   <h2 className="display-title text-2xl font-semibold text-stone-900">

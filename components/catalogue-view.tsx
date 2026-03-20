@@ -111,7 +111,7 @@ export function CatalogueView({ items, itemCount }: CatalogueViewProps) {
           </p>
         </div>
       ) : viewMode === "grid" ? (
-        <div className="space-y-4">
+        <div className="space-y-3">
           {selectedItems.length > 0 ? (
             <div className="panel flex flex-wrap items-center justify-between gap-3 p-4 md:p-5">
               <p className="text-sm font-medium text-stone-900">
@@ -122,7 +122,7 @@ export function CatalogueView({ items, itemCount }: CatalogueViewProps) {
               </button>
             </div>
           ) : null}
-          <div className="grid gap-5 md:grid-cols-2 xl:grid-cols-3">
+          <div className="grid gap-4 md:grid-cols-2 xl:grid-cols-3">
             {items.map((item, index) => (
             <div
               key={item.id}

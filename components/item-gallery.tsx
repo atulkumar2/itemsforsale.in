@@ -42,7 +42,7 @@ export function ItemGallery({ item }: ItemGalleryProps) {
         />
       </div>
 
-      <div className="grid gap-3 p-4 md:grid-cols-3 md:p-6">
+      <div className="grid gap-2.5 p-3 md:grid-cols-3 md:p-4">
         {item.images.map((image) => {
           const thumbnailUrl = image.thumbnailUrl ?? image.imageUrl;
           const isActive = image.imageUrl === activeImageUrl;
@@ -50,7 +50,7 @@ export function ItemGallery({ item }: ItemGalleryProps) {
           return (
             <button
               key={image.id}
-              className={`relative aspect-[4/3] overflow-hidden rounded-[22px] border ${
+              className={`relative aspect-[4/3] overflow-hidden rounded-[18px] border ${
                 isActive
                   ? "border-[color:var(--primary)]"
                   : "border-[color:var(--line)]"
