@@ -164,6 +164,7 @@ Responsibilities:
 Representative files:
 
 - `app/page.tsx`: public catalogue entry point
+- `app/show-interest/page.tsx`: multi-item interest page
 - `app/items/[slug]/page.tsx`: item details and interest flow
 - `app/contact-seller/page.tsx`: server-rendered initial captcha challenge and contact form
 - `app/admin/page.tsx`: admin landing view
@@ -194,7 +195,9 @@ Current route groups:
 
 - public writes
   - `/api/leads`
+  - `/api/bulk-leads`
   - `/api/contact-submissions`
+  - `/api/human-check`
 - public export
   - `/api/catalogue/export`
 - admin auth
@@ -249,6 +252,7 @@ Representative modules:
 - `lib/upload-security.ts`
   - allowed MIME types
   - file count and size checks
+  - image re-encoding and thumbnail generation
 - `lib/csv.ts`
   - safe CSV cell serialization
 - `lib/env.ts`
@@ -297,10 +301,13 @@ Design choice:
 - `/`
   - searchable catalogue
   - status/category filtering
+  - multi-select interest flow
   - CSV export entry point
+- `/show-interest`
+  - multi-item interest form
 - `/items/[slug]`
   - item details
-  - gallery rendering
+  - gallery rendering with clickable thumbnails
   - interest submission
 - `/contact-seller`
   - direct contact form
@@ -344,15 +351,17 @@ Represents an uploaded image associated with an item:
 - `id`
 - `itemId`
 - `imageUrl`
+- `thumbnailUrl`
 - `sortOrder`
 - `createdAt`
 
 ### Lead
 
-Represents interest submitted from an item detail page:
+Represents interest submitted from an item detail page or the multi-item selection flow:
 
 - `itemId`
 - buyer identity/contact fields
+- optional buyer location
 - free-text message
 - optional bid price
 - `createdAt`
@@ -426,19 +435,32 @@ Tradeoffs:
 1. User loads `/`.
 2. Server renders the catalogue shell.
 3. Repository resolves items from the active store.
-4. UI renders either card or table views and exposes export actions.
-5. `/api/catalogue/export` can emit the same filtered result set as CSV.
+4. UI renders either card or table views, supports multi-selection, and exposes export actions.
+5. `/api/catalogue/export` validates filters, applies rate limiting, and emits the same filtered result set as CSV.
 
 ### Item interest flow
 
 1. User opens `/items/[slug]`.
 2. Client-side form validates against `interestFormSchema`.
-3. Request posts to `/api/leads`.
-4. Server applies rate limiting.
-5. Server validates the payload again.
-6. Repository verifies that the item exists.
-7. Repository stores the lead in the active persistence mode.
-8. Admin later reviews the data in `/admin/leads`.
+3. Client submits a signed human-check token and answer with the lead payload.
+4. Request posts to `/api/leads`.
+5. Server applies rate limiting.
+6. Server validates the payload again.
+7. Server verifies the human-check answer.
+8. Repository verifies that the item exists.
+9. Repository stores the lead in the active persistence mode.
+10. Admin later reviews the data in `/admin/leads`.
+
+### Multi-item interest flow
+
+1. User selects multiple items on `/`.
+2. Client navigates to `/show-interest` with the selected item IDs.
+3. The page resolves the selected items and renders a combined interest form.
+4. Client submits a signed human-check token and answer with the selected item IDs.
+5. `/api/bulk-leads` validates the payload and applies rate limiting.
+6. Server verifies the selected items still exist.
+7. Repository creates one lead per selected item.
+8. Admin reviews the resulting records in the normal leads view.
 
 ### Contact seller flow
 
@@ -457,19 +479,21 @@ The route also supports `GET /api/contact-submissions` to issue a new captcha ch
 
 1. Admin signs in through `/api/admin/login`.
 2. `lib/auth.ts` validates credentials and issues a signed HTTP-only cookie.
-3. Admin pages call `requireAdminPage()`.
-4. Admin APIs call `ensureAdminApiAuth()`.
-5. Item create/update requests go through `/api/admin/items`.
-6. Item image uploads are validated for type/count/size before persistence.
-7. Repository writes metadata and image records to the active store.
-8. Raw image bytes are stored under `public/uploads/<itemId>/...`.
+3. The login route also requires a valid human-check answer.
+4. Admin pages call `requireAdminPage()`.
+5. Admin APIs call `ensureAdminApiAuth()`.
+6. Item create/update requests go through `/api/admin/items`.
+7. Item image uploads are validated for type/count/size and re-encoded before persistence.
+8. Repository writes metadata and image records to the active store.
+9. Optimized image bytes are stored under `public/uploads/<itemId>/...`.
 
 ### CSV export flow
 
 1. User or admin triggers an export route.
-2. Route resolves the relevant filtered dataset.
-3. `lib/csv.ts` escapes quotes and neutralizes dangerous leading formula characters.
-4. Route returns a downloadable CSV with `text/csv` content type and `no-store`.
+2. Route validates filter input and may apply rate limiting depending on the endpoint.
+3. Route resolves the relevant filtered dataset.
+4. `lib/csv.ts` escapes quotes and neutralizes dangerous leading formula characters.
+5. Route returns a downloadable CSV with `text/csv` content type and `no-store`.
 
 ## Authentication Model
 
@@ -519,8 +543,10 @@ Limitations:
 
 - signed admin cookies via HMAC token signing
 - server-side captcha challenge bank
+- human-check protection on public interest, bulk interest, contact seller, and admin login flows
 - in-memory IP-based rate limiting
 - MIME/type/count/size restrictions on admin uploads
+- server-side image re-encoding with thumbnail generation
 - CSV formula neutralization
 - production misconfiguration checks for auth/captcha
 
@@ -528,7 +554,6 @@ Known limitations:
 
 - rate limiting is per-process, not distributed
 - uploaded images are still served from `public/uploads`
-- uploads are restricted but not re-encoded
 - sessions are not backed by durable server-side storage
 
 ## File and Image Handling
@@ -540,6 +565,8 @@ Current behavior:
 - accepted formats: JPEG, PNG, WebP
 - file count limit enforced per request
 - per-file size limit enforced per request
+- uploaded images are re-encoded to WebP
+- both display and thumbnail variants are generated
 - extension is derived from trusted MIME mapping, not original filename alone
 - image metadata is stored separately from item metadata
 
@@ -576,6 +603,7 @@ The current automated coverage uses Vitest with a node test environment.
 - CSV security rules
 - rate-limit state behavior
 - route-level `429` and `503` responses for critical API protections
+- catalogue export abuse protections
 
 ### Test categories
 

@@ -46,6 +46,7 @@ The current public and protected entry points are:
 ### Public browser pages
 
 - `/`
+- `/show-interest`
 - `/items/[slug]`
 - `/contact-seller`
 
@@ -54,7 +55,9 @@ These mostly expose rendered data, but they also lead users into form submission
 ### Public API routes
 
 - `/api/leads`
+- `/api/bulk-leads`
 - `/api/contact-submissions`
+- `/api/human-check`
 - `/api/catalogue/export`
 
 These are the first places a bot or attacker would send automated traffic.
@@ -94,6 +97,7 @@ When moving to production, misconfiguration becomes part of the attack surface.
 ### What an attacker would try
 
 - submit thousands of lead requests
+- submit thousands of multi-item lead requests
 - submit thousands of contact requests
 - bypass client-side validation by sending raw HTTP requests
 - send very large payloads to consume CPU/memory
@@ -106,13 +110,14 @@ Public form endpoints are open to the internet and easy to automate. They are us
 ### Current exposed routes
 
 - [`app/api/leads/route.ts`](/E:/ws-ifs/itemsforsale.in/app/api/leads/route.ts)
+- [`app/api/bulk-leads/route.ts`](/E:/ws-ifs/itemsforsale.in/app/api/bulk-leads/route.ts)
 - [`app/api/contact-submissions/route.ts`](/E:/ws-ifs/itemsforsale.in/app/api/contact-submissions/route.ts)
 
 ### Current defenses
 
 - server-side Zod validation in [`lib/validation.ts`](/E:/ws-ifs/itemsforsale.in/lib/validation.ts)
 - in-memory IP-based rate limiting in [`lib/rate-limit.ts`](/E:/ws-ifs/itemsforsale.in/lib/rate-limit.ts)
-- server-issued signed captcha challenges for contact submissions in [`lib/contact-captcha-store.ts`](/E:/ws-ifs/itemsforsale.in/lib/contact-captcha-store.ts)
+- server-issued signed captcha challenges in [`lib/contact-captcha-store.ts`](/E:/ws-ifs/itemsforsale.in/lib/contact-captcha-store.ts)
 
 ### Remaining gaps
 
@@ -180,13 +185,13 @@ If admin access is compromised, the attacker can upload content, inspect leads, 
 - per-request file count limit
 - per-file size limit
 - trusted extension mapping from MIME type
+- server-side image re-encoding and thumbnail generation
 
 ### Remaining gaps
 
-- uploads are not re-encoded server-side
 - uploads are not virus-scanned
-- raw image bytes are still served from `public/uploads`
-- image parsing libraries are not used to verify content structure
+- optimized image bytes are still served from `public/uploads`
+- there is still no malware scanning or separate object-storage isolation
 
 ### Production priority
 
@@ -211,6 +216,7 @@ The route is admin-only, which lowers exposure, but upload handling remains a cl
 ### Current defenses
 
 - CSV escaping and formula neutralization in [`lib/csv.ts`](/E:/ws-ifs/itemsforsale.in/lib/csv.ts)
+- public catalogue export throttling and filter validation in [`app/api/catalogue/export/route.ts`](/E:/ws-ifs/itemsforsale.in/app/api/catalogue/export/route.ts)
 
 ### Remaining gaps
 
@@ -330,6 +336,7 @@ The current model is reasonable for a small app, but not equivalent to a full au
 
 - basic rate limiting
 - upload count and size limits
+- public export throttling
 
 ### Remaining gaps
 
@@ -358,6 +365,7 @@ Tools:
 Likely targets:
 
 - `/api/leads`
+- `/api/bulk-leads`
 - `/api/contact-submissions`
 
 ### Opportunistic internet scanner
@@ -396,9 +404,9 @@ Compared with the earlier review, the app is in a better place now because it ha
 - fail-closed production admin auth config
 - signed admin sessions instead of deterministic cookies
 - server-side captcha issuance and verification
-- upload type/count/size restrictions
+- upload type/count/size restrictions plus server-side re-encoding
 - CSV formula neutralization
-- route-level abuse throttling
+- route-level abuse throttling, including public catalogue export
 
 That said, this is still not “hardened SaaS” security. It is a small full-stack app with sensible first-layer controls.
 

@@ -1,7 +1,9 @@
 import { NextResponse } from "next/server";
 
 import { escapeCsvCell } from "@/lib/csv";
+import { itemFormLimits, itemStatuses } from "@/lib/constants";
 import { listPublicItems } from "@/lib/data/repository";
+import { checkRateLimit } from "@/lib/rate-limit";
 import { parseItemStatus } from "@/lib/utils";
 
 function buildOrigin(request: Request) {
@@ -15,10 +17,62 @@ function buildOrigin(request: Request) {
 }
 
 export async function GET(request: Request) {
+  const rateLimit = checkRateLimit(request, {
+    key: "catalogue-export",
+    limit: 12,
+    windowMs: 10 * 60 * 1000,
+  });
+
+  if (!rateLimit.allowed) {
+    return NextResponse.json(
+      {
+        error: "Too many catalogue exports. Please wait and try again.",
+      },
+      {
+        status: 429,
+        headers: {
+          "Retry-After": rateLimit.retryAfterSeconds.toString(),
+        },
+      },
+    );
+  }
+
   const url = new URL(request.url);
-  const category = url.searchParams.get("category")?.trim() || undefined;
-  const query = url.searchParams.get("q")?.trim() || undefined;
-  const status = parseItemStatus(url.searchParams.get("status") ?? undefined);
+  const rawCategory = url.searchParams.get("category")?.trim() || undefined;
+  const rawQuery = url.searchParams.get("q")?.trim() || undefined;
+  const rawStatus = url.searchParams.get("status")?.trim() || undefined;
+
+  if (rawCategory && rawCategory.length > itemFormLimits.categoryMax) {
+    return NextResponse.json(
+      {
+        error: "Category filter is too long.",
+      },
+      { status: 400 },
+    );
+  }
+
+  if (rawQuery && rawQuery.length > itemFormLimits.titleMax) {
+    return NextResponse.json(
+      {
+        error: "Search query is too long.",
+      },
+      { status: 400 },
+    );
+  }
+
+  const status = parseItemStatus(rawStatus);
+
+  if (rawStatus && !status) {
+    return NextResponse.json(
+      {
+        error: `Status filter must be one of: ${itemStatuses.join(", ")}.`,
+      },
+      { status: 400 },
+    );
+  }
+
+  const category = rawCategory;
+  const query = rawQuery;
 
   const items = await listPublicItems({
     category,
