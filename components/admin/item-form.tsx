@@ -28,6 +28,7 @@ export function ItemForm({ item }: ItemFormProps) {
   const [serverError, setServerError] = useState<string | null>(null);
   const [serverMessage, setServerMessage] = useState<string | null>(null);
   const [selectedFiles, setSelectedFiles] = useState<File[]>([]);
+  const [removedImageIds, setRemovedImageIds] = useState<string[]>([]);
   const {
     register,
     handleSubmit,
@@ -57,6 +58,9 @@ export function ItemForm({ item }: ItemFormProps) {
       const formData = new FormData();
       for (const [key, value] of Object.entries(values)) {
         formData.set(key, value ?? "");
+      }
+      for (const imageId of removedImageIds) {
+        formData.append("removeImageIds", imageId);
       }
       for (const file of selectedFiles) {
         formData.append("images", file);
@@ -108,6 +112,16 @@ export function ItemForm({ item }: ItemFormProps) {
       router.push("/admin");
       router.refresh();
     });
+  }
+
+  function markImageForRemoval(imageId: string) {
+    setRemovedImageIds((current) =>
+      current.includes(imageId) ? current : current.concat(imageId),
+    );
+  }
+
+  function restoreImage(imageId: string) {
+    setRemovedImageIds((current) => current.filter((currentId) => currentId !== imageId));
   }
 
   return (
@@ -297,13 +311,37 @@ export function ItemForm({ item }: ItemFormProps) {
           </h2>
           <div className="mt-4 grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
             {item.images.length > 0 ? (
-              item.images.map((image) => (
-                <div key={image.id} className="overflow-hidden rounded-[22px] border border-[color:var(--line)] bg-white">
+              item.images.map((image) => {
+                const isRemoved = removedImageIds.includes(image.id);
+
+                return (
+                <div
+                  key={image.id}
+                  className={`overflow-hidden rounded-[22px] border bg-white ${
+                    isRemoved
+                      ? "border-[color:var(--danger)] opacity-60"
+                      : "border-[color:var(--line)]"
+                  }`}
+                >
                   <div className="relative aspect-[4/3]">
                     <Image src={image.thumbnailUrl ?? image.imageUrl} alt={item.title} fill className="object-cover" sizes="33vw" />
                   </div>
+                  <div className="flex items-center justify-between gap-3 p-3">
+                    <p className="text-sm text-[color:var(--muted)]">
+                      {isRemoved ? "Marked for deletion" : "Stored image"}
+                    </p>
+                    {isRemoved ? (
+                      <button className="button-secondary" onClick={() => restoreImage(image.id)} type="button">
+                        Undo
+                      </button>
+                    ) : (
+                      <button className="button-danger" onClick={() => markImageForRemoval(image.id)} type="button">
+                        Remove image
+                      </button>
+                    )}
+                  </div>
                 </div>
-              ))
+              )})
             ) : (
               <p className="text-sm text-[color:var(--muted)]">No images uploaded yet.</p>
             )}

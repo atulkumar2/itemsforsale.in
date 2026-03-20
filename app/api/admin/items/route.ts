@@ -16,6 +16,10 @@ export async function POST(request: Request) {
   }
 
   const formData = await request.formData();
+  const removeImageIds = formData
+    .getAll("removeImageIds")
+    .map((value) => String(value).trim())
+    .filter(Boolean);
   const parsed = itemFormSchema.safeParse({
     id: String(formData.get("id") ?? ""),
     title: String(formData.get("title") ?? ""),
@@ -67,6 +71,7 @@ export async function POST(request: Request) {
         expectedPrice: parseOptionalNumber(parsed.data.expectedPrice),
         availableFrom: parseOptionalDate(parsed.data.availableFrom),
         locationArea: parsed.data.locationArea,
+        removeImageIds,
         status: parsed.data.status,
       },
       files,

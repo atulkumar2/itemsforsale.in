@@ -1,6 +1,6 @@
 import "server-only";
 
-import { mkdir, readFile, writeFile } from "node:fs/promises";
+import { mkdir, readFile, unlink, writeFile } from "node:fs/promises";
 import path from "node:path";
 
 import { localSeedDatabase } from "@/lib/data/local-seed";
@@ -114,6 +114,25 @@ async function storeUploadedImages(itemId: string, files: File[]) {
   );
 
   return uploadedImages;
+}
+
+async function deleteStoredImageFiles(images: ItemImage[]) {
+  await Promise.all(
+    images.flatMap((image) =>
+      [image.imageUrl, image.thumbnailUrl]
+        .filter((filePath): filePath is string => Boolean(filePath))
+        .map(async (filePath) => {
+          const normalizedPath = filePath.replace(/^\/+/, "").replace(/\//g, path.sep);
+          const absolutePath = path.join(process.cwd(), "public", normalizedPath);
+
+          try {
+            await unlink(absolutePath);
+          } catch {
+            // Ignore missing files so metadata cleanup can still succeed.
+          }
+        }),
+    ),
+  );
 }
 
 export async function listItems(filters: ItemFilters = {}) {
@@ -264,6 +283,16 @@ export async function saveItem(input: SaveItemInput, files: File[]) {
   };
 
   const uploadedImages = await storeUploadedImages(itemId, files);
+  const removeImageIds = new Set(input.removeImageIds ?? []);
+  const currentImages = database.itemImages.filter((image) => image.itemId === itemId);
+  const removedImages = currentImages.filter((image) => removeImageIds.has(image.id));
+  const retainedImages = currentImages
+    .filter((image) => !removeImageIds.has(image.id))
+    .sort((left, right) => left.sortOrder - right.sortOrder)
+    .map((image, index) => ({
+      ...image,
+      sortOrder: index,
+    }));
 
   if (existingItem) {
     database.items = database.items.map((item) => (item.id === existingItem.id ? nextItem : item));
@@ -271,9 +300,19 @@ export async function saveItem(input: SaveItemInput, files: File[]) {
     database.items.unshift(nextItem);
   }
 
+  database.itemImages = database.itemImages.filter(
+    (image) => image.itemId !== itemId || !removeImageIds.has(image.id),
+  );
+
+  if (removeImageIds.size > 0) {
+    database.itemImages = database.itemImages.map((image) => {
+      const updatedImage = retainedImages.find((retainedImage) => retainedImage.id === image.id);
+      return updatedImage ?? image;
+    });
+  }
+
   if (uploadedImages.length > 0) {
-    const currentImages = database.itemImages.filter((image) => image.itemId === itemId);
-    const offset = currentImages.length;
+    const offset = retainedImages.length;
     database.itemImages = database.itemImages.concat(
       uploadedImages.map((image, index) => ({
         ...image,
@@ -283,6 +322,7 @@ export async function saveItem(input: SaveItemInput, files: File[]) {
   }
 
   await writeDatabase(database);
+  await deleteStoredImageFiles(removedImages);
   return getItemById(itemId);
 }
 

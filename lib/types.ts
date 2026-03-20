@@ -79,6 +79,7 @@ export type LeadFilters = {
 
 export type SaveItemInput = {
   id?: string;
+  removeImageIds?: string[];
   title: string;
   description?: string;
   category?: string;

@@ -1,6 +1,6 @@
 import "server-only";
 
-import { mkdir, writeFile } from "node:fs/promises";
+import { mkdir, unlink, writeFile } from "node:fs/promises";
 import path from "node:path";
 
 import { Pool, type PoolClient, type QueryResultRow } from "pg";
@@ -502,6 +502,25 @@ async function storeUploadedImages(itemId: string, files: File[]) {
   return uploadedImages;
 }
 
+async function deleteStoredImageFiles(images: ItemImage[]) {
+  await Promise.all(
+    images.flatMap((image) =>
+      [image.imageUrl, image.thumbnailUrl]
+        .filter((filePath): filePath is string => Boolean(filePath))
+        .map(async (filePath) => {
+          const normalizedPath = filePath.replace(/^\/+/, "").replace(/\//g, path.sep);
+          const absolutePath = path.join(process.cwd(), "public", normalizedPath);
+
+          try {
+            await unlink(absolutePath);
+          } catch {
+            // Ignore missing files so metadata cleanup can still succeed.
+          }
+        }),
+    ),
+  );
+}
+
 export async function listItems(filters: ItemFilters = {}) {
   await ensurePostgresReady();
 
@@ -740,6 +759,11 @@ export async function saveItem(input: SaveItemInput, files: File[]) {
   };
 
   const uploadedImages = await storeUploadedImages(itemId, files);
+  const removeImageIds = new Set(input.removeImageIds ?? []);
+  const removedImages = existingItem?.images.filter((image) => removeImageIds.has(image.id)) ?? [];
+  const retainedImages = (existingItem?.images ?? [])
+    .filter((image) => !removeImageIds.has(image.id))
+    .sort((left, right) => left.sortOrder - right.sortOrder);
 
   await withTransaction(async (client) => {
     if (existingItem) {
@@ -804,12 +828,23 @@ export async function saveItem(input: SaveItemInput, files: File[]) {
       );
     }
 
-    if (uploadedImages.length > 0) {
-      const countResult = await client.query<{ count: string }>(
-        `select count(*)::text as count from item_images where item_id = $1`,
-        [itemId],
+    if (removeImageIds.size > 0) {
+      await client.query(
+        `delete from item_images
+         where item_id = $1 and id = any($2::uuid[])`,
+        [itemId, Array.from(removeImageIds)],
       );
-      const offset = Number(countResult.rows[0]?.count ?? "0");
+
+      for (const [index, image] of retainedImages.entries()) {
+        await client.query(
+          `update item_images set sort_order = $2 where id = $1`,
+          [image.id, index],
+        );
+      }
+    }
+
+    if (uploadedImages.length > 0) {
+      const offset = retainedImages.length;
 
       for (const [index, image] of uploadedImages.entries()) {
         await client.query(
@@ -828,6 +863,7 @@ export async function saveItem(input: SaveItemInput, files: File[]) {
     }
   });
 
+  await deleteStoredImageFiles(removedImages);
   return getItemById(itemId);
 }
 
