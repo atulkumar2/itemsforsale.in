@@ -2,237 +2,514 @@
 
 ## Overview
 
-itemsforsale.in is a local-first Next.js application for a single seller to publish household items, collect buyer interest, and manage enquiries from an admin interface.
+`itemsforsale.in` is a local-first Next.js App Router application for a single seller to publish household items, accept buyer enquiries, and manage submissions from an authenticated admin area.
 
-The app is designed around a simple layered architecture:
+The codebase is intentionally structured around replaceable boundaries:
 
-- App Router pages for public and admin screens
-- Reusable UI components for rendering forms, cards, tables, and layout
-- Route handlers for writes and exports
-- Shared validation and utility modules
-- A repository boundary that can use local JSON or local PostgreSQL before later moving to Supabase
+- Next.js pages and components handle rendering and UX
+- route handlers own writes, exports, and admin/session endpoints
+- shared `lib/` modules hold validation, auth, security, and utility logic
+- `lib/data/repository.ts` provides a stable persistence boundary
+- persistence can run in local JSON mode or local PostgreSQL mode without changing page-level behavior
 
-## High-Level Layers
+This keeps the app practical for local operation today while preserving a clean path to a later Supabase-backed implementation.
 
-### 1. Presentation layer
+## Goals and Constraints
+
+### Primary goals
+
+- publish a searchable catalogue of personal items
+- collect structured interest and direct-contact enquiries
+- manage items and submissions from a lightweight admin interface
+- support local development without requiring cloud infrastructure
+- keep the data and route shapes close to a future hosted deployment model
+
+### Non-goals for the current phase
+
+- multi-user seller accounts
+- full RBAC or tenant isolation
+- object storage/CDN-backed media
+- external anti-abuse services
+- distributed rate limiting or durable session storage
+
+## Runtime Topology
+
+At runtime, the app consists of one Next.js server process with three major responsibilities:
+
+1. Render public and admin pages.
+2. Serve API routes for writes, exports, login, and logout.
+3. Read and write item, lead, contact, and image data through the repository layer.
+
+The system also uses local filesystem storage for uploaded images in both persistence modes.
+
+### High-level flow
+
+```text
+Browser
+  -> App Router pages/components
+  -> API route handlers
+  -> validation/auth/security helpers in lib/
+  -> repository boundary
+  -> JSON store or PostgreSQL store
+  -> filesystem uploads under public/uploads
+```
+
+## Layered Design
+
+### 1. Presentation Layer
 
 Located mainly in `app/` and `components/`.
 
 Responsibilities:
 
-- render public catalogue and item detail pages
-- render admin dashboard and admin data views
-- handle client-side form interactions
-- expose grid/table switching and CSV export actions
+- render public catalogue, item detail, and contact pages
+- render admin dashboard, admin tables, forms, and system status views
+- provide client-side form UX through React Hook Form
+- submit writes to route handlers instead of talking to persistence directly
+- display CSV export actions and navigation between catalogue/admin views
 
-Examples:
+Representative files:
 
-- `app/page.tsx`: homepage catalogue and seller location section
-- `app/items/[slug]/page.tsx`: item detail page
-- `app/contact-seller/page.tsx`: direct contact page with captcha gate
-- `app/admin/page.tsx`: admin dashboard
-- `components/catalogue-view.tsx`: grid/table toggle and export button
-- `components/contact-seller-form.tsx`: validated contact form
+- `app/page.tsx`: public catalogue entry point
+- `app/items/[slug]/page.tsx`: item details and interest flow
+- `app/contact-seller/page.tsx`: server-rendered initial captcha challenge and contact form
+- `app/admin/page.tsx`: admin landing view
+- `app/admin/leads/page.tsx`: lead review UI
+- `app/admin/contact-submissions/page.tsx`: contact submission review UI
+- `app/admin/system/page.tsx`: active mode and PostgreSQL health display
+- `components/contact-seller-form.tsx`: contact workflow client component
+- `components/admin/item-form.tsx`: admin item create/update UI
 
-### 2. API layer
+Design choice:
+
+- pages and components do not know whether the backing store is JSON or PostgreSQL
+- they call route handlers or repository-backed server functions and stay focused on UI concerns
+
+### 2. API Layer
 
 Located in `app/api/`.
 
 Responsibilities:
 
-- accept validated writes from forms
-- protect admin-only export endpoints
-- transform persisted data into downloadable CSV responses
+- accept and validate write requests
+- enforce admin authentication on protected routes
+- enforce abuse controls such as rate limiting and captcha verification
+- build CSV export responses
+- translate domain failures into HTTP responses
 
-Current route handlers:
+Current route groups:
 
-- `/api/leads`: saves item interest submissions
-- `/api/contact-submissions`: saves contact seller submissions after captcha validation
-- `/api/catalogue/export`: exports filtered catalogue rows with item links
-- `/api/admin/leads/export`: exports filtered leads as CSV
-- `/api/admin/contact-submissions/export`: exports contact submission logs as CSV
-- `/api/admin/items/*`: admin item create/update/delete flows
-- `/api/admin/login` and `/api/admin/logout`: local admin session lifecycle
+- public writes
+  - `/api/leads`
+  - `/api/contact-submissions`
+- public export
+  - `/api/catalogue/export`
+- admin auth
+  - `/api/admin/login`
+  - `/api/admin/logout`
+- admin item management
+  - `/api/admin/items`
+  - `/api/admin/items/[id]`
+- admin exports
+  - `/api/admin/leads/export`
+  - `/api/admin/contact-submissions/export`
 
-### 3. Domain and validation layer
+### Route responsibilities by concern
+
+- validation: `lib/validation.ts`
+- auth/session checks: `lib/auth.ts`
+- captcha issuing and verification: `lib/contact-captcha-store.ts`
+- rate limiting: `lib/rate-limit.ts`
+- CSV escaping and formula neutralization: `lib/csv.ts`
+- upload restrictions: `lib/upload-security.ts`
+
+### 3. Domain and Security Layer
 
 Located in `lib/`.
 
-Responsibilities:
+This is the most important shared layer in the app. It holds business rules, validation, security helpers, and reusable utilities.
 
-- define shared types
-- validate request payloads
-- centralize constants and formatting helpers
-- encapsulate captcha logic
+Representative modules:
 
-Important modules:
+- `lib/types.ts`
+  - item, image, lead, and contact submission shapes
+  - repository input types
+- `lib/constants.ts`
+  - field length limits
+  - regex patterns
+  - shared enums such as item status
+- `lib/validation.ts`
+  - Zod schemas used by both the UI and route handlers
+- `lib/auth.ts`
+  - signed admin session handling
+  - admin page/admin API gate helpers
+- `lib/crypto-tokens.ts`
+  - HMAC-signed JSON token helpers
+- `lib/contact-captcha.ts`
+  - shared captcha answer normalization and public challenge type
+- `lib/contact-captcha-store.ts`
+  - private captcha question bank
+  - signed challenge issuance
+  - server-side answer verification
+- `lib/rate-limit.ts`
+  - in-memory per-IP throttling
+- `lib/upload-security.ts`
+  - allowed MIME types
+  - file count and size checks
+- `lib/csv.ts`
+  - safe CSV cell serialization
+- `lib/env.ts`
+  - runtime configuration access
+  - production auth/captcha configuration checks
 
-- `lib/types.ts`: core domain types and persistence shapes
-- `lib/validation.ts`: Zod schemas for forms and API payloads
-- `lib/constants.ts`: shared enums, max lengths, and regex patterns
-- `lib/contact-captcha.ts`: captcha answer validation
-- `lib/contact-captcha-questions.ts`: editable question bank
-- `lib/utils.ts`: formatting and parsing helpers
-
-### 4. Data access layer
+### 4. Data Access Layer
 
 Located in `lib/data/`.
 
-Responsibilities:
+This layer hides storage details from the rest of the application.
 
-- provide a stable repository interface to the app
-- isolate the local JSON implementation from page and API code
-- preserve a future migration path to Supabase
+### Repository facade
 
-Important modules:
+`lib/data/repository.ts` is the app-facing gateway. It chooses the active store based on `DATA_MODE` and exposes stable operations such as:
 
-- `lib/data/repository.ts`: app-facing data access interface
-- `lib/data/local-store.ts`: file-backed CRUD implementation
-- `lib/data/postgres-store.ts`: PostgreSQL-backed CRUD implementation for local database mode
-- `lib/data/local-seed.ts`: initial seeded dataset
+- `listPublicItems`
+- `getPublicItemBySlug`
+- `submitLead`
+- `saveAdminItem`
+- `listAdminLeads`
+- `submitContactSubmission`
+- `listAdminContactSubmissions`
+- `getAdminSystemStatus`
+
+### Store implementations
+
+- `lib/data/local-store.ts`
+  - JSON-file-backed persistence in `data/local-db.json`
+  - filesystem image writes to `public/uploads`
+- `lib/data/postgres-store.ts`
+  - PostgreSQL-backed CRUD for the same domain model
+  - local schema bootstrapping and health checks
+- `lib/data/local-seed.ts`
+  - initial seed data used by local modes
+
+Design choice:
+
+- the rest of the app talks to the repository, not directly to `local-store` or `postgres-store`
+- switching the backing store should not require page or route rewrites
 
 ## Routing Structure
 
 ### Public routes
 
-- `/`: homepage with search, filters, catalogue view toggle, and seller map
-- `/items/[slug]`: item detail page with images and interest form
-- `/contact-seller`: direct contact page with captcha verification
+- `/`
+  - searchable catalogue
+  - status/category filtering
+  - CSV export entry point
+- `/items/[slug]`
+  - item details
+  - gallery rendering
+  - interest submission
+- `/contact-seller`
+  - direct contact form
+  - initial captcha challenge bootstrap
 
 ### Admin routes
 
-- `/admin`: dashboard and inventory overview
-- `/admin/items/new`: create item
-- `/admin/items/[id]/edit`: edit item
-- `/admin/leads`: filter and review buyer interest submissions
-- `/admin/contact-submissions`: review direct contact submissions
-- `/admin/system`: runtime mode and PostgreSQL health details
-- `/admin/login`: admin authentication
-
-### Export routes
-
-- `/api/catalogue/export`: public CSV export for filtered catalogue data
-- `/api/admin/leads/export`: admin CSV export for filtered leads
-- `/api/admin/contact-submissions/export`: admin CSV export for contact logs
+- `/admin`
+  - overview/dashboard
+- `/admin/items/new`
+  - create item flow
+- `/admin/items/[id]/edit`
+  - edit and delete flow
+- `/admin/leads`
+  - lead review and filtering
+- `/admin/contact-submissions`
+  - direct-contact review
+- `/admin/system`
+  - runtime and PostgreSQL status
+- `/admin/login`
+  - admin sign-in
 
 ## Data Model
 
-The runtime persistence model supports two local modes:
+The application uses four main domain entities.
 
-- JSON mode via `data/local-db.json`
-- PostgreSQL mode via `DATABASE_URL` when `DATA_MODE=postgres`
+### Item
 
-Top-level collections:
+Represents a sale listing:
+
+- identity: `id`, `slug`
+- display fields: `title`, `description`, `category`, `condition`
+- pricing fields: `purchasePrice`, `expectedPrice`
+- availability/location fields: `availableFrom`, `locationArea`
+- lifecycle fields: `status`, `createdAt`, `updatedAt`
+
+### ItemImage
+
+Represents an uploaded image associated with an item:
+
+- `id`
+- `itemId`
+- `imageUrl`
+- `sortOrder`
+- `createdAt`
+
+### Lead
+
+Represents interest submitted from an item detail page:
+
+- `itemId`
+- buyer identity/contact fields
+- free-text message
+- optional bid price
+- `createdAt`
+
+### ContactSubmission
+
+Represents direct contact intent from the contact page:
+
+- buyer identity/contact fields
+- location
+- free-text message
+- stored `captchaPrompt` for audit/history
+- `createdAt`
+
+### Persistence shapes
+
+JSON mode stores:
 
 - `items`
 - `itemImages`
 - `leads`
 - `contactSubmissions`
 
-Both local modes mirror the intended cloud-ready structure so they can later be replaced by Supabase-backed queries without changing page-level behavior.
+PostgreSQL mode mirrors the same conceptual entities with relational tables:
 
-## Request and Write Flows
+- `items`
+- `item_images`
+- `leads`
+- `contact_submissions`
+
+## Persistence Modes
+
+### JSON mode
+
+Enabled when `DATA_MODE=local` or unset.
+
+Characteristics:
+
+- no external database required
+- data stored in `data/local-db.json`
+- initial seed inserted automatically
+- ideal for quick local development
+
+Tradeoffs:
+
+- no concurrent-writer protection
+- no query engine beyond in-process filtering
+- not suitable for multi-instance deployment
+
+### PostgreSQL mode
+
+Enabled when `DATA_MODE=postgres`.
+
+Characteristics:
+
+- uses `DATABASE_URL`
+- auto-creates schema on first use
+- supports health checks surfaced in `/admin/system`
+- better matches a future hosted relational deployment model
+
+Tradeoffs:
+
+- still uses local filesystem uploads
+- still uses in-memory rate limiting and signed-cookie auth
+- still assumes a single-seller application model
+
+## Core Request Flows
+
+### Public catalogue read flow
+
+1. User loads `/`.
+2. Server renders the catalogue shell.
+3. Repository resolves items from the active store.
+4. UI renders either card or table views and exposes export actions.
+5. `/api/catalogue/export` can emit the same filtered result set as CSV.
 
 ### Item interest flow
 
-1. User opens an item detail page.
-2. User submits the interest form.
-3. Client validates input through React Hook Form + Zod.
-4. `/api/leads` re-validates on the server.
-5. Repository writes a new lead into local storage.
-6. Admin can review submissions under `/admin/leads`.
-
-In `postgres` mode, the same repository flow writes the lead into the local PostgreSQL database instead.
-
-### Lead management flow
-
-1. Admin opens `/admin/leads`.
-2. Admin filters by `itemId` and/or text query.
-3. Repository resolves filtered leads in active data mode.
-4. Admin can export filtered leads using `/api/admin/leads/export`.
-5. Admin inventory table shows per-item lead counts and item-specific lead shortcuts.
+1. User opens `/items/[slug]`.
+2. Client-side form validates against `interestFormSchema`.
+3. Request posts to `/api/leads`.
+4. Server applies rate limiting.
+5. Server validates the payload again.
+6. Repository verifies that the item exists.
+7. Repository stores the lead in the active persistence mode.
+8. Admin later reviews the data in `/admin/leads`.
 
 ### Contact seller flow
 
-1. User opens `/contact-seller`.
-2. User fills in name, phone, email, location, message, and captcha.
-3. Client validates against shared schema rules.
-4. `/api/contact-submissions` validates again on the server.
-5. Captcha answer is verified using the shared captcha module.
-6. Submission is stored in `contactSubmissions`.
-7. Admin can review logs or export them as CSV.
+1. Server renders `/contact-seller` with an initial signed captcha challenge.
+2. Client submits form data plus the signed captcha token.
+3. `/api/contact-submissions` verifies captcha configuration in production.
+4. Server applies rate limiting.
+5. Server validates the payload.
+6. Server verifies the captcha token and answer against the private challenge bank.
+7. Repository stores the contact submission.
+8. Admin reviews the data in `/admin/contact-submissions`.
 
-In `postgres` mode, the submission is stored in the `contact_submissions` table instead.
+The route also supports `GET /api/contact-submissions` to issue a new captcha challenge without exposing the answer key to the client.
 
-### Catalogue export flow
+### Admin item management flow
 
-1. User filters catalogue on the homepage.
-2. Export button preserves current search parameters.
-3. `/api/catalogue/export` fetches the same filtered items.
-4. Route handler emits CSV rows including direct `itemLink` URLs.
+1. Admin signs in through `/api/admin/login`.
+2. `lib/auth.ts` validates credentials and issues a signed HTTP-only cookie.
+3. Admin pages call `requireAdminPage()`.
+4. Admin APIs call `ensureAdminApiAuth()`.
+5. Item create/update requests go through `/api/admin/items`.
+6. Item image uploads are validated for type/count/size before persistence.
+7. Repository writes metadata and image records to the active store.
+8. Raw image bytes are stored under `public/uploads/<itemId>/...`.
+
+### CSV export flow
+
+1. User or admin triggers an export route.
+2. Route resolves the relevant filtered dataset.
+3. `lib/csv.ts` escapes quotes and neutralizes dangerous leading formula characters.
+4. Route returns a downloadable CSV with `text/csv` content type and `no-store`.
 
 ## Authentication Model
 
-Current admin authentication is local and cookie-based.
+Admin authentication is intentionally lightweight but no longer deterministic.
 
-- credentials come from `.env.local`
-- login issues an HTTP-only cookie
-- admin pages use `requireAdminPage()`
-- admin APIs use `ensureAdminApiAuth()`
+### Current model
 
-This is intentionally simple for local-first operation and can later be replaced with Supabase Auth.
+- credentials come from environment variables
+- in development only, local defaults can be used if env vars are missing
+- in production, missing admin auth env vars cause login to fail closed with `503`
+- login issues a signed HTTP-only cookie
+- cookie payload includes the admin email, random session ID, and expiry timestamp
+- verification checks signature, expiry, and configured admin identity
 
-## Validation Strategy
+### Why this design
 
-Validation is enforced in two places:
+- simpler than a full auth provider for local-first operation
+- stronger than a static predictable cookie
+- still easy to replace later with Supabase Auth or another hosted identity system
 
-- frontend: immediate UX feedback through React Hook Form + Zod
-- backend: final protection in API route handlers using the same schema layer
+Limitations:
 
-Examples:
+- sessions are stateless signed tokens rather than revocable server-side records
+- only one admin identity is modeled
 
-- contact phone must be exactly 10 digits and start with 6, 7, 8, or 9
-- contact email must pass regex validation
-- contact field lengths are driven from shared constants
-- captcha answer is validated both structurally and semantically
+## Security Boundaries and Trust Model
+
+### Trusted server responsibilities
+
+- validate every write request
+- guard admin-only pages and APIs
+- keep captcha answers private
+- sign and verify admin session tokens
+- sign and verify captcha challenge tokens
+- apply upload restrictions
+- apply rate limiting
+- sanitize CSV output for spreadsheet consumers
+
+### Client trust assumptions
+
+- the client is untrusted
+- client-side validation exists for UX only
+- any hidden field, captcha token, or file metadata can be tampered with
+- route handlers must re-check everything
+
+### Current security controls
+
+- signed admin cookies via HMAC token signing
+- server-side captcha challenge bank
+- in-memory IP-based rate limiting
+- MIME/type/count/size restrictions on admin uploads
+- CSV formula neutralization
+- production misconfiguration checks for auth/captcha
+
+Known limitations:
+
+- rate limiting is per-process, not distributed
+- uploaded images are still served from `public/uploads`
+- uploads are restricted but not re-encoded
+- sessions are not backed by durable server-side storage
 
 ## File and Image Handling
 
-Uploaded item images are stored in `public/uploads/<itemId>/...`.
+Uploads are stored in the local filesystem regardless of JSON or PostgreSQL mode.
 
-The item record and image metadata are stored separately:
+Current behavior:
 
-- item metadata lives in `items`
-- image metadata lives in `itemImages`
+- accepted formats: JPEG, PNG, WebP
+- file count limit enforced per request
+- per-file size limit enforced per request
+- extension is derived from trusted MIME mapping, not original filename alone
+- image metadata is stored separately from item metadata
 
-At read time, `hydrateItems()` joins items and images into `ItemWithImages` objects for rendering.
+This separation keeps list/detail queries simple while allowing multiple images per item.
+
+## Runtime Status and Observability
+
+The app currently has minimal built-in observability.
+
+What it does expose:
+
+- `/admin/system` shows active data mode
+- `/admin/system` shows persistence type
+- `/admin/system` shows upload storage type
+- `/admin/system` shows PostgreSQL reachability and parsed connection target in `postgres` mode
+
+What it does not yet include:
+
+- structured application logs
+- tracing
+- metrics dashboards
+- audit logs for admin actions
 
 ## Testing Strategy
 
-Current automated coverage uses Vitest for unit tests.
+The current automated coverage uses Vitest with a node test environment.
 
-Covered areas:
+### Covered areas
 
-- captcha normalization and answer validation
-- contact form validation rules
-- interest form validation rules
+- schema validation
+- captcha normalization, signing, expiry, and secret mismatch handling
+- token signing helpers
+- upload security rules
+- CSV security rules
+- rate-limit state behavior
+- route-level `429` and `503` responses for critical API protections
 
-Test files:
+### Test categories
 
-- `tests/contact-captcha.test.ts`
-- `tests/contact-seller-validation.test.ts`
-- `tests/interest-form-validation.test.ts`
+- pure unit tests for helpers in `lib/`
+- route-level tests with mocked collaborators for API behavior
+
+This is a good fit for the current codebase because most important logic lives in small modules and route handlers with clear dependencies.
 
 ## Migration Path
 
-The main architectural boundary that enables future migration is `lib/data/repository.ts`.
+The architecture is already set up so the main future migration happens behind existing boundaries.
 
-To move to Supabase later:
+### Likely future migration steps
 
-1. keep route handlers and page components unchanged where possible
-2. replace local-store-backed repository calls with Supabase queries
-	or replace postgres-store-backed local queries with Supabase queries
-3. move image storage from `public/uploads` to Supabase Storage
-4. replace local cookie auth with Supabase Auth
+1. Replace repository internals with Supabase queries.
+2. Move uploaded image storage from local filesystem to object storage.
+3. Replace local admin auth with Supabase Auth or another identity layer.
+4. Replace per-process rate limiting with shared infrastructure.
+5. Add proper observability and audit logging.
 
-This keeps the UI and domain logic stable while changing only the persistence and auth implementations.
+### What should stay stable
+
+- public routes
+- admin route structure
+- most page components
+- Zod validation layer
+- repository method surface
+- domain types
+
+That stability is the main architectural goal of the current design.
