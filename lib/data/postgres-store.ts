@@ -545,8 +545,8 @@ export async function listItems(filters: ItemFilters = {}) {
   const where = clauses.length > 0 ? `where ${clauses.join(" and ")}` : "";
 
   const itemResult = await query<ItemRow>(
-    `select id, slug, title, description, category, condition, purchase_date,
-            purchase_price, expected_price, available_from, location_area,
+    `select id, slug, title, description, category, condition, purchase_date::text,
+            purchase_price, expected_price, available_from::text, location_area,
             status, created_at, updated_at
      from items
      ${where}
@@ -563,8 +563,8 @@ export async function listItems(filters: ItemFilters = {}) {
 export async function getItemBySlug(slug: string) {
   await ensurePostgresReady();
   const itemResult = await query<ItemRow>(
-    `select id, slug, title, description, category, condition, purchase_date,
-            purchase_price, expected_price, available_from, location_area,
+    `select id, slug, title, description, category, condition, purchase_date::text,
+            purchase_price, expected_price, available_from::text, location_area,
             status, created_at, updated_at
      from items where slug = $1 limit 1`,
     [slug],
@@ -583,8 +583,8 @@ export async function getItemBySlug(slug: string) {
 export async function getItemById(id: string) {
   await ensurePostgresReady();
   const itemResult = await query<ItemRow>(
-    `select id, slug, title, description, category, condition, purchase_date,
-            purchase_price, expected_price, available_from, location_area,
+    `select id, slug, title, description, category, condition, purchase_date::text,
+            purchase_price, expected_price, available_from::text, location_area,
             status, created_at, updated_at
      from items where id = $1 limit 1`,
     [id],

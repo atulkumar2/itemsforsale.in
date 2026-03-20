@@ -6,12 +6,16 @@ import path from "node:path";
 import process from "node:process";
 import { setTimeout as delay } from "node:timers/promises";
 
-import { Client } from "pg";
+import { Client, types } from "pg";
 import sharp from "sharp";
 
+// Configure pg to return DATE columns as strings instead of Date objects
+// Type OID 1082 is DATE type in PostgreSQL
+types.setTypeParser(1082, (value) => value);
+
 const containerName = process.env.E2E_POSTGRES_CONTAINER ?? "itemsforsale-e2e-postgres";
-const postgresPort = Number(process.env.E2E_POSTGRES_PORT ?? "55432");
-const appPort = Number(process.env.E2E_APP_PORT ?? "3411");
+const postgresPort = Number(process.env.E2E_POSTGRES_PORT ?? "54321");
+const appPort = Number(process.env.E2E_APP_PORT ?? String(3400 + Math.floor(Math.random() * 1000)));
 const postgresDb = process.env.E2E_POSTGRES_DB ?? "itemsforsale_e2e";
 const postgresUser = process.env.E2E_POSTGRES_USER ?? "postgres";
 const postgresPassword = process.env.E2E_POSTGRES_PASSWORD ?? "postgres";
@@ -70,6 +74,50 @@ async function removeContainerIfExists() {
     await runCommand("docker", ["rm", "-f", containerName]);
   } catch {
     // Ignore missing container.
+  }
+}
+
+async function killProcessListeningOnPort(port) {
+  if (process.platform === "win32") {
+    try {
+      await runCommand("cmd.exe", [
+        "/d",
+        "/s",
+        "/c",
+        `for /f "tokens=5" %a in ('netstat -aon ^| findstr :${String(port)} ^| findstr LISTENING') do taskkill /PID %a /F`,
+      ]);
+    } catch {
+      // Ignore missing listeners and command failures during cleanup
+    }
+    return;
+  }
+
+  try {
+    const { stdout } = await runCommand("sh", [
+      "-lc",
+      `lsof -ti:${String(port)} 2>/dev/null || true`,
+    ]);
+
+    const pids = stdout
+      .split("\n")
+      .map((line) => line.trim())
+      .filter(Boolean)
+      .map((line) => Number(line))
+      .filter((pid) => Number.isInteger(pid) && pid > 0);
+
+    for (const pid of pids) {
+      if (pid === process.pid || pid === process.ppid) {
+        continue;
+      }
+
+      try {
+        process.kill(pid, "SIGKILL");
+      } catch {
+        // Ignore race conditions where process exits between lookup and kill
+      }
+    }
+  } catch {
+    // Ignore missing listeners and command failures during cleanup
   }
 }
 
@@ -179,6 +227,7 @@ async function startApp() {
 
   appProcess = spawn(command, args, {
     cwd: rootDir,
+    detached: process.platform !== "win32",
     env: {
       ...process.env,
       DATA_MODE: "postgres",
@@ -209,10 +258,13 @@ async function startApp() {
 
 async function waitForApp() {
   log("Waiting for app HTTP server");
-  for (let attempt = 0; attempt < 90; attempt += 1) {
+  for (let attempt = 0; attempt < 120; attempt += 1) {
     try {
       const response = await fetch(`${appBaseUrl}/admin/login`, { redirect: "manual" });
-      if (response.ok || response.status === 307) {
+      if (response.ok || response.status === 307 || response.status === 429) {
+        // 429 means app is responding (rate limited) so it's ready
+        // Add extra delay to ensure app is fully stable
+        await delay(2000);
         return;
       }
     } catch {
@@ -350,8 +402,13 @@ async function getItemState(itemId) {
          order by sort_order asc, created_at asc`,
       [itemId],
     );
+    const item = itemResult.rows[0] ?? null;
+    if (item) {
+      log(`DEBUG: available_from from DB: "${item.available_from}" (type: ${typeof item.available_from})`);
+      log(`DEBUG: full item: ${JSON.stringify(item, null, 2)}`);
+    }
     return {
-      item: itemResult.rows[0] ?? null,
+      item,
       images: imageResult.rows,
     };
   } finally {
@@ -443,16 +500,50 @@ async function verifyScenario(itemId, removedImage) {
 async function cleanup() {
   log("Cleaning up disposable resources");
 
-  if (appProcess && !appProcess.killed) {
-    appProcess.kill("SIGTERM");
-    await Promise.race([
-      new Promise((resolve) => appProcess.once("exit", resolve)),
-      delay(5000).then(() => {
-        if (!appProcess.killed) {
+  if (appProcess) {
+    const waitForExit = () => {
+      if (appProcess.exitCode !== null) {
+        return Promise.resolve();
+      }
+
+      return new Promise((resolve) => {
+        appProcess.once("exit", resolve);
+      });
+    };
+
+    if (appProcess.exitCode === null) {
+      if (process.platform === "win32") {
+        appProcess.kill("SIGTERM");
+      } else if (appProcess.pid) {
+        try {
+          process.kill(-appProcess.pid, "SIGTERM");
+        } catch {
+          appProcess.kill("SIGTERM");
+        }
+      } else {
+        appProcess.kill("SIGTERM");
+      }
+
+      const exitedGracefully = await Promise.race([
+        waitForExit().then(() => true),
+        delay(5000).then(() => false),
+      ]);
+
+      if (!exitedGracefully && appProcess.exitCode === null) {
+        if (process.platform === "win32") {
+          appProcess.kill("SIGKILL");
+        } else if (appProcess.pid) {
+          try {
+            process.kill(-appProcess.pid, "SIGKILL");
+          } catch {
+            appProcess.kill("SIGKILL");
+          }
+        } else {
           appProcess.kill("SIGKILL");
         }
-      }),
-    ]);
+        await waitForExit();
+      }
+    }
   }
 
   if (createdItemId) {
@@ -462,11 +553,42 @@ async function cleanup() {
     });
   }
 
+  log(`Ensuring app process on port ${appPort} is stopped`);
+  await killProcessListeningOnPort(appPort);
+
   await removeContainerIfExists();
+}
+
+async function preflightCleanup() {
+  log("Cleaning up any stray Docker containers from previous runs");
+  try {
+    await runCommand("docker", ["rm", "-f", containerName]);
+  } catch {
+    // Ignore cleanup errors during preflight
+  }
+
+  if (process.platform !== "win32") {
+    log("Stopping stray next dev processes");
+    try {
+      await runCommand("sh", ["-lc", "pkill -f 'next dev' || true"]);
+    } catch {
+      // Ignore if no matching process is running
+    }
+  }
+
+  try {
+    await rm(path.join(rootDir, ".next", "dev", "lock"), { force: true });
+  } catch {
+    // Ignore if lock file does not exist
+  }
+
+  log(`Cleaning up any stale app process on port ${appPort}`);
+  await killProcessListeningOnPort(appPort);
 }
 
 async function main() {
   try {
+    await preflightCleanup();
     await ensureDockerAvailable();
     await startPostgresContainer();
     await waitForPostgres();

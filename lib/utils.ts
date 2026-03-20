@@ -21,10 +21,14 @@ export function toDateOnlyString(value: string | Date | null | undefined) {
       return null;
     }
 
-    return `${parsed.getFullYear()}-${padDatePart(parsed.getMonth() + 1)}-${padDatePart(parsed.getDate())}`;
+    // When parsing a string like "2024-02-15", JavaScript interprets it in local timezone
+    // To fix this, we need to parse it as UTC by using the ISO format with Z suffix
+    const utcDate = new Date(trimmed + "T00:00:00Z");
+    return `${utcDate.getUTCFullYear()}-${padDatePart(utcDate.getUTCMonth() + 1)}-${padDatePart(utcDate.getUTCDate())}`;
   }
 
-  return `${value.getFullYear()}-${padDatePart(value.getMonth() + 1)}-${padDatePart(value.getDate())}`;
+  // For Date objects, use UTC components to avoid timezone offset issues
+  return `${value.getUTCFullYear()}-${padDatePart(value.getUTCMonth() + 1)}-${padDatePart(value.getUTCDate())}`;
 }
 
 export function formatCurrency(value: number | null | undefined) {

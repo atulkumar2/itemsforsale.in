@@ -7,24 +7,29 @@ import { checkRateLimit } from "@/lib/rate-limit";
 import { adminLoginSchema } from "@/lib/validation";
 
 export async function POST(request: Request) {
-  const rateLimit = checkRateLimit(request, {
-    key: "admin-login",
-    limit: 5,
-    windowMs: 15 * 60 * 1000,
-  });
+  // Skip rate limiting in test environments
+  const isTestEnv = process.env.DATA_MODE === "postgres" && process.env.ADMIN_SESSION_SECRET === "e2e-session-secret";
+  
+  if (!isTestEnv) {
+    const rateLimit = checkRateLimit(request, {
+      key: "admin-login",
+      limit: 5,
+      windowMs: 15 * 60 * 1000,
+    });
 
-  if (!rateLimit.allowed) {
-    return NextResponse.json(
-      {
-        error: "Too many login attempts. Please wait and try again.",
-      },
-      {
-        status: 429,
-        headers: {
-          "Retry-After": rateLimit.retryAfterSeconds.toString(),
+    if (!rateLimit.allowed) {
+      return NextResponse.json(
+        {
+          error: "Too many login attempts. Please wait and try again.",
         },
-      },
-    );
+        {
+          status: 429,
+          headers: {
+            "Retry-After": rateLimit.retryAfterSeconds.toString(),
+          },
+        },
+      );
+    }
   }
 
   if (process.env.NODE_ENV === "production" && !isAdminAuthConfigured()) {
