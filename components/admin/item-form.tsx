@@ -8,6 +8,7 @@ import { useForm } from "react-hook-form";
 
 import { imageUploadLimits, itemFormLimits, itemStatuses } from "@/lib/constants";
 import type { ItemWithImages } from "@/lib/types";
+import { toDateOnlyString } from "@/lib/utils";
 import {
   itemFormSchema,
   type ItemFormValues,
@@ -18,13 +19,7 @@ type ItemFormProps = {
 };
 
 function toDateInputValue(value: string | Date | null | undefined) {
-  if (!value) {
-    return "";
-  }
-
-  const trimmed = value instanceof Date ? value.toISOString() : value.trim();
-  const dateOnlyMatch = trimmed.match(/^\d{4}-\d{2}-\d{2}/);
-  return dateOnlyMatch ? dateOnlyMatch[0] : "";
+  return toDateOnlyString(value) ?? "";
 }
 
 export function ItemForm({ item }: ItemFormProps) {

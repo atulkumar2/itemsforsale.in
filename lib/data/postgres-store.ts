@@ -22,7 +22,7 @@ import type {
   SaveItemInput,
   SaveLeadInput,
 } from "@/lib/types";
-import { normaliseOptionalString, slugify } from "@/lib/utils";
+import { normaliseOptionalString, slugify, toDateOnlyString } from "@/lib/utils";
 import { processUploadedImage } from "@/lib/upload-security";
 
 const uploadsRootPath = path.join(process.cwd(), "public", "uploads");
@@ -372,10 +372,10 @@ function mapItemRow(row: ItemRow): Item {
     description: row.description,
     category: row.category,
     condition: row.condition,
-    purchaseDate: row.purchase_date,
+    purchaseDate: toDateOnlyString(row.purchase_date),
     purchasePrice: parseDbNumber(row.purchase_price),
     expectedPrice: parseDbNumber(row.expected_price),
-    availableFrom: row.available_from,
+    availableFrom: toDateOnlyString(row.available_from),
     locationArea: row.location_area,
     status: row.status,
     createdAt: toIsoString(row.created_at) ?? new Date().toISOString(),

@@ -1,5 +1,32 @@
 import type { ItemStatus } from "@/lib/types";
 
+function padDatePart(value: number) {
+  return value.toString().padStart(2, "0");
+}
+
+export function toDateOnlyString(value: string | Date | null | undefined) {
+  if (!value) {
+    return null;
+  }
+
+  if (typeof value === "string") {
+    const trimmed = value.trim();
+    const directMatch = trimmed.match(/^\d{4}-\d{2}-\d{2}/);
+    if (directMatch) {
+      return directMatch[0];
+    }
+
+    const parsed = new Date(trimmed);
+    if (Number.isNaN(parsed.getTime())) {
+      return null;
+    }
+
+    return `${parsed.getFullYear()}-${padDatePart(parsed.getMonth() + 1)}-${padDatePart(parsed.getDate())}`;
+  }
+
+  return `${value.getFullYear()}-${padDatePart(value.getMonth() + 1)}-${padDatePart(value.getDate())}`;
+}
+
 export function formatCurrency(value: number | null | undefined) {
   if (value === null || value === undefined) {
     return "Not listed";
@@ -12,8 +39,9 @@ export function formatCurrency(value: number | null | undefined) {
   }).format(value);
 }
 
-export function formatDate(value: string | null | undefined) {
-  if (!value) {
+export function formatDate(value: string | Date | null | undefined) {
+  const dateOnly = toDateOnlyString(value);
+  if (!dateOnly) {
     return "Not listed";
   }
 
@@ -21,7 +49,8 @@ export function formatDate(value: string | null | undefined) {
     day: "numeric",
     month: "short",
     year: "numeric",
-  }).format(new Date(value));
+    timeZone: "UTC",
+  }).format(new Date(`${dateOnly}T00:00:00.000Z`));
 }
 
 export function formatDateTime(value: string | null | undefined) {
