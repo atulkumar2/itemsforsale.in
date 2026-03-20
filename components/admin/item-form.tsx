@@ -17,6 +17,16 @@ type ItemFormProps = {
   item?: ItemWithImages | null;
 };
 
+function toDateInputValue(value: string | null | undefined) {
+  if (!value) {
+    return "";
+  }
+
+  const trimmed = value.trim();
+  const dateOnlyMatch = trimmed.match(/^\d{4}-\d{2}-\d{2}/);
+  return dateOnlyMatch ? dateOnlyMatch[0] : "";
+}
+
 export function ItemForm({ item }: ItemFormProps) {
   const router = useRouter();
   const [isPending, startTransition] = useTransition();
@@ -35,10 +45,10 @@ export function ItemForm({ item }: ItemFormProps) {
       description: item?.description ?? "",
       category: item?.category ?? "",
       condition: item?.condition ?? "",
-      purchaseDate: item?.purchaseDate ?? "",
+      purchaseDate: toDateInputValue(item?.purchaseDate),
       purchasePrice: item?.purchasePrice?.toString() ?? "",
       expectedPrice: item?.expectedPrice?.toString() ?? "",
-      availableFrom: item?.availableFrom ?? "",
+      availableFrom: toDateInputValue(item?.availableFrom),
       locationArea: item?.locationArea ?? "",
       status: item?.status ?? "available",
     },
