@@ -14,14 +14,47 @@ export function getDatabaseUrl() {
   return process.env.DATABASE_URL ?? "postgresql://postgres:postgres@localhost:5432/itemsforsale";
 }
 
+function readConfiguredEnv(name: string) {
+  const value = process.env[name]?.trim();
+  return value ? value : null;
+}
+
+function isProduction() {
+  return process.env.NODE_ENV === "production";
+}
+
+export function isAdminAuthConfigured() {
+  return Boolean(
+    readConfiguredEnv("ADMIN_EMAIL")
+    && readConfiguredEnv("ADMIN_PASSWORD")
+    && readConfiguredEnv("ADMIN_SESSION_SECRET"),
+  );
+}
+
+export function isCaptchaConfigured() {
+  return Boolean(
+    readConfiguredEnv("CONTACT_CAPTCHA_SECRET")
+    || readConfiguredEnv("ADMIN_SESSION_SECRET")
+    || !isProduction(),
+  );
+}
+
 export function getAdminEmail() {
-  return process.env.ADMIN_EMAIL ?? "admin@example.com";
+  return readConfiguredEnv("ADMIN_EMAIL")
+    ?? (isProduction() ? "" : "admin@example.com");
 }
 
 export function getAdminPassword() {
-  return process.env.ADMIN_PASSWORD ?? "admin12345";
+  return readConfiguredEnv("ADMIN_PASSWORD")
+    ?? (isProduction() ? "" : "admin12345");
 }
 
 export function getAdminSessionSecret() {
-  return process.env.ADMIN_SESSION_SECRET ?? "local-dev-session-secret";
+  return readConfiguredEnv("ADMIN_SESSION_SECRET")
+    ?? (isProduction() ? "" : "local-dev-session-secret");
+}
+
+export function getCaptchaSecret() {
+  return readConfiguredEnv("CONTACT_CAPTCHA_SECRET")
+    ?? getAdminSessionSecret();
 }

@@ -8,6 +8,7 @@ import { useForm } from "react-hook-form";
 
 import { itemFormLimits, itemStatuses } from "@/lib/constants";
 import type { ItemWithImages } from "@/lib/types";
+import { imageUploadLimits } from "@/lib/upload-security";
 import {
   itemFormSchema,
   type ItemFormValues,
@@ -256,6 +257,7 @@ export function ItemForm({ item }: ItemFormProps) {
             Upload photos
           </label>
           <input
+            accept="image/jpeg,image/png,image/webp"
             className="field"
             id="images"
             multiple
@@ -265,7 +267,7 @@ export function ItemForm({ item }: ItemFormProps) {
             type="file"
           />
           <p className="mt-2 text-sm text-[color:var(--muted)]">
-            Local mode stores uploaded images in public/uploads.
+            Upload up to {imageUploadLimits.maxFiles} JPG, PNG, or WebP images, {imageUploadLimits.maxFileSizeBytes / (1024 * 1024)} MB each.
           </p>
         </div>
 

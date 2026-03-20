@@ -1,17 +1,19 @@
 import { describe, expect, it } from "vitest";
 
 import { contactFormLimits } from "@/lib/constants";
-import { contactCaptchaChallenges } from "@/lib/contact-captcha";
+import { issueContactCaptchaChallenge } from "@/lib/contact-captcha-store";
 import { contactSellerSchema } from "@/lib/validation";
 
 function validPayload() {
+  const challenge = issueContactCaptchaChallenge();
+
   return {
     buyerName: "Atul Kumar",
     phone: "9876543210",
     email: "itemsforsale@outlook.in",
     location: "Bommanahalli",
     message: "I am interested in your dining set. Please share available timing.",
-    captchaId: contactCaptchaChallenges[0]?.id ?? "math-7-plus-5",
+    captchaToken: challenge.token,
     captchaAnswer: "12",
   };
 }

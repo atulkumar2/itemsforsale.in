@@ -1,13 +1,41 @@
 import { NextResponse } from "next/server";
 
-import {
-  contactCaptchaChallenges,
-  isValidCaptchaAnswer,
-} from "@/lib/contact-captcha";
+import { issueContactCaptchaChallenge, verifyContactCaptchaChallenge } from "@/lib/contact-captcha-store";
 import { submitContactSubmission } from "@/lib/data/repository";
+import { isCaptchaConfigured } from "@/lib/env";
+import { checkRateLimit } from "@/lib/rate-limit";
 import { contactSellerSchema } from "@/lib/validation";
 
 export async function POST(request: Request) {
+  if (process.env.NODE_ENV === "production" && !isCaptchaConfigured()) {
+    return NextResponse.json(
+      {
+        error: "Captcha is not configured on this deployment.",
+      },
+      { status: 503 },
+    );
+  }
+
+  const rateLimit = checkRateLimit(request, {
+    key: "contact-submissions",
+    limit: 8,
+    windowMs: 10 * 60 * 1000,
+  });
+
+  if (!rateLimit.allowed) {
+    return NextResponse.json(
+      {
+        error: "Too many contact requests. Please wait and try again.",
+      },
+      {
+        status: 429,
+        headers: {
+          "Retry-After": rateLimit.retryAfterSeconds.toString(),
+        },
+      },
+    );
+  }
+
   const body = (await request.json()) as Record<string, string>;
   const parsed = contactSellerSchema.safeParse(body);
 
@@ -20,7 +48,12 @@ export async function POST(request: Request) {
     );
   }
 
-  if (!isValidCaptchaAnswer(parsed.data.captchaId, parsed.data.captchaAnswer)) {
+  const verifiedChallenge = verifyContactCaptchaChallenge(
+    parsed.data.captchaToken,
+    parsed.data.captchaAnswer,
+  );
+
+  if (!verifiedChallenge) {
     return NextResponse.json(
       {
         error: "Captcha answer is incorrect.",
@@ -29,15 +62,13 @@ export async function POST(request: Request) {
     );
   }
 
-  const challenge = contactCaptchaChallenges.find((entry) => entry.id === parsed.data.captchaId);
-
   await submitContactSubmission({
     buyerName: parsed.data.buyerName,
     phone: parsed.data.phone,
     email: parsed.data.email,
     location: parsed.data.location,
     message: parsed.data.message,
-    captchaPrompt: challenge?.prompt ?? "Unknown prompt",
+    captchaPrompt: verifiedChallenge.prompt,
   });
 
   return NextResponse.json(
@@ -46,4 +77,21 @@ export async function POST(request: Request) {
     },
     { status: 201 },
   );
+}
+
+export async function GET() {
+  if (process.env.NODE_ENV === "production" && !isCaptchaConfigured()) {
+    return NextResponse.json(
+      {
+        error: "Captcha is not configured on this deployment.",
+      },
+      { status: 503 },
+    );
+  }
+
+  return NextResponse.json(issueContactCaptchaChallenge(), {
+    headers: {
+      "Cache-Control": "no-store",
+    },
+  });
 }

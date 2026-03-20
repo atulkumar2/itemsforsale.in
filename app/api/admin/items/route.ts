@@ -2,6 +2,7 @@ import { NextResponse } from "next/server";
 
 import { ensureAdminApiAuth } from "@/lib/auth";
 import { saveAdminItem } from "@/lib/data/repository";
+import { validateImageUploads } from "@/lib/upload-security";
 import {
   normaliseOptionalString,
   parseOptionalDate,
@@ -41,6 +42,17 @@ export async function POST(request: Request) {
   const files = formData
     .getAll("images")
     .filter((value): value is File => value instanceof File && value.size > 0);
+
+  try {
+    validateImageUploads(files);
+  } catch (error) {
+    return NextResponse.json(
+      {
+        error: error instanceof Error ? error.message : "Invalid image upload.",
+      },
+      { status: 400 },
+    );
+  }
 
   const savedItem = await saveAdminItem(
     {

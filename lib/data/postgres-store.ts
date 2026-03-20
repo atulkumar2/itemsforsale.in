@@ -22,7 +22,8 @@ import type {
   SaveItemInput,
   SaveLeadInput,
 } from "@/lib/types";
-import { getFileExtension, normaliseOptionalString, slugify } from "@/lib/utils";
+import { normaliseOptionalString, slugify } from "@/lib/utils";
+import { getSafeImageExtension } from "@/lib/upload-security";
 
 const uploadsRootPath = path.join(process.cwd(), "public", "uploads");
 
@@ -449,7 +450,7 @@ async function storeUploadedImages(itemId: string, files: File[]) {
 
   const uploadedImages = await Promise.all(
     files.map(async (file, index) => {
-      const extension = getFileExtension(file.name);
+      const extension = getSafeImageExtension(file) ?? "bin";
       const fileName = `${Date.now()}-${index}.${extension}`;
       const relativePath = path.posix.join("/uploads", itemId, fileName);
       const outputPath = path.join(uploadsRootPath, itemId, fileName);

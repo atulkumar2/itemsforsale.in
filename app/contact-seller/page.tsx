@@ -1,7 +1,10 @@
 import { ContactSellerForm } from "@/components/contact-seller-form";
+import { issueContactCaptchaChallenge } from "@/lib/contact-captcha-store";
 import { SiteHeader } from "@/components/site-header";
 
 export default function ContactSellerPage() {
+  const initialChallenge = issueContactCaptchaChallenge();
+
   return (
     <main className="pb-16">
       <SiteHeader />
@@ -19,7 +22,7 @@ export default function ContactSellerPage() {
             </p>
           </div>
 
-          <ContactSellerForm />
+          <ContactSellerForm initialChallenge={initialChallenge} />
         </div>
       </section>
     </main>

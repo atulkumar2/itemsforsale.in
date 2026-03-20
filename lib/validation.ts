@@ -1,6 +1,5 @@
 import { z } from "zod";
 
-import { contactCaptchaChallenges } from "@/lib/contact-captcha";
 import {
   contactFormLimits,
   emailRegex,
@@ -134,13 +133,10 @@ export const contactSellerSchema = z.object({
     .trim()
     .min(10, "Message must be at least 10 characters.")
     .max(contactFormLimits.messageMax, "Message is too long."),
-  captchaId: z
+  captchaToken: z
     .string()
     .trim()
-    .refine(
-      (value) => contactCaptchaChallenges.some((challenge) => challenge.id === value),
-      "Captcha question is invalid.",
-    ),
+    .min(1, "Captcha token is required."),
   captchaAnswer: z
     .string()
     .trim()

@@ -1,16 +1,8 @@
 import { NextResponse } from "next/server";
 
+import { escapeCsvCell } from "@/lib/csv";
 import { listPublicItems } from "@/lib/data/repository";
 import { parseItemStatus } from "@/lib/utils";
-
-function escapeCsvCell(value: string | null | undefined) {
-  if (!value) {
-    return "";
-  }
-
-  const escaped = value.replace(/"/g, '""');
-  return `"${escaped}"`;
-}
 
 function buildOrigin(request: Request) {
   const url = new URL(request.url);

@@ -1,16 +1,8 @@
 import { NextResponse } from "next/server";
 
 import { ensureAdminApiAuth } from "@/lib/auth";
+import { escapeCsvCell } from "@/lib/csv";
 import { listAdminContactSubmissions } from "@/lib/data/repository";
-
-function escapeCsvCell(value: string | null | undefined) {
-  if (!value) {
-    return "";
-  }
-
-  const escaped = value.replace(/"/g, '""');
-  return `"${escaped}"`;
-}
 
 export async function GET() {
   if (!(await ensureAdminApiAuth())) {

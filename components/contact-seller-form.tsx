@@ -2,38 +2,36 @@
 
 import { zodResolver } from "@hookform/resolvers/zod";
 import { useMemo, useState, useTransition } from "react";
-import { useForm } from "react-hook-form";
+import { useForm, useWatch } from "react-hook-form";
 
-import { contactCaptchaChallenges } from "@/lib/contact-captcha";
+import type { ContactCaptchaChallenge } from "@/lib/contact-captcha";
 import { contactFormLimits, emailRegex, phoneRegex } from "@/lib/constants";
 import {
   contactSellerSchema,
   type ContactSellerValues,
 } from "@/lib/validation";
 
-function randomChallengeIndex() {
-  return Math.floor(Math.random() * contactCaptchaChallenges.length);
-}
-
 const sellerContact = {
   phone: "+91 90000 00000",
   email: "itemsforsale@outlook.in",
 };
 
-export function ContactSellerForm() {
-  const [challengeIndex, setChallengeIndex] = useState<number>(() => randomChallengeIndex());
+type ContactSellerFormProps = {
+  initialChallenge: ContactCaptchaChallenge;
+};
+
+export function ContactSellerForm({ initialChallenge }: ContactSellerFormProps) {
+  const [challenge, setChallenge] = useState<ContactCaptchaChallenge | null>(initialChallenge);
   const [isPending, startTransition] = useTransition();
   const [error, setError] = useState<string | null>(null);
   const [success, setSuccess] = useState<string | null>(null);
 
-  const activeChallenge = contactCaptchaChallenges[challengeIndex];
-
   const {
     register,
     handleSubmit,
+    control,
     setValue,
     reset,
-    watch,
     formState: { errors },
   } = useForm<ContactSellerValues>({
     resolver: zodResolver(contactSellerSchema),
@@ -43,13 +41,13 @@ export function ContactSellerForm() {
       email: "",
       location: "",
       message: "",
-      captchaId: activeChallenge.id,
+      captchaToken: initialChallenge.token,
       captchaAnswer: "",
     },
   });
 
-  const watchName = watch("buyerName");
-  const watchMessage = watch("message");
+  const watchName = useWatch({ control, name: "buyerName" });
+  const watchMessage = useWatch({ control, name: "message" });
 
   const whatsappLink = useMemo(() => {
     const text = encodeURIComponent(
@@ -59,12 +57,20 @@ export function ContactSellerForm() {
     return `https://wa.me/${sellerContact.phone.replace(/\D/g, "")}?text=${text}`;
   }, [watchMessage, watchName]);
 
-  function resetChallenge() {
-    const nextIndex = randomChallengeIndex();
-    const nextChallenge = contactCaptchaChallenges[nextIndex];
+  async function refreshChallenge() {
+    const response = await fetch("/api/contact-submissions", {
+      method: "GET",
+      cache: "no-store",
+    });
 
-    setChallengeIndex(nextIndex);
-    setValue("captchaId", nextChallenge.id, { shouldValidate: true });
+    if (!response.ok) {
+      setError("Unable to load captcha right now.");
+      return;
+    }
+
+    const nextChallenge = (await response.json()) as ContactCaptchaChallenge;
+    setChallenge(nextChallenge);
+    setValue("captchaToken", nextChallenge.token, { shouldValidate: true });
     setValue("captchaAnswer", "", { shouldValidate: true });
   }
 
@@ -85,7 +91,7 @@ export function ContactSellerForm() {
 
       if (!response.ok) {
         setError(result.error ?? "Unable to submit contact request right now.");
-        resetChallenge();
+        await refreshChallenge();
         return;
       }
 
@@ -96,10 +102,10 @@ export function ContactSellerForm() {
         email: values.email,
         location: values.location,
         message: values.message,
-        captchaId: values.captchaId,
+        captchaToken: "",
         captchaAnswer: "",
       });
-      resetChallenge();
+      await refreshChallenge();
     });
   }
 
@@ -199,12 +205,15 @@ export function ContactSellerForm() {
 
         <div className="rounded-2xl border border-[color:var(--line)] bg-[color:var(--bg-secondary)] p-4">
           <p className="text-xs uppercase tracking-[0.18em] text-[color:var(--muted)]">Captcha check</p>
-          <p className="mt-2 text-sm font-semibold text-stone-900">{activeChallenge.prompt}</p>
-          <input type="hidden" {...register("captchaId")} value={activeChallenge.id} />
+          <p className="mt-2 text-sm font-semibold text-stone-900">
+            {challenge?.prompt ?? "Loading captcha..."}
+          </p>
+          <input type="hidden" {...register("captchaToken")} />
 
           <div className="mt-3 flex flex-col gap-3 sm:flex-row">
             <input
               className="field"
+              disabled={!challenge}
               maxLength={contactFormLimits.captchaAnswerMax}
               placeholder="Type your answer"
               {...register("captchaAnswer")}
@@ -212,7 +221,7 @@ export function ContactSellerForm() {
             <button
               type="button"
               className="button-ghost"
-              onClick={resetChallenge}
+              onClick={() => void refreshChallenge()}
             >
               New question
             </button>
@@ -225,7 +234,7 @@ export function ContactSellerForm() {
         {error ? <p className="text-sm text-[color:var(--danger)]">{error}</p> : null}
         {success ? <p className="text-sm text-[color:var(--success)]">{success}</p> : null}
 
-        <button className="button w-full" type="submit" disabled={isPending}>
+        <button className="button w-full" type="submit" disabled={isPending || !challenge}>
           {isPending ? "Submitting..." : "Verify & continue"}
         </button>
       </form>
