@@ -68,7 +68,7 @@ export const interestFormSchema = z.object({
   captchaAnswer: z
     .string()
     .trim()
-    .min(1, "Captcha answer is required.")
+    .min(1, "Choose the correct answer.")
     .max(contactFormLimits.captchaAnswerMax, "Captcha answer is too long."),
 });
 
@@ -112,7 +112,7 @@ export const bulkInterestFormSchema = z.object({
   captchaAnswer: z
     .string()
     .trim()
-    .min(1, "Captcha answer is required.")
+    .min(1, "Choose the correct answer.")
     .max(contactFormLimits.captchaAnswerMax, "Captcha answer is too long."),
 });
 
@@ -128,7 +128,7 @@ export const adminLoginSchema = z.object({
   captchaAnswer: z
     .string()
     .trim()
-    .min(1, "Captcha answer is required.")
+    .min(1, "Choose the correct answer.")
     .max(contactFormLimits.captchaAnswerMax, "Captcha answer is too long."),
 });
 
@@ -209,7 +209,7 @@ export const contactSellerSchema = z.object({
   captchaAnswer: z
     .string()
     .trim()
-    .min(1, "Captcha answer is required.")
+    .min(1, "Choose the correct answer.")
     .max(contactFormLimits.captchaAnswerMax, "Captcha answer is too long."),
 });
 

@@ -1,6 +1,7 @@
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 
 import { normalizeCaptchaAnswer } from "@/lib/contact-captcha";
+import { contactCaptchaQuestions } from "@/lib/contact-captcha-questions";
 import {
   issueContactCaptchaChallenge,
   verifyContactCaptchaChallenge,
@@ -31,41 +32,15 @@ describe("contact captcha", () => {
     const challenge = issueContactCaptchaChallenge();
     expect(challenge.prompt.length).toBeGreaterThan(0);
     expect(challenge.token.length).toBeGreaterThan(0);
+    expect(challenge.options).toHaveLength(4);
+    expect(new Set(challenge.options).size).toBe(4);
 
-    const knownAnswers = [
-      "12",
-      "twelve",
-      "6",
-      "six",
-      "14",
-      "fourteen",
-      "13",
-      "thirteen",
-      "8",
-      "eight",
-      "24",
-      "twenty four",
-      "15",
-      "fifteen",
-      "17",
-      "seventeen",
-      "9",
-      "nine",
-      "21",
-      "twenty one",
-      "new delhi",
-      "delhi",
-      "india",
-      "hindi",
-      "karnataka",
-      "tamilnadu",
-      "telangana",
-    ];
-    const matchedAnswer = knownAnswers.find((answer) =>
-      verifyContactCaptchaChallenge(challenge.token, answer),
-    );
-
-    expect(matchedAnswer).toBeTruthy();
+    const matchingQuestion = contactCaptchaQuestions.find((entry) => entry.prompt === challenge.prompt);
+    expect(matchingQuestion).toBeTruthy();
+    expect(challenge.options).toContain(matchingQuestion!.correctAnswer);
+    expect(verifyContactCaptchaChallenge(challenge.token, matchingQuestion!.correctAnswer)).toEqual({
+      prompt: challenge.prompt,
+    });
   });
 
   it("rejects invalid or tampered tokens", () => {

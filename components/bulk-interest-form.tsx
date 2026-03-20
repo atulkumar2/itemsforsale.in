@@ -236,13 +236,14 @@ export function BulkInterestForm({ initialChallenge, items }: BulkInterestFormPr
           <input type="hidden" {...register("captchaToken")} />
 
           <div className="mt-3 flex flex-col gap-3 sm:flex-row">
-            <input
-              className="field"
-              disabled={!challenge}
-              maxLength={contactFormLimits.captchaAnswerMax}
-              placeholder="Type your answer"
-              {...register("captchaAnswer")}
-            />
+            <select className="field" disabled={!challenge} {...register("captchaAnswer")}>
+              <option value="">Select the correct answer</option>
+              {(challenge?.options ?? []).map((option) => (
+                <option key={option} value={option}>
+                  {option}
+                </option>
+              ))}
+            </select>
             <button className="button-ghost" onClick={() => void refreshChallenge()} type="button">
               New question
             </button>

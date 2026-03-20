@@ -1,140 +1,98 @@
 import { randomInt, randomUUID } from "node:crypto";
 
-import { getCaptchaSecret } from "@/lib/env";
 import {
   normalizeCaptchaAnswer,
   type ContactCaptchaChallenge,
+  type ContactCaptchaQuestion,
 } from "@/lib/contact-captcha";
+import { contactCaptchaQuestions } from "@/lib/contact-captcha-questions";
 import { signJsonToken, verifyJsonToken } from "@/lib/crypto-tokens";
-
-type StoredContactCaptchaChallenge = {
-  id: string;
-  prompt: string;
-  answers: string[];
-};
+import { getCaptchaSecret } from "@/lib/env";
 
 type ContactCaptchaTokenPayload = {
   challengeId: string;
-  nonce: string;
   issuedAt: number;
+  nonce: string;
 };
 
 const captchaLifetimeMs = 30 * 60 * 1000;
+const numericDistractorOffsets = [-9, -7, -5, -4, -3, -2, -1, 1, 2, 3, 4, 5, 7, 9];
 
-const contactCaptchaQuestions: StoredContactCaptchaChallenge[] = [
-  { id: "math-7-plus-5", prompt: "What is 7 + 5?", answers: ["12", "twelve"] },
-  { id: "math-9-minus-3", prompt: "What is 9 - 3?", answers: ["6", "six"] },
-  { id: "math-8-plus-6", prompt: "What is 8 + 6?", answers: ["14", "fourteen"] },
-  { id: "math-10-minus-4", prompt: "What is 10 - 4?", answers: ["6", "six"] },
-  { id: "math-11-plus-2", prompt: "What is 11 + 2?", answers: ["13", "thirteen"] },
-  { id: "math-15-minus-7", prompt: "What is 15 - 7?", answers: ["8", "eight"] },
-  {
-    id: "math-6-times-4",
-    prompt: "What is 6 x 4?",
-    answers: ["24", "twenty four", "twenty-four"],
-  },
-  {
-    id: "math-3-times-5",
-    prompt: "What is 3 x 5?",
-    answers: ["15", "fifteen"],
-  },
-  {
-    id: "math-9-plus-8",
-    prompt: "What is 9 + 8?",
-    answers: ["17", "seventeen"],
-  },
-  {
-    id: "math-18-minus-9",
-    prompt: "What is 18 - 9?",
-    answers: ["9", "nine"],
-  },
-  {
-    id: "math-7-times-3",
-    prompt: "What is 7 x 3?",
-    answers: ["21", "twenty one", "twenty-one"],
-  },
-  {
-    id: "india-capital",
-    prompt: "What is the capital city of India?",
-    answers: ["new delhi", "delhi"],
-  },
-  {
-    id: "india-country-code",
-    prompt: "What country does the city of Mumbai belong to?",
-    answers: ["india"],
-  },
-  {
-    id: "india-national-language-common",
-    prompt: "Which language is widely spoken in India and often used as a common official language?",
-    answers: ["hindi"],
-  },
-  {
-    id: "bengaluru-state",
-    prompt: "Which state is Bengaluru in?",
-    answers: ["karnataka"],
-  },
-  {
-    id: "karnataka-country",
-    prompt: "Which country is Karnataka in?",
-    answers: ["india"],
-  },
-  {
-    id: "bengaluru-capital-of",
-    prompt: "Bengaluru is commonly known as the capital of which state?",
-    answers: ["karnataka"],
-  },
-  {
-    id: "bengaluru-country",
-    prompt: "Name the country where Bengaluru is located.",
-    answers: ["india"],
-  },
-  {
-    id: "mysuru-state",
-    prompt: "Which state is Mysuru in?",
-    answers: ["karnataka"],
-  },
-  {
-    id: "mangaluru-state",
-    prompt: "Which state is Mangaluru in?",
-    answers: ["karnataka"],
-  },
-  {
-    id: "chennai-state",
-    prompt: "Which state is Chennai in?",
-    answers: ["tamilnadu"],
-  },
-  {
-    id: "hyderabad-state",
-    prompt: "Which state is Hyderabad in?",
-    answers: ["telangana"],
-  },
-  {
-    id: "kerala-country",
-    prompt: "Which country is Kerala in?",
-    answers: ["india"],
-  },
-  {
-    id: "tamil-nadu-country",
-    prompt: "Which country is Tamil Nadu in?",
-    answers: ["india"],
-  },
-  {
-    id: "goa-country",
-    prompt: "Which country is Goa in?",
-    answers: ["india"],
-  },
-  {
-    id: "maharashtra-country",
-    prompt: "Which country is Maharashtra in?",
-    answers: ["india"],
-  },
-];
+function shuffleValues(values: string[]) {
+  const next = [...values];
+
+  for (let index = next.length - 1; index > 0; index -= 1) {
+    const swapIndex = randomInt(index + 1);
+    [next[index], next[swapIndex]] = [next[swapIndex]!, next[index]!];
+  }
+
+  return next;
+}
+
+function uniqueNormalized(values: string[]) {
+  const seen = new Set<string>();
+  const result: string[] = [];
+
+  for (const value of values) {
+    const normalized = normalizeCaptchaAnswer(value);
+    if (!normalized || seen.has(normalized)) {
+      continue;
+    }
+
+    seen.add(normalized);
+    result.push(value);
+  }
+
+  return result;
+}
+
+function buildNumericOptions(question: ContactCaptchaQuestion) {
+  const answer = Number.parseInt(question.correctAnswer, 10);
+  if (Number.isNaN(answer)) {
+    return [question.correctAnswer];
+  }
+
+  const distractors: string[] = [];
+
+  for (const offset of shuffleValues(numericDistractorOffsets.map((value) => value.toString())).map(Number)) {
+    const candidate = answer + offset;
+    if (candidate < 0 || candidate === answer) {
+      continue;
+    }
+
+    distractors.push(candidate.toString());
+    if (distractors.length === 3) {
+      break;
+    }
+  }
+
+  return shuffleValues([question.correctAnswer, ...distractors]);
+}
+
+function buildTextOptions(question: ContactCaptchaQuestion) {
+  const wrongAnswers = uniqueNormalized(question.wrongAnswers ?? []);
+  const distractors = shuffleValues(wrongAnswers).slice(0, 3);
+  return shuffleValues([question.correctAnswer, ...distractors]);
+}
+
+function buildOptions(question: ContactCaptchaQuestion) {
+  const numericAnswer = Number.parseInt(question.correctAnswer, 10);
+  const options = Number.isNaN(numericAnswer)
+    ? buildTextOptions(question)
+    : buildNumericOptions(question);
+
+  return uniqueNormalized(options).slice(0, 4);
+}
+
+function getQuestionById(challengeId: string) {
+  return contactCaptchaQuestions.find((entry) => entry.id === challengeId) ?? null;
+}
 
 export function issueContactCaptchaChallenge(): ContactCaptchaChallenge {
-  const challenge = contactCaptchaQuestions[randomInt(contactCaptchaQuestions.length)];
+  const question = contactCaptchaQuestions[randomInt(contactCaptchaQuestions.length)];
   const token = signJsonToken(
     {
-      challengeId: challenge.id,
+      challengeId: question.id,
       nonce: randomUUID(),
       issuedAt: Date.now(),
     } satisfies ContactCaptchaTokenPayload,
@@ -142,7 +100,8 @@ export function issueContactCaptchaChallenge(): ContactCaptchaChallenge {
   );
 
   return {
-    prompt: challenge.prompt,
+    options: buildOptions(question),
+    prompt: question.prompt,
     token,
   };
 }
@@ -154,19 +113,16 @@ export function verifyContactCaptchaChallenge(token: string, answer: string) {
     return null;
   }
 
-  const challenge = contactCaptchaQuestions.find((entry) => entry.id === payload.challengeId);
-  if (!challenge) {
+  const question = getQuestionById(payload.challengeId);
+  if (!question) {
     return null;
   }
 
-  const actual = normalizeCaptchaAnswer(answer);
-  const expectedAnswers = challenge.answers.map(normalizeCaptchaAnswer);
-
-  if (!expectedAnswers.includes(actual)) {
+  if (normalizeCaptchaAnswer(answer) !== normalizeCaptchaAnswer(question.correctAnswer)) {
     return null;
   }
 
   return {
-    prompt: challenge.prompt,
+    prompt: question.prompt,
   };
 }

@@ -41,6 +41,7 @@ describe("human check route", () => {
   it("returns a no-store challenge payload when configured", async () => {
     process.env.NODE_ENV = "test";
     issueContactCaptchaChallengeMock.mockReturnValue({
+      options: ["10", "11", "12", "13"],
       prompt: "What is 7 + 5?",
       token: "signed-token",
     });
@@ -51,6 +52,7 @@ describe("human check route", () => {
     expect(response.status).toBe(200);
     expect(response.headers.get("Cache-Control")).toBe("no-store");
     await expect(response.json()).resolves.toEqual({
+      options: ["10", "11", "12", "13"],
       prompt: "What is 7 + 5?",
       token: "signed-token",
     });

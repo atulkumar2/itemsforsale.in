@@ -205,31 +205,32 @@ export function ContactSellerForm({ initialChallenge }: ContactSellerFormProps) 
 
         <div className="rounded-2xl border border-[color:var(--line)] bg-[color:var(--bg-secondary)] p-4">
           <p className="text-xs uppercase tracking-[0.18em] text-[color:var(--muted)]">Captcha check</p>
-          <p className="mt-2 text-sm font-semibold text-stone-900">
-            {challenge?.prompt ?? "Loading captcha..."}
-          </p>
-          <input type="hidden" {...register("captchaToken")} />
+      <p className="mt-2 text-sm font-semibold text-stone-900">
+        {challenge?.prompt ?? "Loading captcha..."}
+      </p>
+      <input type="hidden" {...register("captchaToken")} />
 
-          <div className="mt-3 flex flex-col gap-3 sm:flex-row">
-            <input
-              className="field"
-              disabled={!challenge}
-              maxLength={contactFormLimits.captchaAnswerMax}
-              placeholder="Type your answer"
-              {...register("captchaAnswer")}
-            />
-            <button
-              type="button"
-              className="button-ghost"
-              onClick={() => void refreshChallenge()}
-            >
-              New question
-            </button>
-          </div>
-          {errors.captchaAnswer ? (
-            <p className="mt-2 text-sm text-[color:var(--danger)]">{errors.captchaAnswer.message}</p>
-          ) : null}
+      <div className="mt-3 flex flex-col gap-3 sm:flex-row">
+          <select className="field" disabled={!challenge} {...register("captchaAnswer")}>
+            <option value="">Select the correct answer</option>
+            {(challenge?.options ?? []).map((option) => (
+              <option key={option} value={option}>
+                {option}
+              </option>
+            ))}
+          </select>
+          <button
+            type="button"
+            className="button-ghost"
+            onClick={() => void refreshChallenge()}
+          >
+            New question
+          </button>
         </div>
+        {errors.captchaAnswer ? (
+          <p className="mt-2 text-sm text-[color:var(--danger)]">{errors.captchaAnswer.message}</p>
+        ) : null}
+      </div>
 
         {error ? <p className="text-sm text-[color:var(--danger)]">{error}</p> : null}
         {success ? <p className="text-sm text-[color:var(--success)]">{success}</p> : null}
