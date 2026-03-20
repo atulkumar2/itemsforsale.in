@@ -104,55 +104,39 @@ export function BulkInterestForm({ initialChallenge, items }: BulkInterestFormPr
     <div className="space-y-6">
       <div className="rounded-[22px] border border-[color:var(--line)] bg-[rgba(255,248,241,0.64)] p-5">
         <p className="eyebrow">Selected items</p>
-        <ul className="mt-4 space-y-3 text-sm text-stone-900">
-          {items.map((item) => (
-            <li key={item.id} className="rounded-xl border border-[color:var(--line)] bg-white px-4 py-3">
-              <div className="flex flex-wrap items-start justify-between gap-3">
-                <div>
-                  <p className="font-semibold">{item.title}</p>
-                  <p className="mt-1 text-[color:var(--muted)]">
-                    {item.category || "General"}
-                  </p>
-                </div>
-                <Link
-                  className="text-sm font-medium text-[color:var(--primary)] underline decoration-[color:var(--line)]"
-                  href={`/items/${item.slug}`}
-                  rel="noreferrer"
-                  target="_blank"
-                >
-                  Open item
-                </Link>
-              </div>
-              <dl className="mt-3 grid gap-2 text-sm sm:grid-cols-2">
-                <div>
-                  <dt className="text-[color:var(--muted)]">Price</dt>
-                  <dd className="font-medium text-stone-900">{formatCurrency(item.expectedPrice)}</dd>
-                </div>
-                <div>
-                  <dt className="text-[color:var(--muted)]">Available</dt>
-                  <dd className="font-medium text-stone-900">{formatDate(item.availableFrom)}</dd>
-                </div>
-                <div>
-                  <dt className="text-[color:var(--muted)]">Category</dt>
-                  <dd className="font-medium text-stone-900">{item.category || "General"}</dd>
-                </div>
-                <div>
-                  <dt className="text-[color:var(--muted)]">Item link</dt>
-                  <dd>
+        <div className="mt-4 overflow-x-auto rounded-xl border border-[color:var(--line)] bg-white">
+          <table className="w-full min-w-[680px] text-sm text-stone-900">
+            <thead className="bg-[color:var(--bg-secondary)] text-left">
+              <tr>
+                <th className="px-4 py-3 font-semibold text-stone-900">Item</th>
+                <th className="px-4 py-3 font-semibold text-stone-900">Price</th>
+                <th className="px-4 py-3 font-semibold text-stone-900">Available</th>
+                <th className="px-4 py-3 font-semibold text-stone-900">Category</th>
+                <th className="px-4 py-3 font-semibold text-stone-900">Details</th>
+              </tr>
+            </thead>
+            <tbody>
+              {items.map((item) => (
+                <tr key={item.id} className="border-t border-[color:var(--line)] align-top">
+                  <td className="px-4 py-3 font-medium text-stone-900">{item.title}</td>
+                  <td className="px-4 py-3">{formatCurrency(item.expectedPrice)}</td>
+                  <td className="px-4 py-3">{formatDate(item.availableFrom)}</td>
+                  <td className="px-4 py-3 text-[color:var(--muted)]">{item.category || "General"}</td>
+                  <td className="px-4 py-3">
                     <Link
                       className="font-medium text-[color:var(--primary)] underline decoration-[color:var(--line)]"
                       href={`/items/${item.slug}`}
                       rel="noreferrer"
                       target="_blank"
                     >
-                      /items/{item.slug}
+                      Open item
                     </Link>
-                  </dd>
-                </div>
-              </dl>
-            </li>
-          ))}
-        </ul>
+                  </td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
+        </div>
       </div>
 
       <form className="space-y-4" onSubmit={handleSubmit(onSubmit)}>
