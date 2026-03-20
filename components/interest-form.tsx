@@ -5,19 +5,22 @@ import { useRouter } from "next/navigation";
 import { useState, useTransition } from "react";
 import { useForm } from "react-hook-form";
 
-import { emailRegex, interestFormLimits, phoneRegex } from "@/lib/constants";
+import type { ContactCaptchaChallenge } from "@/lib/contact-captcha";
+import { contactFormLimits, emailRegex, interestFormLimits, phoneRegex } from "@/lib/constants";
 import {
   interestFormSchema,
   type InterestFormValues,
 } from "@/lib/validation";
 
 type InterestFormProps = {
+  initialChallenge: ContactCaptchaChallenge;
   itemId: string;
   itemTitle: string;
 };
 
-export function InterestForm({ itemId, itemTitle }: InterestFormProps) {
+export function InterestForm({ initialChallenge, itemId, itemTitle }: InterestFormProps) {
   const router = useRouter();
+  const [challenge, setChallenge] = useState<ContactCaptchaChallenge | null>(initialChallenge);
   const [isPending, startTransition] = useTransition();
   const [serverMessage, setServerMessage] = useState<string | null>(null);
   const [serverError, setServerError] = useState<string | null>(null);
@@ -26,17 +29,37 @@ export function InterestForm({ itemId, itemTitle }: InterestFormProps) {
     handleSubmit,
     formState: { errors },
     reset,
+    setValue,
   } = useForm<InterestFormValues>({
     resolver: zodResolver(interestFormSchema),
     defaultValues: {
       bidPrice: "",
       buyerName: "",
+      captchaAnswer: "",
+      captchaToken: initialChallenge.token,
       email: "",
       itemId,
       message: "",
       phone: "",
     },
   });
+
+  async function refreshChallenge() {
+    const response = await fetch("/api/human-check", {
+      method: "GET",
+      cache: "no-store",
+    });
+
+    if (!response.ok) {
+      setServerError("Unable to load captcha right now.");
+      return;
+    }
+
+    const nextChallenge = (await response.json()) as ContactCaptchaChallenge;
+    setChallenge(nextChallenge);
+    setValue("captchaToken", nextChallenge.token, { shouldValidate: true });
+    setValue("captchaAnswer", "", { shouldValidate: true });
+  }
 
   async function onSubmit(values: InterestFormValues) {
     setServerMessage(null);
@@ -55,17 +78,21 @@ export function InterestForm({ itemId, itemTitle }: InterestFormProps) {
 
       if (!response.ok) {
         setServerError(result.error ?? "Unable to submit interest right now.");
+        await refreshChallenge();
         return;
       }
 
       reset({
         bidPrice: "",
         buyerName: "",
+        captchaAnswer: "",
+        captchaToken: "",
         email: "",
         itemId,
         message: "",
         phone: "",
       });
+      await refreshChallenge();
       setServerMessage(result.message ?? `Interest for ${itemTitle} was recorded.`);
       router.refresh();
     });
@@ -159,10 +186,38 @@ export function InterestForm({ itemId, itemTitle }: InterestFormProps) {
         ) : null}
       </div>
 
+      <div className="rounded-2xl border border-[color:var(--line)] bg-[color:var(--bg-secondary)] p-4">
+        <p className="text-xs uppercase tracking-[0.18em] text-[color:var(--muted)]">Captcha check</p>
+        <p className="mt-2 text-sm font-semibold text-stone-900">
+          {challenge?.prompt ?? "Loading captcha..."}
+        </p>
+        <input type="hidden" {...register("captchaToken")} />
+
+        <div className="mt-3 flex flex-col gap-3 sm:flex-row">
+          <input
+            className="field"
+            disabled={!challenge}
+            maxLength={contactFormLimits.captchaAnswerMax}
+            placeholder="Type your answer"
+            {...register("captchaAnswer")}
+          />
+          <button
+            type="button"
+            className="button-ghost"
+            onClick={() => void refreshChallenge()}
+          >
+            New question
+          </button>
+        </div>
+        {errors.captchaAnswer ? (
+          <p className="mt-2 text-sm text-[color:var(--danger)]">{errors.captchaAnswer.message}</p>
+        ) : null}
+      </div>
+
       {serverError ? <p className="text-sm text-[color:var(--danger)]">{serverError}</p> : null}
       {serverMessage ? <p className="text-sm text-[color:var(--success)]">{serverMessage}</p> : null}
 
-      <button className="button w-full" disabled={isPending} type="submit">
+      <button className="button w-full" disabled={isPending || !challenge} type="submit">
         {isPending ? "Sending..." : "Submit interest"}
       </button>
     </form>

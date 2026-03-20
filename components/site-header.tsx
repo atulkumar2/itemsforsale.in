@@ -33,6 +33,9 @@ export function SiteHeader({ compact = false }: SiteHeaderProps) {
           <Link className="button-ghost" href="/">
             Home
           </Link>
+          <Link className="button-ghost" href="/about">
+            About
+          </Link>
           <Link className="button-ghost" href="/contact-seller">
             Contact seller
           </Link>

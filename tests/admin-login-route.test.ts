@@ -3,9 +3,14 @@ import { afterEach, describe, expect, it, vi } from "vitest";
 const signInAdminMock = vi.fn();
 const isAdminAuthConfiguredMock = vi.fn();
 const checkRateLimitMock = vi.fn();
+const verifyContactCaptchaChallengeMock = vi.fn();
 
 vi.mock("@/lib/auth", () => ({
   signInAdmin: signInAdminMock,
+}));
+
+vi.mock("@/lib/contact-captcha-store", () => ({
+  verifyContactCaptchaChallenge: verifyContactCaptchaChallengeMock,
 }));
 
 vi.mock("@/lib/env", () => ({
@@ -21,6 +26,15 @@ async function importRoute() {
   return import("@/app/api/admin/login/route");
 }
 
+function validPayload() {
+  return {
+    email: "admin@example.com",
+    password: "secret123",
+    captchaToken: "signed-token",
+    captchaAnswer: "12",
+  };
+}
+
 describe("admin login route", () => {
   const originalNodeEnv = process.env.NODE_ENV;
 
@@ -29,6 +43,7 @@ describe("admin login route", () => {
     signInAdminMock.mockReset();
     isAdminAuthConfiguredMock.mockReset();
     checkRateLimitMock.mockReset();
+    verifyContactCaptchaChallengeMock.mockReset();
   });
 
   it("returns 429 when rate limited", async () => {
@@ -40,7 +55,7 @@ describe("admin login route", () => {
       new Request("http://localhost/api/admin/login", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ email: "admin@example.com", password: "secret123" }),
+        body: JSON.stringify(validPayload()),
       }),
     );
 
@@ -62,13 +77,34 @@ describe("admin login route", () => {
       new Request("http://localhost/api/admin/login", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ email: "admin@example.com", password: "secret123" }),
+        body: JSON.stringify(validPayload()),
       }),
     );
 
     expect(response.status).toBe(503);
     await expect(response.json()).resolves.toEqual({
       error: "Admin login is not configured on this deployment.",
+    });
+    expect(signInAdminMock).not.toHaveBeenCalled();
+  });
+
+  it("returns 400 when captcha verification fails", async () => {
+    process.env.NODE_ENV = "test";
+    checkRateLimitMock.mockReturnValue({ allowed: true, retryAfterSeconds: 60 });
+    verifyContactCaptchaChallengeMock.mockReturnValue(null);
+
+    const { POST } = await importRoute();
+    const response = await POST(
+      new Request("http://localhost/api/admin/login", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(validPayload()),
+      }),
+    );
+
+    expect(response.status).toBe(400);
+    await expect(response.json()).resolves.toEqual({
+      error: "Captcha answer is incorrect.",
     });
     expect(signInAdminMock).not.toHaveBeenCalled();
   });

@@ -2,6 +2,11 @@
 
 A local-first personal item selling board built with Next.js, TypeScript, Tailwind CSS, and a Supabase-ready data model.
 
+Site URL: [itemsforsale.in](https://itemsforsale.in)
+
+If you are new to full stack development and want to understand how the frontend and backend live together in this single Next.js repo, read [docs/ARCHITECTURE.md](docs/ARCHITECTURE.md).
+For a practical security/threat-model view of the app, read [docs/ATTACK_SURFACE_REVIEW.md](docs/ATTACK_SURFACE_REVIEW.md).
+
 ## Current implementation
 
 The app now runs fully in local mode without cloud infrastructure:

@@ -58,7 +58,7 @@ export function ContactSellerForm({ initialChallenge }: ContactSellerFormProps) 
   }, [watchMessage, watchName]);
 
   async function refreshChallenge() {
-    const response = await fetch("/api/contact-submissions", {
+    const response = await fetch("/api/human-check", {
       method: "GET",
       cache: "no-store",
     });

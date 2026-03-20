@@ -43,6 +43,12 @@ export function Footer() {
               Contact seller
             </Link>
             <Link
+              href="/about"
+              className="text-[color:var(--muted)] hover:text-stone-900"
+            >
+              About this site
+            </Link>
+            <Link
               href="/admin"
               className="text-[color:var(--muted)] hover:text-stone-900"
             >
@@ -70,6 +76,17 @@ export function Footer() {
       <div className="border-t border-[color:var(--line)] py-6 text-center">
         <p className="text-xs text-[color:var(--muted)]">
           © 2026 itemsforsale.in. All rights reserved.
+        </p>
+        <p className="mt-2 text-xs text-[color:var(--muted)]">
+          Repository:{" "}
+          <a
+            href="https://github.com/atulkamble/itemsforsale.in"
+            target="_blank"
+            rel="noreferrer"
+            className="hover:text-stone-900 hover:underline"
+          >
+            github.com/atulkamble/itemsforsale.in
+          </a>
         </p>
       </div>
     </footer>

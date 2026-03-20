@@ -1,9 +1,12 @@
 import { describe, expect, it } from "vitest";
 
 import { interestFormLimits } from "@/lib/constants";
+import { issueContactCaptchaChallenge } from "@/lib/contact-captcha-store";
 import { interestFormSchema } from "@/lib/validation";
 
 function validPayload() {
+  const challenge = issueContactCaptchaChallenge();
+
   return {
     itemId: "064b9d22-f5d1-4fcb-9237-7b6ba8123401",
     buyerName: "Atul Kumar",
@@ -11,6 +14,8 @@ function validPayload() {
     email: "itemsforsale@outlook.in",
     message: "I am interested in this item and would like to visit this week.",
     bidPrice: "12000",
+    captchaToken: challenge.token,
+    captchaAnswer: "12",
   };
 }
 

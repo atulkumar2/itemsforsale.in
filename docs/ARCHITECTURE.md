@@ -4,6 +4,8 @@
 
 `itemsforsale.in` is a local-first Next.js App Router application for a single seller to publish household items, accept buyer enquiries, and manage submissions from an authenticated admin area.
 
+This repository is a full-stack application in a single codebase. It does not split into separate `frontend/` and `backend/` folders because Next.js supports both UI rendering and server-side API handling in the same project.
+
 The codebase is intentionally structured around replaceable boundaries:
 
 - Next.js pages and components handle rendering and UX
@@ -13,6 +15,79 @@ The codebase is intentionally structured around replaceable boundaries:
 - persistence can run in local JSON mode or local PostgreSQL mode without changing page-level behavior
 
 This keeps the app practical for local operation today while preserving a clean path to a later Supabase-backed implementation.
+
+## How To Read This Repo
+
+If you are new to full stack development, the most important thing to understand is that this repo still has a frontend and a backend. They are just packaged together.
+
+### What counts as frontend here
+
+Frontend code is the part that renders pages, forms, tables, buttons, and other UI in the browser.
+
+Main frontend areas:
+
+- `app/`
+- `components/`
+
+Examples:
+
+- `app/page.tsx`
+- `app/items/[slug]/page.tsx`
+- `components/interest-form.tsx`
+- `components/contact-seller-form.tsx`
+- `components/admin/item-form.tsx`
+
+### What counts as backend here
+
+Backend code is the part that handles requests, validates input, checks auth, talks to storage, and returns JSON or CSV.
+
+Main backend areas:
+
+- `app/api/`
+- server-side modules in `lib/`
+- persistence code in `lib/data/`
+
+Examples:
+
+- `app/api/leads/route.ts`
+- `app/api/contact-submissions/route.ts`
+- `app/api/admin/login/route.ts`
+- `lib/auth.ts`
+- `lib/validation.ts`
+- `lib/data/repository.ts`
+
+### Why there is no separate backend folder
+
+This app uses Next.js App Router, which allows:
+
+- UI pages and components
+- API endpoints
+- server-side rendering
+- server-only helpers
+
+to live in one project.
+
+That is why this codebase looks different from an older “React frontend + Express backend” tutorial. The backend exists, but it is embedded inside the Next.js app instead of running as a separate service.
+
+### Simple mental model
+
+Use this rule when reading files:
+
+- if a file renders UI, it is frontend
+- if a file handles requests, auth, validation, storage, or secrets, it is backend
+
+### End-to-end example
+
+When a buyer submits interest for an item:
+
+1. The browser shows the form from `components/interest-form.tsx`.
+2. The form sends a request to `/api/leads`.
+3. `app/api/leads/route.ts` validates and processes that request.
+4. `lib/data/repository.ts` chooses the active data store.
+5. `lib/data/local-store.ts` or `lib/data/postgres-store.ts` writes the data.
+6. The API returns a response to the browser.
+
+That is a complete frontend-to-backend flow inside one repo.
 
 ## Goals and Constraints
 

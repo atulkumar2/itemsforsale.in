@@ -3,6 +3,7 @@ import { redirect } from "next/navigation";
 import { LoginForm } from "@/components/admin/login-form";
 import { SiteHeader } from "@/components/site-header";
 import { isAdminAuthenticated } from "@/lib/auth";
+import { issueContactCaptchaChallenge } from "@/lib/contact-captcha-store";
 
 export const dynamic = "force-dynamic";
 
@@ -10,6 +11,8 @@ export default async function AdminLoginPage() {
   if (await isAdminAuthenticated()) {
     redirect("/admin");
   }
+
+  const initialChallenge = issueContactCaptchaChallenge();
 
   return (
     <main className="pb-16">
@@ -26,7 +29,7 @@ export default async function AdminLoginPage() {
           </p>
 
           <div className="mt-8">
-            <LoginForm />
+            <LoginForm initialChallenge={initialChallenge} />
           </div>
         </div>
       </section>

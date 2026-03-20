@@ -1,11 +1,22 @@
 import { NextResponse } from "next/server";
 
+import { verifyContactCaptchaChallenge } from "@/lib/contact-captcha-store";
 import { getAdminItemById, submitLead } from "@/lib/data/repository";
+import { isCaptchaConfigured } from "@/lib/env";
 import { checkRateLimit } from "@/lib/rate-limit";
 import { parseOptionalNumber } from "@/lib/utils";
 import { interestFormSchema } from "@/lib/validation";
 
 export async function POST(request: Request) {
+  if (process.env.NODE_ENV === "production" && !isCaptchaConfigured()) {
+    return NextResponse.json(
+      {
+        error: "Captcha is not configured on this deployment.",
+      },
+      { status: 503 },
+    );
+  }
+
   const rateLimit = checkRateLimit(request, {
     key: "lead-submissions",
     limit: 10,
@@ -33,6 +44,20 @@ export async function POST(request: Request) {
     return NextResponse.json(
       {
         error: parsed.error.issues[0]?.message ?? "Invalid lead payload.",
+      },
+      { status: 400 },
+    );
+  }
+
+  const verifiedChallenge = verifyContactCaptchaChallenge(
+    parsed.data.captchaToken,
+    parsed.data.captchaAnswer,
+  );
+
+  if (!verifiedChallenge) {
+    return NextResponse.json(
+      {
+        error: "Captcha answer is incorrect.",
       },
       { status: 400 },
     );

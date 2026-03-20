@@ -4,6 +4,7 @@ import { notFound } from "next/navigation";
 
 import { InterestForm } from "@/components/interest-form";
 import { SiteHeader } from "@/components/site-header";
+import { issueContactCaptchaChallenge } from "@/lib/contact-captcha-store";
 import { StatusBadge } from "@/components/status-badge";
 import { getPublicItemBySlug } from "@/lib/data/repository";
 import { formatCurrency, formatDate } from "@/lib/utils";
@@ -99,6 +100,7 @@ export default async function ItemPage({ params }: ItemPageProps) {
   }
 
   const heroImage = item.images[0]?.imageUrl ?? "/placeholder-chair.svg";
+  const initialChallenge = issueContactCaptchaChallenge();
 
   return (
     <main className="pb-16">
@@ -206,7 +208,11 @@ export default async function ItemPage({ params }: ItemPageProps) {
             </div>
 
             <div className="mt-6">
-              <InterestForm itemId={item.id} itemTitle={item.title} />
+              <InterestForm
+                initialChallenge={initialChallenge}
+                itemId={item.id}
+                itemTitle={item.title}
+              />
             </div>
           </div>
         </div>

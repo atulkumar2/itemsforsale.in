@@ -55,6 +55,15 @@ export const interestFormSchema = z.object({
     })
     .optional()
     .or(z.literal("")),
+  captchaToken: z
+    .string()
+    .trim()
+    .min(1, "Captcha token is required."),
+  captchaAnswer: z
+    .string()
+    .trim()
+    .min(1, "Captcha answer is required.")
+    .max(contactFormLimits.captchaAnswerMax, "Captcha answer is too long."),
 });
 
 export type InterestFormValues = z.infer<typeof interestFormSchema>;
@@ -62,6 +71,15 @@ export type InterestFormValues = z.infer<typeof interestFormSchema>;
 export const adminLoginSchema = z.object({
   email: z.string().trim().email("Enter the admin email."),
   password: z.string().min(6, "Password must be at least 6 characters."),
+  captchaToken: z
+    .string()
+    .trim()
+    .min(1, "Captcha token is required."),
+  captchaAnswer: z
+    .string()
+    .trim()
+    .min(1, "Captcha answer is required.")
+    .max(contactFormLimits.captchaAnswerMax, "Captcha answer is too long."),
 });
 
 export type AdminLoginValues = z.infer<typeof adminLoginSchema>;
