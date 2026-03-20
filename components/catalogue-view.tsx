@@ -48,6 +48,11 @@ export function CatalogueView({ items, itemCount }: CatalogueViewProps) {
     router.push(`/show-interest?${params.toString()}`);
   }
 
+  const iconButtonClassName =
+    "inline-flex h-10 w-10 items-center justify-center rounded-xl border border-[color:var(--line)] bg-[color:var(--bg-secondary)] text-stone-900 transition hover:border-[color:var(--primary)] hover:text-[color:var(--primary)]";
+  const activeIconButtonClassName =
+    "inline-flex h-10 w-10 items-center justify-center rounded-xl bg-[color:var(--primary)] text-white transition";
+
   return (
     <>
       <div className="flex items-center justify-between gap-4 px-1">
@@ -75,28 +80,54 @@ export function CatalogueView({ items, itemCount }: CatalogueViewProps) {
               </button>
             </>
           ) : null}
-          <Link className="button-secondary" href={exportHref}>
-            Export CSV
+          <Link aria-label="Export catalogue CSV" className={iconButtonClassName} href={exportHref} title="Export CSV">
+            <svg aria-hidden="true" className="h-4 w-4" fill="none" viewBox="0 0 24 24">
+              <path
+                d="M12 3v11m0 0 4-4m-4 4-4-4M5 18h14"
+                stroke="currentColor"
+                strokeLinecap="round"
+                strokeLinejoin="round"
+                strokeWidth="1.8"
+              />
+            </svg>
           </Link>
           <button
+            aria-label="Grid view"
             onClick={() => setViewMode("grid")}
-            className={`px-4 py-2 rounded-lg text-sm font-medium transition-colors ${
+            title="Grid view"
+            className={`${
               viewMode === "grid"
-                ? "bg-[color:var(--primary)] text-white"
-                : "bg-[color:var(--bg-secondary)] text-stone-900 hover:bg-[color:var(--line)]"
+                ? activeIconButtonClassName
+                : iconButtonClassName
             }`}
           >
-            Grid
+            <svg aria-hidden="true" className="h-4 w-4" fill="none" viewBox="0 0 24 24">
+              <path
+                d="M4 4h6v6H4V4Zm10 0h6v6h-6V4ZM4 14h6v6H4v-6Zm10 0h6v6h-6v-6Z"
+                stroke="currentColor"
+                strokeLinejoin="round"
+                strokeWidth="1.8"
+              />
+            </svg>
           </button>
           <button
+            aria-label="Table view"
             onClick={() => setViewMode("table")}
-            className={`px-4 py-2 rounded-lg text-sm font-medium transition-colors ${
+            title="Table view"
+            className={`${
               viewMode === "table"
-                ? "bg-[color:var(--primary)] text-white"
-                : "bg-[color:var(--bg-secondary)] text-stone-900 hover:bg-[color:var(--line)]"
+                ? activeIconButtonClassName
+                : iconButtonClassName
             }`}
           >
-            Table
+            <svg aria-hidden="true" className="h-4 w-4" fill="none" viewBox="0 0 24 24">
+              <path
+                d="M4 6h16M4 12h16M4 18h16"
+                stroke="currentColor"
+                strokeLinecap="round"
+                strokeWidth="1.8"
+              />
+            </svg>
           </button>
         </div>
       </div>

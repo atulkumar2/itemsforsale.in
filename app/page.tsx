@@ -62,7 +62,7 @@ export default async function Home({ searchParams }: HomePageProps) {
   return (
     <main className="pb-16">
       <SiteHeader />
-      <section className="shell grid gap-6 py-6 lg:grid-cols-[1.2fr_0.8fr] lg:py-10">
+      <section className="shell grid gap-5 py-6 lg:grid-cols-[1.35fr_0.65fr] lg:py-8">
         <div className="fade-up flex flex-col gap-5">
           <span className="eyebrow">Household items for sale</span>
           <div className="space-y-4">
@@ -92,13 +92,13 @@ export default async function Home({ searchParams }: HomePageProps) {
           </div>
         </div>
 
-        <div className="panel fade-up overflow-hidden p-5 md:p-6">
-          <div className="space-y-3">
+        <div className="panel fade-up overflow-hidden p-4 md:p-5">
+          <div className="space-y-2.5">
             <p className="eyebrow">Seller location</p>
-            <h2 className="display-title text-2xl font-semibold text-stone-900">
-              Visit or inspect pickup point on map
+            <h2 className="display-title text-xl font-semibold text-stone-900">
+              Pickup location
             </h2>
-            <p className="text-sm leading-7 text-[color:var(--muted)]">
+            <p className="text-sm leading-6 text-[color:var(--muted)]">
               {sellerAddress}
             </p>
             <a
@@ -111,12 +111,12 @@ export default async function Home({ searchParams }: HomePageProps) {
             </a>
           </div>
 
-          <div className="mt-5 overflow-hidden rounded-[24px] border border-[color:var(--line)]">
+          <div className="mt-4 overflow-hidden rounded-[20px] border border-[color:var(--line)]">
             <iframe
               title="Seller location map"
               src={sellerMapEmbed}
               width="100%"
-              height="280"
+              height="220"
               loading="lazy"
               referrerPolicy="no-referrer-when-downgrade"
             />

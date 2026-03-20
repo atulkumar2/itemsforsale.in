@@ -20,6 +20,7 @@ export function LoginForm({ initialChallenge }: LoginFormProps) {
   const [challenge, setChallenge] = useState<ContactCaptchaChallenge | null>(initialChallenge);
   const [isPending, startTransition] = useTransition();
   const [serverError, setServerError] = useState<string | null>(null);
+  const [showPassword, setShowPassword] = useState(false);
   const {
     register,
     handleSubmit,
@@ -92,7 +93,22 @@ export function LoginForm({ initialChallenge }: LoginFormProps) {
         <label className="mb-2 block text-sm font-semibold text-stone-800" htmlFor="password">
           Password
         </label>
-        <input className="field" id="password" type="password" {...register("password")} />
+        <div className="grid grid-cols-[minmax(0,1fr)_auto] gap-2">
+          <input
+            className="field"
+            id="password"
+            type={showPassword ? "text" : "password"}
+            {...register("password")}
+          />
+          <button
+            type="button"
+            aria-label={showPassword ? "Hide password" : "Show password"}
+            className="inline-flex h-12 items-center justify-center rounded-full border border-[color:var(--line)] bg-white px-4 text-sm font-semibold text-[color:var(--primary)] transition hover:border-[color:var(--primary)] hover:text-stone-900"
+            onClick={() => setShowPassword((current) => !current)}
+          >
+            {showPassword ? "Hide" : "Show"}
+          </button>
+        </div>
         {errors.password ? (
           <p className="mt-2 text-sm text-[color:var(--danger)]">{errors.password.message}</p>
         ) : null}

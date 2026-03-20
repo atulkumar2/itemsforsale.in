@@ -111,8 +111,7 @@ export function ContactSellerForm({ initialChallenge }: ContactSellerFormProps) 
 
   return (
     <div className="panel p-5 md:p-6">
-      <h2 className="display-title text-2xl font-semibold text-stone-900">Contact Seller</h2>
-      <p className="mt-2 text-sm text-[color:var(--muted)]">
+      <p className="text-sm text-[color:var(--muted)]">
         Fill a quick enquiry and solve one simple question to verify you are human.
       </p>
 
