@@ -32,6 +32,9 @@ export function LeadsTable({ leads }: LeadsTableProps) {
                 <div className="mt-1 text-sm text-[color:var(--muted)]">
                   {lead.phone || lead.email || "No contact detail"}
                 </div>
+                <div className="mt-1 text-sm text-[color:var(--muted)]">
+                  {lead.location || "Location not shared"}
+                </div>
               </td>
               <td>
                 {lead.itemSlug ? (

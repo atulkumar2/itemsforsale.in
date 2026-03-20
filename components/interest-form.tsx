@@ -39,6 +39,7 @@ export function InterestForm({ initialChallenge, itemId, itemTitle }: InterestFo
       captchaToken: initialChallenge.token,
       email: "",
       itemId,
+      location: "",
       message: "",
       phone: "",
     },
@@ -89,6 +90,7 @@ export function InterestForm({ initialChallenge, itemId, itemTitle }: InterestFo
         captchaToken: "",
         email: "",
         itemId,
+        location: "",
         message: "",
         phone: "",
       });
@@ -152,6 +154,22 @@ export function InterestForm({ initialChallenge, itemId, itemTitle }: InterestFo
             <p className="mt-2 text-sm text-[color:var(--danger)]">{errors.email.message}</p>
           ) : null}
         </div>
+      </div>
+
+      <div>
+        <label className="mb-2 block text-sm font-semibold text-stone-800" htmlFor="location">
+          Your location (optional)
+        </label>
+        <input
+          className="field"
+          id="location"
+          maxLength={contactFormLimits.locationMax}
+          placeholder="Area / locality"
+          {...register("location")}
+        />
+        {errors.location ? (
+          <p className="mt-2 text-sm text-[color:var(--danger)]">{errors.location.message}</p>
+        ) : null}
       </div>
 
       <div>

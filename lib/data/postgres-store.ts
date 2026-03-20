@@ -94,6 +94,7 @@ async function ensureSchema() {
       buyer_name varchar(${interestFormLimits.buyerNameMax}) not null check (char_length(buyer_name) between 2 and ${interestFormLimits.buyerNameMax}),
       phone varchar(${interestFormLimits.phoneLength}) check (phone is null or char_length(phone) = ${interestFormLimits.phoneLength}),
       email varchar(${interestFormLimits.emailMax}) check (email is null or char_length(email) <= ${interestFormLimits.emailMax}),
+      location varchar(${contactFormLimits.locationMax}) check (location is null or char_length(location) <= ${contactFormLimits.locationMax}),
       message varchar(${interestFormLimits.messageMax}) check (message is null or char_length(message) <= ${interestFormLimits.messageMax}),
       bid_price numeric(12,2),
       created_at timestamptz not null
@@ -179,6 +180,15 @@ async function ensureSchema() {
       end if;
       if not exists (select 1 from pg_constraint where conname = 'leads_email_length_check') then
         alter table leads add constraint leads_email_length_check check (email is null or char_length(email) <= ${interestFormLimits.emailMax});
+      end if;
+      if not exists (
+        select 1 from information_schema.columns
+        where table_schema = 'public' and table_name = 'leads' and column_name = 'location'
+      ) then
+        alter table leads add column location varchar(${contactFormLimits.locationMax});
+      end if;
+      if not exists (select 1 from pg_constraint where conname = 'leads_location_length_check') then
+        alter table leads add constraint leads_location_length_check check (location is null or char_length(location) <= ${contactFormLimits.locationMax});
       end if;
       if not exists (select 1 from pg_constraint where conname = 'leads_message_length_check') then
         alter table leads add constraint leads_message_length_check check (message is null or char_length(message) <= ${interestFormLimits.messageMax});
@@ -334,6 +344,7 @@ type LeadRow = {
   buyer_name: string;
   phone: string | null;
   email: string | null;
+  location: string | null;
   message: string | null;
   bid_price: number | string | null;
   created_at: string | Date;
@@ -389,6 +400,7 @@ function mapLeadRow(row: LeadRow): LeadWithItem {
     buyerName: row.buyer_name,
     phone: row.phone,
     email: row.email,
+    location: row.location,
     message: row.message,
     bidPrice: parseDbNumber(row.bid_price),
     createdAt: toIsoString(row.created_at) ?? new Date().toISOString(),
@@ -586,20 +598,22 @@ export async function createLead(input: SaveLeadInput) {
     buyerName: input.buyerName,
     phone: normaliseOptionalString(input.phone) ?? null,
     email: normaliseOptionalString(input.email) ?? null,
+    location: normaliseOptionalString(input.location) ?? null,
     message: normaliseOptionalString(input.message) ?? null,
     bidPrice: input.bidPrice ?? null,
     createdAt: new Date().toISOString(),
   };
 
   await query(
-    `insert into leads (id, item_id, buyer_name, phone, email, message, bid_price, created_at)
-     values ($1, $2, $3, $4, $5, $6, $7, $8)`,
+    `insert into leads (id, item_id, buyer_name, phone, email, location, message, bid_price, created_at)
+     values ($1, $2, $3, $4, $5, $6, $7, $8, $9)`,
     [
       lead.id,
       lead.itemId,
       lead.buyerName,
       lead.phone,
       lead.email,
+      lead.location,
       lead.message,
       lead.bidPrice,
       lead.createdAt,
@@ -625,6 +639,7 @@ export async function listLeads(filters: LeadFilters = {}) {
       lower(l.buyer_name) like $${values.length}
       or coalesce(lower(l.phone), '') like $${values.length}
       or coalesce(lower(l.email), '') like $${values.length}
+      or coalesce(lower(l.location), '') like $${values.length}
       or coalesce(lower(l.message), '') like $${values.length}
       or coalesce(lower(i.title), '') like $${values.length}
     )`);
@@ -638,6 +653,7 @@ export async function listLeads(filters: LeadFilters = {}) {
         l.buyer_name,
         l.phone,
         l.email,
+        l.location,
         l.message,
         l.bid_price,
         l.created_at,

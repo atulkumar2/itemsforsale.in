@@ -24,6 +24,15 @@ describe("contact seller validation", () => {
     expect(result.success).toBe(true);
   });
 
+  it("accepts an empty location", () => {
+    const result = contactSellerSchema.safeParse({
+      ...validPayload(),
+      location: "",
+    });
+
+    expect(result.success).toBe(true);
+  });
+
   it("rejects phone numbers that do not match 10-digit mobile pattern", () => {
     const badShort = contactSellerSchema.safeParse({ ...validPayload(), phone: "987654321" });
     const badStart = contactSellerSchema.safeParse({ ...validPayload(), phone: "5876543210" });

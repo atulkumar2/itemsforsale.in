@@ -12,7 +12,7 @@ type ItemCardProps = {
 };
 
 export function ItemCard({ item, isSelected = false, onToggleSelection }: ItemCardProps) {
-  const imageUrl = item.images[0]?.imageUrl ?? "/placeholder-chair.svg";
+  const imageUrl = item.images[0]?.thumbnailUrl ?? item.images[0]?.imageUrl ?? "/placeholder-chair.svg";
   const galleryPreview =
     item.images.length > 0
       ? item.images.slice(0, 3)
@@ -101,7 +101,7 @@ export function ItemCard({ item, isSelected = false, onToggleSelection }: ItemCa
           </div>
         </dl>
 
-        <Link className="button w-full" href={`/items/${item.slug}`}>
+        <Link className="button w-full" href={`/items/${item.slug}`} rel="noreferrer" target="_blank">
           View details
         </Link>
       </div>

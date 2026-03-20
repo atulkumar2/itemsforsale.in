@@ -162,6 +162,7 @@ export async function createLead(input: SaveLeadInput) {
     buyerName: input.buyerName,
     phone: normaliseOptionalString(input.phone) ?? null,
     email: normaliseOptionalString(input.email) ?? null,
+    location: normaliseOptionalString(input.location) ?? null,
     message: normaliseOptionalString(input.message) ?? null,
     bidPrice: input.bidPrice ?? null,
     createdAt: new Date().toISOString(),
@@ -187,6 +188,7 @@ export async function listLeads(filters: LeadFilters = {}) {
         lead.buyerName,
         lead.phone,
         lead.email,
+        lead.location,
         lead.message,
         item?.title,
       ]

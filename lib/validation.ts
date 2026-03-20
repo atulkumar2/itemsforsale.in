@@ -41,6 +41,12 @@ export const interestFormSchema = z.object({
     .regex(emailRegex, "Enter a valid email address.")
     .optional()
     .or(z.literal("")),
+  location: z
+    .string()
+    .trim()
+    .max(contactFormLimits.locationMax, "Location is too long.")
+    .optional()
+    .or(z.literal("")),
   message: z
     .string()
     .trim()
@@ -86,6 +92,12 @@ export const bulkInterestFormSchema = z.object({
     .trim()
     .max(interestFormLimits.emailMax, "Email is too long.")
     .regex(emailRegex, "Enter a valid email address.")
+    .optional()
+    .or(z.literal("")),
+  location: z
+    .string()
+    .trim()
+    .max(contactFormLimits.locationMax, "Location is too long.")
     .optional()
     .or(z.literal("")),
   message: z
@@ -182,8 +194,9 @@ export const contactSellerSchema = z.object({
   location: z
     .string()
     .trim()
-    .min(2, "Location is required.")
-    .max(contactFormLimits.locationMax, "Location is too long."),
+    .max(contactFormLimits.locationMax, "Location is too long.")
+    .optional()
+    .or(z.literal("")),
   message: z
     .string()
     .trim()

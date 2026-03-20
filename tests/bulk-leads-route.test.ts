@@ -37,6 +37,7 @@ function validPayload() {
     buyerName: "Atul Kumar",
     phone: "9876543210",
     email: "itemsforsale@outlook.in",
+    location: "Bommanahalli",
     message: "I am interested in these items and would like to inspect them this week.",
     captchaToken: "signed-token",
     captchaAnswer: "12",
@@ -122,6 +123,7 @@ describe("bulk leads route", () => {
       buyerName: "Atul Kumar",
       phone: "9876543210",
       email: "itemsforsale@outlook.in",
+      location: "Bommanahalli",
       message: "I am interested in these items and would like to inspect them this week.",
     });
   });

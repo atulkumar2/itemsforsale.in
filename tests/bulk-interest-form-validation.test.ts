@@ -15,6 +15,7 @@ function validPayload() {
     buyerName: "Atul Kumar",
     phone: "9876543210",
     email: "itemsforsale@outlook.in",
+    location: "Bommanahalli",
     message: "I am interested in these items and would like to inspect them this week.",
     captchaToken: challenge.token,
     captchaAnswer: "12",
@@ -24,6 +25,15 @@ function validPayload() {
 describe("bulk interest form validation", () => {
   it("accepts a valid payload", () => {
     expect(bulkInterestFormSchema.safeParse(validPayload()).success).toBe(true);
+  });
+
+  it("accepts an empty location", () => {
+    const result = bulkInterestFormSchema.safeParse({
+      ...validPayload(),
+      location: "",
+    });
+
+    expect(result.success).toBe(true);
   });
 
   it("rejects an empty item selection", () => {

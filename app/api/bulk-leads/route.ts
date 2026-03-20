@@ -41,6 +41,7 @@ export async function POST(request: Request) {
     buyerName?: string;
     phone?: string;
     email?: string;
+    location?: string;
     message?: string;
     captchaToken?: string;
     captchaAnswer?: string;
@@ -90,6 +91,7 @@ export async function POST(request: Request) {
         buyerName: parsed.data.buyerName,
         phone: parsed.data.phone,
         email: parsed.data.email,
+        location: parsed.data.location,
         message: parsed.data.message,
       }),
     ),
@@ -102,3 +104,4 @@ export async function POST(request: Request) {
     { status: 201 },
   );
 }
+

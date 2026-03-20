@@ -173,7 +173,7 @@ export function ContactSellerForm({ initialChallenge }: ContactSellerFormProps) 
 
         <div>
           <label className="mb-2 block text-sm font-semibold text-stone-800" htmlFor="contact-location">
-            Your location
+            Your location (optional)
           </label>
           <input
             id="contact-location"

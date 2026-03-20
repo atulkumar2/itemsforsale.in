@@ -64,6 +64,8 @@ export function ItemsTable({
                 <Link
                   href={`/items/${item.slug}`}
                   className="font-medium text-[color:var(--primary)] hover:underline"
+                  rel="noreferrer"
+                  target="_blank"
                 >
                   {item.title}
                 </Link>

@@ -1,6 +1,7 @@
 "use client";
 
 import { zodResolver } from "@hookform/resolvers/zod";
+import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useState, useTransition } from "react";
 import { useForm } from "react-hook-form";
@@ -8,6 +9,7 @@ import { useForm } from "react-hook-form";
 import type { ContactCaptchaChallenge } from "@/lib/contact-captcha";
 import { contactFormLimits, emailRegex, interestFormLimits, phoneRegex } from "@/lib/constants";
 import type { ItemWithImages } from "@/lib/types";
+import { formatCurrency, formatDate } from "@/lib/utils";
 import {
   bulkInterestFormSchema,
   type BulkInterestFormValues,
@@ -37,6 +39,7 @@ export function BulkInterestForm({ initialChallenge, items }: BulkInterestFormPr
       buyerName: "",
       phone: "",
       email: "",
+      location: "",
       message: "",
       captchaToken: initialChallenge.token,
       captchaAnswer: "",
@@ -86,6 +89,7 @@ export function BulkInterestForm({ initialChallenge, items }: BulkInterestFormPr
         buyerName: "",
         phone: "",
         email: "",
+        location: "",
         message: "",
         captchaToken: "",
         captchaAnswer: "",
@@ -100,11 +104,52 @@ export function BulkInterestForm({ initialChallenge, items }: BulkInterestFormPr
     <div className="space-y-6">
       <div className="rounded-[22px] border border-[color:var(--line)] bg-[rgba(255,248,241,0.64)] p-5">
         <p className="eyebrow">Selected items</p>
-        <ul className="mt-4 space-y-2 text-sm text-stone-900">
+        <ul className="mt-4 space-y-3 text-sm text-stone-900">
           {items.map((item) => (
             <li key={item.id} className="rounded-xl border border-[color:var(--line)] bg-white px-4 py-3">
-              <span className="font-semibold">{item.title}</span>
-              <span className="ml-2 text-[color:var(--muted)]">{item.category || "General"}</span>
+              <div className="flex flex-wrap items-start justify-between gap-3">
+                <div>
+                  <p className="font-semibold">{item.title}</p>
+                  <p className="mt-1 text-[color:var(--muted)]">
+                    {item.category || "General"}
+                  </p>
+                </div>
+                <Link
+                  className="text-sm font-medium text-[color:var(--primary)] underline decoration-[color:var(--line)]"
+                  href={`/items/${item.slug}`}
+                  rel="noreferrer"
+                  target="_blank"
+                >
+                  Open item
+                </Link>
+              </div>
+              <dl className="mt-3 grid gap-2 text-sm sm:grid-cols-2">
+                <div>
+                  <dt className="text-[color:var(--muted)]">Price</dt>
+                  <dd className="font-medium text-stone-900">{formatCurrency(item.expectedPrice)}</dd>
+                </div>
+                <div>
+                  <dt className="text-[color:var(--muted)]">Available</dt>
+                  <dd className="font-medium text-stone-900">{formatDate(item.availableFrom)}</dd>
+                </div>
+                <div>
+                  <dt className="text-[color:var(--muted)]">Category</dt>
+                  <dd className="font-medium text-stone-900">{item.category || "General"}</dd>
+                </div>
+                <div>
+                  <dt className="text-[color:var(--muted)]">Item link</dt>
+                  <dd>
+                    <Link
+                      className="font-medium text-[color:var(--primary)] underline decoration-[color:var(--line)]"
+                      href={`/items/${item.slug}`}
+                      rel="noreferrer"
+                      target="_blank"
+                    >
+                      /items/{item.slug}
+                    </Link>
+                  </dd>
+                </div>
+              </dl>
             </li>
           ))}
         </ul>
@@ -165,6 +210,22 @@ export function BulkInterestForm({ initialChallenge, items }: BulkInterestFormPr
               <p className="mt-2 text-sm text-[color:var(--danger)]">{errors.email.message}</p>
             ) : null}
           </div>
+        </div>
+
+        <div>
+          <label className="mb-2 block text-sm font-semibold text-stone-800" htmlFor="bulk-location">
+            Your location (optional)
+          </label>
+          <input
+            className="field"
+            id="bulk-location"
+            maxLength={contactFormLimits.locationMax}
+            placeholder="Area / locality"
+            {...register("location")}
+          />
+          {errors.location ? (
+            <p className="mt-2 text-sm text-[color:var(--danger)]">{errors.location.message}</p>
+          ) : null}
         </div>
 
         <div>

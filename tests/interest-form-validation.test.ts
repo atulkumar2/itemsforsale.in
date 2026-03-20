@@ -12,6 +12,7 @@ function validPayload() {
     buyerName: "Atul Kumar",
     phone: "9876543210",
     email: "itemsforsale@outlook.in",
+    location: "Bommanahalli",
     message: "I am interested in this item and would like to visit this week.",
     bidPrice: "12000",
     captchaToken: challenge.token,
@@ -22,6 +23,15 @@ function validPayload() {
 describe("interest form validation", () => {
   it("accepts a valid payload", () => {
     expect(interestFormSchema.safeParse(validPayload()).success).toBe(true);
+  });
+
+  it("accepts an empty location", () => {
+    const result = interestFormSchema.safeParse({
+      ...validPayload(),
+      location: "",
+    });
+
+    expect(result.success).toBe(true);
   });
 
   it("rejects invalid phone and email values", () => {

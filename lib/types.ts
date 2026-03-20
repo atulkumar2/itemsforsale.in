@@ -32,6 +32,7 @@ export type Lead = {
   buyerName: string;
   phone: string | null;
   email: string | null;
+  location: string | null;
   message: string | null;
   bidPrice: number | null;
   createdAt: string;
@@ -94,6 +95,7 @@ export type SaveLeadInput = {
   buyerName: string;
   phone?: string;
   email?: string;
+  location?: string;
   message?: string;
   bidPrice?: number;
 };
@@ -103,6 +105,7 @@ export type SaveBulkLeadInput = {
   buyerName: string;
   phone?: string;
   email?: string;
+  location?: string;
   message?: string;
 };
 
@@ -110,7 +113,7 @@ export type SaveContactSubmissionInput = {
   buyerName: string;
   phone?: string;
   email?: string;
-  location: string;
+  location?: string;
   message: string;
   captchaPrompt: string;
 };
