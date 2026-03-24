@@ -10,5 +10,11 @@
   "public-bulk-interest-flow.mjs": "run",
   "public-contact-flow.mjs": "run",
   "public-lead-flow.mjs": "run",
-  "public-location-fallback-flow.mjs": "run"
+  "public-location-fallback-flow.mjs": "run",
+  "human-check-refresh-flow.mjs": "run",
+  "public-rate-limit-flow.mjs": "run",
+  "export-throttle-flow.mjs": "run",
+  "catalogue-render-flow.mjs": "run",
+  "item-detail-render-flow.mjs": "run",
+  "about-seller-flow.mjs": "run"
 }

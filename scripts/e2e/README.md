@@ -75,6 +75,38 @@ This folder is for disposable end-to-end flows that boot the app against a tempo
   - Verifies no-location item page links to `/about-seller`.
   - Verifies located item page renders location text directly.
 
+- `human-check-refresh-flow.mjs`
+  - Fetches one challenge and then a refreshed challenge from `/api/human-check`.
+  - Verifies challenge token changes across refresh.
+  - Verifies stale token with refreshed answer is rejected.
+  - Verifies refreshed challenge accepts valid lead submission.
+
+- `public-rate-limit-flow.mjs`
+  - Repeatedly submits valid public lead requests to route limit.
+  - Repeatedly submits valid public contact requests to route limit.
+  - Verifies `429` and `Retry-After` on overflow attempts.
+  - Verifies no excess lead/contact rows are written after throttle.
+
+- `export-throttle-flow.mjs`
+  - Verifies invalid export filter is rejected with `400`.
+  - Repeatedly hits public catalogue export until throttled.
+  - Verifies `429` and `Retry-After` on overflow request.
+
+- `catalogue-render-flow.mjs`
+  - Seeds items in `available`, `reserved`, and `sold` states.
+  - Verifies catalogue heading, seeded cards, and status badges render.
+  - Verifies export link and grid/table controls render.
+
+- `item-detail-render-flow.mjs`
+  - Seeds one item with multiple photos.
+  - Verifies item metadata panel and location rendering.
+  - Verifies gallery thumbnails and enquiry form section render.
+
+- `about-seller-flow.mjs`
+  - Verifies seller address and Google Maps link render.
+  - Verifies distance table rows and map embed render.
+  - Verifies merged contact form and captcha selector render.
+
 ## Scenario Backlog
 
 ### Admin inventory lifecycle (Complete)
@@ -83,32 +115,9 @@ This folder is for disposable end-to-end flows that boot the app against a tempo
 
 ### Public buyer flows (Complete)
 
-### Captcha and abuse controls
+### Captcha and abuse controls (Complete)
 
-- `human-check-refresh-flow.mjs`
-  - Fetch a challenge, refresh it, and confirm the token changes.
-  - Verify the old token no longer passes when the flow expects the new challenge.
-
-- `public-rate-limit-flow.mjs`
-  - Repeatedly submit lead/contact requests.
-  - Verify `429` responses and no excess rows.
-
-- `export-throttle-flow.mjs`
-  - Hit public catalogue export repeatedly.
-  - Verify throttling and invalid query rejection.
-
-### Read-only public behavior
-
-- `catalogue-render-flow.mjs`
-  - Seed items in `available`, `reserved`, and `sold` states.
-  - Verify grid/table rendering, status badges, and selection behavior.
-
-- `item-detail-render-flow.mjs`
-  - Seed an item with multiple photos.
-  - Verify the public page renders metadata, gallery thumbnails, and enquiry form defaults.
-
-- `about-seller-flow.mjs`
-  - Verify seller address, Google Maps link, distance table, map embed, and merged contact form all render.
+### Read-only public behavior (Complete)
 
 ### Export and reporting
 
@@ -229,5 +238,11 @@ If you are building coverage incrementally, add scripts in this order:
 08. ✅ Public bulk-interest flow
 09. ✅ Public contact/about-seller flow
 10. ✅ Public location fallback flow
-11. CSV export flow
-12. System status and startup-schema flows
+11. ✅ Human-check refresh flow
+12. ✅ Public rate-limit flow
+13. ✅ Export throttle flow
+14. ✅ Catalogue render flow
+15. ✅ Item detail render flow
+16. ✅ About seller flow
+17. CSV export flow
+18. System status and startup-schema flows

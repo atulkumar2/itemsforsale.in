@@ -315,6 +315,24 @@ End-to-end flows:
 - `npm run test:e2e:public-location-fallback`
   - public item location fallback link/text rendering checks
 
+- `npm run test:e2e:human-check-refresh`
+  - captcha refresh token-change and stale-token rejection checks
+
+- `npm run test:e2e:public-rate-limit`
+  - public lead/contact throttling checks with no-excess-row assertions
+
+- `npm run test:e2e:export-throttle`
+  - public catalogue export invalid-filter and throttling checks
+
+- `npm run test:e2e:catalogue-render`
+  - public catalogue rendering checks across available/reserved/sold states
+
+- `npm run test:e2e:item-detail-render`
+  - item detail metadata, gallery thumbnail, and enquiry-section rendering checks
+
+- `npm run test:e2e:about-seller`
+  - seller page address, map, distances, and contact-form rendering checks
+
 ## Moving To Supabase Later
 
 1. Create a Supabase project
