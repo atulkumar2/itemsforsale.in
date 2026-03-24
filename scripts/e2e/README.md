@@ -20,6 +20,11 @@ This folder is for disposable end-to-end flows that boot the app against a tempo
   - Verifies item image files are removed from local upload storage.
   - Verifies public item route returns not found after delete.
 
+- `postgres-admin-auth-guard-flow.mjs`
+  - Verifies protected admin APIs reject unauthenticated requests.
+  - Verifies wrong captcha and wrong credentials are blocked.
+  - Verifies valid session cookie is required for protected create/delete mutations.
+
 ## Scenario Backlog
 
 ### Admin inventory lifecycle
@@ -38,11 +43,6 @@ This folder is for disposable end-to-end flows that boot the app against a tempo
   - Verify public item routes still resolve after title changes.
 
 ### Admin auth and security
-
-- `postgres-admin-auth-guard-flow.mjs`
-  - Verify protected admin APIs reject unauthenticated requests.
-  - Verify wrong credentials and wrong captcha answers are blocked.
-  - Verify valid session cookie is required for protected mutations.
 
 - `postgres-admin-rate-limit-flow.mjs`
   - Repeatedly hit admin login until throttled.
