@@ -1,10 +1,22 @@
 import { spawn } from "node:child_process";
 import process from "node:process";
 
+/**
+ * Shared helpers used by E2E scripts under scripts/e2e.
+ *
+ * The helpers here intentionally avoid test-framework dependencies so the
+ * scripts can be run directly with node.
+ */
+
+/** Logs a line with a consistent E2E prefix. */
 export function log(message) {
   process.stdout.write(`[e2e] ${message}\n`);
 }
 
+/**
+ * Runs a command and returns collected stdout/stderr.
+ * Rejects when the process exits with a non-zero code.
+ */
 export function runCommand(command, args, options = {}) {
   return new Promise((resolve, reject) => {
     const child = spawn(command, args, {
@@ -40,6 +52,7 @@ export function runCommand(command, args, options = {}) {
   });
 }
 
+/** Best-effort cleanup helper for a known Docker container name. */
 export async function removeContainerIfExists(containerName, cwd = process.cwd()) {
   try {
     await runCommand("docker", ["rm", "-f", containerName], { cwd });
@@ -48,6 +61,12 @@ export async function removeContainerIfExists(containerName, cwd = process.cwd()
   }
 }
 
+/**
+ * Kills listeners bound to the provided port.
+ *
+ * This is used in cleanup/preflight so repeated E2E runs can start from a
+ * deterministic state.
+ */
 export async function killProcessListeningOnPort(
   port,
   { cwd = process.cwd(), excludePids = [process.pid, process.ppid] } = {},

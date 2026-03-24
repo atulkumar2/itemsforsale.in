@@ -15,5 +15,6 @@
             "username": "postgres"
         }
     ],
-    "semgrep.scan.onlyGitDirty": false
+    "semgrep.scan.onlyGitDirty": false,
+    "snyk.advanced.autoSelectOrganization": true
 }

@@ -869,5 +869,15 @@ export async function saveItem(input: SaveItemInput, files: File[]) {
 
 export async function deleteItem(itemId: string) {
   await ensurePostgresReady();
+
+  const imageResult = await query<ItemImageRow>(
+    `select id, item_id, image_url, thumbnail_url, sort_order, created_at
+     from item_images
+     where item_id = $1
+     order by sort_order asc, created_at asc`,
+    [itemId],
+  );
+
   await query(`delete from items where id = $1`, [itemId]);
+  await deleteStoredImageFiles(imageResult.rows.map(mapImageRow));
 }

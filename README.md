@@ -221,7 +221,25 @@ npm run db:recreate:seed
 
 - Run all tests: `npm test`
 - Run tests in watch mode: `npm run test:watch`
+- Run all E2E scripts (auto-discovers `scripts/e2e/*-flow.mjs`): `npm run test:e2e`
+- Run one E2E flow directly: `node scripts/e2e/<name>-flow.mjs`
 - Run lint: `npm run lint`
+
+E2E run behavior:
+
+- `npm run test:e2e` uses `scripts/e2e/run-all.mjs`
+- runner discovers all `*-flow.mjs` files inside `scripts/e2e/`
+- runner reads `scripts/e2e/flow-run-config.json` for run control
+- set a flow to `"not-run"` in that file to skip it from combined runs
+
+Example:
+
+```json
+{
+  "postgres-admin-flow.mjs": "run",
+  "postgres-admin-delete-flow.mjs": "not-run"
+}
+```
 
 Current automated coverage includes:
 

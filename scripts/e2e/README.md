@@ -14,15 +14,15 @@ This folder is for disposable end-to-end flows that boot the app against a tempo
   - Verifies DB state, uploaded files, and public item rendering.
   - Cleans up the app process, uploads, and temporary container.
 
+- `postgres-admin-delete-flow.mjs`
+  - Covers admin login and item delete.
+  - Verifies item and image rows are removed from PostgreSQL.
+  - Verifies item image files are removed from local upload storage.
+  - Verifies public item route returns not found after delete.
+
 ## Scenario Backlog
 
 ### Admin inventory lifecycle
-
-- `postgres-admin-delete-flow.mjs`
-  - Login as admin.
-  - Delete an existing item.
-  - Verify item row, image rows, and uploaded files are removed.
-  - Verify the public item route returns not found.
 
 - `postgres-admin-create-validation-flow.mjs`
   - Try creating items with missing title, invalid dates, bad status, and oversized numbers.
@@ -131,7 +131,7 @@ This folder is for disposable end-to-end flows that boot the app against a tempo
 
 - Keep all new E2E scripts inside `scripts/e2e/`.
 - Prefer one script per clear user journey or security boundary.
-- Reuse helpers from `helpers.mjs` and grow that file instead of duplicating container/app/bootstrap logic.
+- Reuse helpers from `helpers.mjs` and shared setup/teardown from `postgres-flow-common.mjs`.
 - Use separate container names and non-default ports so local developer databases are not disturbed.
 - Insert enough seed data to avoid the app auto-seeding unrelated defaults when that matters for assertions.
 - Prefer deterministic assertions against:
@@ -140,6 +140,68 @@ This folder is for disposable end-to-end flows that boot the app against a tempo
   - uploaded files on disk
   - rendered public/admin page HTML when useful
 - Every script should clean up its app process, temporary DB container, and test uploads even on failure.
+- `npm run test:e2e` auto-discovers `*-flow.mjs` scripts and uses `scripts/e2e/flow-run-config.json`.
+- Mark a script as `"not-run"` in that config to skip it during combined runs.
+
+## Script Structure Conventions
+
+- Put shared setup and teardown code in `postgres-flow-common.mjs`.
+- Keep each `*-flow.mjs` focused on scenario-specific steps and assertions.
+- Prefer this shape for each flow script:
+  - module docs with coverage bullets
+  - `config` from `getPostgresE2EConfig()`
+  - scenario helpers (`createX`, `verifyX`, etc.)
+  - `main()` that uses shared preflight/start/login/cleanup helpers
+- Keep side effects isolated:
+  - seed data in `applySchemaAndSeedData(...)`
+  - process startup through `startApp(...)`
+  - cleanup through `cleanupRun(...)`
+- Use deterministic assertions only (DB rows, file presence, route response state).
+
+## Shared Building Blocks
+
+Use these from `postgres-flow-common.mjs` when writing new scripts:
+
+- Runtime and infra:
+  - `getPostgresE2EConfig`
+  - `ensureDockerAvailable`
+  - `startPostgresContainer`
+  - `waitForPostgres`
+  - `applySchemaAndSeedData`
+- App and auth:
+  - `startApp`
+  - `waitForApp`
+  - `loginAsAdmin`
+- Files and images:
+  - `createImageFile`
+  - `assertFileExists`
+  - `assertFileMissing`
+- Safety and cleanup:
+  - `preflightCleanup`
+  - `cleanupRun`
+
+## Running E2E
+
+- Run all enabled flows:
+  - `npm run test:e2e`
+- Run one flow directly:
+  - `node scripts/e2e/postgres-admin-flow.mjs`
+  - `node scripts/e2e/postgres-admin-delete-flow.mjs`
+- Control combined runs with `scripts/e2e/flow-run-config.json`.
+
+Example `flow-run-config.json`:
+
+```json
+{
+  "postgres-admin-flow.mjs": "run",
+  "postgres-admin-delete-flow.mjs": "not-run"
+}
+```
+
+Allowed values:
+
+- `"run"`: include script in `npm run test:e2e`
+- `"not-run"`: skip script in `npm run test:e2e`
 
 ## Recommended Order
 

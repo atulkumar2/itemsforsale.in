@@ -1,0 +1,4 @@
+{
+  "postgres-admin-delete-flow.mjs": "run",
+  "postgres-admin-flow.mjs": "run"
+}

@@ -1,271 +1,43 @@
 import { strict as assert } from "node:assert";
-import { spawn } from "node:child_process";
-import { randomUUID } from "node:crypto";
-import { readFile, rm, stat } from "node:fs/promises";
-import path from "node:path";
-import process from "node:process";
-import { setTimeout as delay } from "node:timers/promises";
 
 import { Client, types } from "pg";
-import sharp from "sharp";
+import { log } from "./helpers.mjs";
 import {
-  killProcessListeningOnPort,
-  log,
-  removeContainerIfExists,
-  runCommand,
-} from "./helpers.mjs";
+  applySchemaAndSeedData,
+  assertFileExists,
+  assertFileMissing,
+  cleanupRun,
+  createImageFile,
+  ensureDockerAvailable,
+  getPostgresE2EConfig,
+  loginAsAdmin,
+  preflightCleanup,
+  startApp,
+  startPostgresContainer,
+  waitForApp,
+  waitForPostgres,
+} from "./postgres-flow-common.mjs";
+
+/**
+ * End-to-end admin CRUD flow against disposable PostgreSQL.
+ *
+ * Coverage:
+ * - app boot with DATA_MODE=postgres
+ * - admin login with captcha
+ * - item create/edit with image upload/delete
+ * - public item page rendering checks
+ * - deterministic teardown of app/container/files
+ */
 
 // Configure pg to return DATE columns as strings instead of Date objects
 // Type OID 1082 is DATE type in PostgreSQL
 types.setTypeParser(1082, (value) => value);
 
-const containerName = process.env.E2E_POSTGRES_CONTAINER ?? "itemsforsale-e2e-postgres";
-const postgresPort = Number(process.env.E2E_POSTGRES_PORT ?? "54321");
-const appPort = Number(process.env.E2E_APP_PORT ?? String(3400 + Math.floor(Math.random() * 1000)));
-const postgresDb = process.env.E2E_POSTGRES_DB ?? "itemsforsale_e2e";
-const postgresUser = process.env.E2E_POSTGRES_USER ?? "postgres";
-const postgresPassword = process.env.E2E_POSTGRES_PASSWORD ?? "postgres";
-const appBaseUrl = `http://127.0.0.1:${appPort}`;
-const databaseUrl = `postgresql://${postgresUser}:${postgresPassword}@127.0.0.1:${postgresPort}/${postgresDb}`;
-const adminEmail = "e2e-admin@example.com";
-const adminPassword = "E2e-admin-pass-123";
-const adminSessionSecret = "e2e-session-secret";
-const captchaSecret = "e2e-captcha-secret";
-const rootDir = process.cwd();
+const config = getPostgresE2EConfig();
+const { appBaseUrl, appPort, containerName, databaseUrl, rootDir } = config;
 
 let appProcess = null;
 let createdItemId = null;
-
-async function ensureDockerAvailable() {
-  try {
-    await runCommand("docker", ["info"], { cwd: rootDir });
-  } catch (error) {
-    throw new Error(
-      "Docker is not available. Start Docker Desktop (or another Docker daemon) and retry this end-to-end test.",
-      { cause: error },
-    );
-  }
-}
-
-async function startPostgresContainer() {
-  await removeContainerIfExists(containerName, rootDir);
-  log(`Starting disposable Postgres container ${containerName} on port ${postgresPort}`);
-  await runCommand("docker", [
-    "run",
-    "-d",
-    "--rm",
-    "--name",
-    containerName,
-    "-e",
-    `POSTGRES_DB=${postgresDb}`,
-    "-e",
-    `POSTGRES_USER=${postgresUser}`,
-    "-e",
-    `POSTGRES_PASSWORD=${postgresPassword}`,
-    "-p",
-    `${postgresPort}:5432`,
-    "postgres:16-alpine",
-  ], { cwd: rootDir });
-}
-
-async function waitForPostgres() {
-  log("Waiting for PostgreSQL to accept connections");
-  for (let attempt = 0; attempt < 60; attempt += 1) {
-    const client = new Client({ connectionString: databaseUrl });
-    try {
-      await client.connect();
-      await client.query("select 1");
-      await client.end();
-      return;
-    } catch {
-      try {
-        await client.end();
-      } catch {
-        // Ignore cleanup errors during retries.
-      }
-      await delay(1000);
-    }
-  }
-
-  throw new Error("PostgreSQL did not become ready in time.");
-}
-
-async function applySchemaAndSeedData() {
-  log("Applying PostgreSQL DDL and inserting dummy seed data");
-  const ddl = await readFile(path.join(rootDir, "data", "postgres.local.sql"), "utf8");
-  const client = new Client({ connectionString: databaseUrl });
-  await client.connect();
-
-  try {
-    await client.query(ddl);
-    const dummyItemId = randomUUID();
-    const now = new Date().toISOString();
-    await client.query(
-      `insert into items (
-         id, slug, title, description, category, condition, purchase_date,
-         purchase_price, expected_price, available_from, location_area,
-         status, created_at, updated_at
-       ) values (
-         $1, $2, $3, $4, $5, $6, $7,
-         $8, $9, $10, $11,
-         $12, $13, $14
-       )`,
-      [
-        dummyItemId,
-        "dummy-seed-item",
-        "Dummy Seed Item",
-        "Disposable row inserted by the end-to-end admin flow test.",
-        "Seed",
-        "Used",
-        "2024-01-10",
-        2500,
-        1800,
-        "2026-04-10",
-        "Seed location",
-        "available",
-        now,
-        now,
-      ],
-    );
-  } finally {
-    await client.end();
-  }
-}
-
-async function startApp() {
-  log(`Starting Next.js app on ${appBaseUrl}`);
-  const command = process.platform === "win32" ? "cmd.exe" : "npm";
-  const args =
-    process.platform === "win32"
-      ? ["/d", "/s", "/c", "npm run dev:webpack -- -H 127.0.0.1 -p " + String(appPort)]
-      : ["run", "dev:webpack", "--", "-H", "127.0.0.1", "-p", String(appPort)];
-
-  appProcess = spawn(command, args, {
-    cwd: rootDir,
-    detached: process.platform !== "win32",
-    env: {
-      ...process.env,
-      DATA_MODE: "postgres",
-      DATABASE_URL: databaseUrl,
-      NEXT_PUBLIC_APP_URL: appBaseUrl,
-      ADMIN_EMAIL: adminEmail,
-      ADMIN_PASSWORD: adminPassword,
-      ADMIN_SESSION_SECRET: adminSessionSecret,
-      CONTACT_CAPTCHA_SECRET: captchaSecret,
-      WATCHPACK_POLLING: "true",
-    },
-    stdio: ["ignore", "pipe", "pipe"],
-  });
-
-  appProcess.stdout?.on("data", (chunk) => {
-    process.stdout.write(`[app] ${chunk.toString()}`);
-  });
-  appProcess.stderr?.on("data", (chunk) => {
-    process.stderr.write(`[app] ${chunk.toString()}`);
-  });
-
-  appProcess.on("exit", (code) => {
-    if (code !== null && code !== 0) {
-      process.stderr.write(`[e2e] App process exited with code ${code}\n`);
-    }
-  });
-}
-
-async function waitForApp() {
-  log("Waiting for app HTTP server");
-  for (let attempt = 0; attempt < 120; attempt += 1) {
-    try {
-      const response = await fetch(`${appBaseUrl}/admin/login`, { redirect: "manual" });
-      if (response.ok || response.status === 307 || response.status === 429) {
-        // 429 means app is responding (rate limited) so it's ready
-        // Add extra delay to ensure app is fully stable
-        await delay(2000);
-        return;
-      }
-    } catch {
-      // Retry until boot finishes.
-    }
-
-    await delay(1000);
-  }
-
-  throw new Error("App server did not become ready in time.");
-}
-
-async function fetchCaptchaChallenge() {
-  const response = await fetch(`${appBaseUrl}/api/human-check`, {
-    headers: { "Cache-Control": "no-store" },
-  });
-  assert.equal(response.status, 200, "captcha endpoint should return 200");
-  return response.json();
-}
-
-function mergeCookies(existingCookieHeader, response) {
-  const jar = new Map();
-
-  for (const part of existingCookieHeader.split(";").map((entry) => entry.trim()).filter(Boolean)) {
-    const [name, ...rest] = part.split("=");
-    jar.set(name, rest.join("="));
-  }
-
-  for (const cookie of response.headers.getSetCookie()) {
-    const [pair] = cookie.split(";", 1);
-    const [name, ...rest] = pair.split("=");
-    jar.set(name, rest.join("="));
-  }
-
-  return Array.from(jar.entries())
-    .map(([name, value]) => `${name}=${value}`)
-    .join("; ");
-}
-
-async function loginAsAdmin() {
-  log("Logging in through the real admin login route");
-  const challenge = await fetchCaptchaChallenge();
-  let cookieHeader = "";
-  let lastError = null;
-
-  for (const option of challenge.options) {
-    const response = await fetch(`${appBaseUrl}/api/admin/login`, {
-      method: "POST",
-      headers: {
-        "Content-Type": "application/json",
-        ...(cookieHeader ? { Cookie: cookieHeader } : {}),
-      },
-      body: JSON.stringify({
-        email: adminEmail,
-        password: adminPassword,
-        captchaToken: challenge.token,
-        captchaAnswer: option,
-      }),
-    });
-
-    if (response.ok) {
-      cookieHeader = mergeCookies(cookieHeader, response);
-      assert.match(cookieHeader, /itemsforsale-admin-session=/, "admin session cookie should be set");
-      return cookieHeader;
-    }
-
-    lastError = await response.text();
-  }
-
-  throw new Error(`Unable to solve login captcha in 4 attempts.\n${lastError ?? ""}`);
-}
-
-async function createImageFile(name, color) {
-  const buffer = await sharp({
-    create: {
-      width: 1200,
-      height: 900,
-      channels: 3,
-      background: color,
-    },
-  })
-    .png()
-    .toBuffer();
-
-  return new File([buffer], name, { type: "image/png" });
-}
 
 async function createItem(cookieHeader) {
   log("Creating a new admin item with three uploaded photos");
@@ -331,22 +103,6 @@ async function getItemState(itemId) {
   }
 }
 
-async function assertFileExists(relativeUrl) {
-  const filePath = path.join(rootDir, "public", relativeUrl.replace(/^\/+/, "").replace(/\//g, path.sep));
-  await stat(filePath);
-}
-
-async function assertFileMissing(relativeUrl) {
-  const filePath = path.join(rootDir, "public", relativeUrl.replace(/^\/+/, "").replace(/\//g, path.sep));
-  try {
-    await stat(filePath);
-  } catch {
-    return;
-  }
-
-  throw new Error(`Expected ${relativeUrl} to be deleted, but it still exists.`);
-}
-
 async function editItem(cookieHeader, itemId, existingImages) {
   log("Editing the item, removing one image, and adding a replacement image");
   const [removedImage] = existingImages;
@@ -399,11 +155,11 @@ async function verifyScenario(itemId, removedImage) {
   );
 
   for (const image of afterEdit.images) {
-    await assertFileExists(image.image_url);
-    await assertFileExists(image.thumbnail_url);
+    await assertFileExists(rootDir, image.image_url);
+    await assertFileExists(rootDir, image.thumbnail_url);
   }
-  await assertFileMissing(removedImage.image_url);
-  await assertFileMissing(removedImage.thumbnail_url);
+  await assertFileMissing(rootDir, removedImage.image_url);
+  await assertFileMissing(rootDir, removedImage.thumbnail_url);
 
   const publicItemResponse = await fetch(`${appBaseUrl}/items/${afterEdit.item.slug}`);
   assert.equal(publicItemResponse.status, 200, "public item page should render");
@@ -412,106 +168,24 @@ async function verifyScenario(itemId, removedImage) {
   assert.match(publicItemHtml, /Seller fallback page expected/);
 }
 
-async function cleanup() {
-  log("Cleaning up disposable resources");
-
-  if (appProcess) {
-    const waitForExit = () => {
-      if (appProcess.exitCode !== null) {
-        return Promise.resolve();
-      }
-
-      return new Promise((resolve) => {
-        appProcess.once("exit", resolve);
-      });
-    };
-
-    if (appProcess.exitCode === null) {
-      if (process.platform === "win32") {
-        appProcess.kill("SIGTERM");
-      } else if (appProcess.pid) {
-        try {
-          process.kill(-appProcess.pid, "SIGTERM");
-        } catch {
-          appProcess.kill("SIGTERM");
-        }
-      } else {
-        appProcess.kill("SIGTERM");
-      }
-
-      const exitedGracefully = await Promise.race([
-        waitForExit().then(() => true),
-        delay(5000).then(() => false),
-      ]);
-
-      if (!exitedGracefully && appProcess.exitCode === null) {
-        if (process.platform === "win32") {
-          appProcess.kill("SIGKILL");
-        } else if (appProcess.pid) {
-          try {
-            process.kill(-appProcess.pid, "SIGKILL");
-          } catch {
-            appProcess.kill("SIGKILL");
-          }
-        } else {
-          appProcess.kill("SIGKILL");
-        }
-        await waitForExit();
-      }
-    }
-  }
-
-  if (createdItemId) {
-    await rm(path.join(rootDir, "public", "uploads", createdItemId), {
-      recursive: true,
-      force: true,
-    });
-  }
-
-  log(`Ensuring app process on port ${appPort} is stopped`);
-  await killProcessListeningOnPort(appPort, { cwd: rootDir });
-
-  await removeContainerIfExists(containerName, rootDir);
-}
-
-async function preflightCleanup() {
-  log("Cleaning up any stray Docker containers from previous runs");
-  try {
-    await runCommand("docker", ["rm", "-f", containerName], { cwd: rootDir });
-  } catch {
-    // Ignore cleanup errors during preflight
-  }
-
-  if (process.platform !== "win32") {
-    log("Stopping stray next dev processes");
-    try {
-      await runCommand("sh", ["-lc", "pkill -f 'next dev' || true"], { cwd: rootDir });
-    } catch {
-      // Ignore if no matching process is running
-    }
-  }
-
-  try {
-    await rm(path.join(rootDir, ".next", "dev", "lock"), { force: true });
-  } catch {
-    // Ignore if lock file does not exist
-  }
-
-  log(`Cleaning up any stale app process on port ${appPort}`);
-  await killProcessListeningOnPort(appPort, { cwd: rootDir });
-}
-
+/**
+ * Runs the full E2E flow and always performs teardown.
+ */
 async function main() {
   try {
-    await preflightCleanup();
-    await ensureDockerAvailable();
-    await startPostgresContainer();
-    await waitForPostgres();
-    await applySchemaAndSeedData();
-    await startApp();
-    await waitForApp();
+    await preflightCleanup(config);
+    await ensureDockerAvailable(rootDir);
+    await startPostgresContainer(config);
+    await waitForPostgres(databaseUrl);
+    await applySchemaAndSeedData({
+      databaseUrl,
+      rootDir,
+      seedDescription: "Disposable row inserted by the end-to-end admin flow test.",
+    });
+    appProcess = await startApp(config);
+    await waitForApp(appBaseUrl);
 
-    const cookieHeader = await loginAsAdmin();
+    const cookieHeader = await loginAsAdmin(config);
     const itemId = await createItem(cookieHeader);
     const afterCreate = await getItemState(itemId);
     assert.ok(afterCreate.item, "created item should exist");
@@ -519,8 +193,8 @@ async function main() {
     assert.equal(afterCreate.images.length, 3, "create flow should persist three images");
 
     for (const image of afterCreate.images) {
-      await assertFileExists(image.image_url);
-      await assertFileExists(image.thumbnail_url);
+      await assertFileExists(rootDir, image.image_url);
+      await assertFileExists(rootDir, image.thumbnail_url);
     }
 
     const removedImage = await editItem(cookieHeader, itemId, afterCreate.images);
@@ -528,7 +202,7 @@ async function main() {
 
     log("E2E PostgreSQL admin flow completed successfully");
   } finally {
-    await cleanup();
+    await cleanupRun({ appProcess, createdItemId, rootDir, appPort, containerName });
   }
 }
 
