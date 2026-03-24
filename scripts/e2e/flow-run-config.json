@@ -1,5 +1,8 @@
 {
-  "postgres-admin-auth-guard-flow.mjs": "run",
-  "postgres-admin-delete-flow.mjs": "run",
-  "postgres-admin-flow.mjs": "run"
+  "admin-auth-guard-flow.mjs": "run",
+  "admin-create-validation-flow.mjs": "run",
+  "admin-delete-flow.mjs": "run",
+  "admin-flow.mjs": "run",
+  "admin-image-validation-flow.mjs": "run",
+  "admin-slug-regression-flow.mjs": "run"
 }

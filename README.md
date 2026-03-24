@@ -6,19 +6,21 @@ Site URL: [itemsforsale.in](https://itemsforsale.in)
 
 ## Table Of Contents
 
-- [Overview](#overview)
-- [Current Implementation](#current-implementation)
-- [Documents](#documents)
-- [Local Setup](#local-setup)
-- [Dev Server Notes](#dev-server-notes)
-- [Local Defaults](#local-defaults)
-- [Security Notes](#security-notes)
-- [Local PostgreSQL Mode](#local-postgresql-mode)
-- [Dev Fake Data Seeding](#dev-fake-data-seeding)
-- [Recreate PostgreSQL Database](#recreate-postgresql-database)
-- [Testing](#testing)
-- [Moving To Supabase Later](#moving-to-supabase-later)
-- [Spec References](#spec-references)
+- [itemsforsale.in](#itemsforsalein)
+  - [Table Of Contents](#table-of-contents)
+  - [Overview](#overview)
+  - [Current Implementation](#current-implementation)
+  - [Documents](#documents)
+  - [Local Setup](#local-setup)
+  - [Dev Server Notes](#dev-server-notes)
+  - [Local Defaults](#local-defaults)
+  - [Security Notes](#security-notes)
+  - [Local PostgreSQL Mode](#local-postgresql-mode)
+  - [Dev Fake Data Seeding](#dev-fake-data-seeding)
+  - [Recreate PostgreSQL Database](#recreate-postgresql-database)
+  - [Testing](#testing)
+  - [Moving To Supabase Later](#moving-to-supabase-later)
+  - [Spec References](#spec-references)
 
 ## Overview
 
@@ -236,8 +238,8 @@ Example:
 
 ```json
 {
-  "postgres-admin-flow.mjs": "run",
-  "postgres-admin-delete-flow.mjs": "not-run"
+  "admin-flow.mjs": "run",
+  "admin-delete-flow.mjs": "not-run"
 }
 ```
 
@@ -251,7 +253,7 @@ Current automated coverage includes:
 - schema validation for single-item interest, multi-item interest, and contact seller flows
 - route-level `429` and `503` responses for admin login and contact submission protections
 - route-level `429` responses for lead submission, multi-item lead submission, and public catalogue export protections
-- disposable PostgreSQL-backed end-to-end admin create/edit flow via `npm run test:e2e:postgres-admin`
+- disposable PostgreSQL-backed end-to-end admin flows via `npm run test:e2e`
 
 Current test files:
 
@@ -270,16 +272,28 @@ Current test files:
 - `tests/rate-limit.test.ts`
 - `tests/upload-security.test.ts`
 
-End-to-end flow:
+End-to-end flows:
 
-- `npm run test:e2e:postgres-admin`
-  - starts a temporary PostgreSQL container on a non-default port
-  - applies local DDL and seed data
-  - boots the app in postgres mode
-  - logs in as admin through the real HTTP flow
-  - creates an item with 3 images
-  - edits the item, removes an image, adds another image, and verifies DB/files/public rendering
-  - tears down the app process, test uploads, and the temporary container
+- `npm run test:e2e`
+  - runs all enabled E2E flows from `scripts/e2e/flow-run-config.json`
+
+- `npm run test:e2e:admin`
+  - admin create/edit journey with image upload/remove and public page verification
+
+- `npm run test:e2e:admin-delete`
+  - admin delete journey with DB row, file, and public route checks
+
+- `npm run test:e2e:admin-auth-guard`
+  - protected route auth checks (unauthenticated reject, bad captcha/credentials reject)
+
+- `npm run test:e2e:admin-create-validation`
+  - create payload validation checks (title/date/status/number constraints)
+
+- `npm run test:e2e:admin-image-validation`
+  - upload validation checks (MIME type, file count, file size)
+
+- `npm run test:e2e:admin-slug-regression`
+  - slug generation/update regression checks for similar titles and edit flows
 
 ## Moving To Supabase Later
 

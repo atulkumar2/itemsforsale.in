@@ -16,7 +16,7 @@ import {
   startPostgresContainer,
   waitForApp,
   waitForPostgres,
-} from "./postgres-flow-common.mjs";
+} from "./flow-common.mjs";
 
 /**
  * End-to-end admin delete flow against disposable PostgreSQL.

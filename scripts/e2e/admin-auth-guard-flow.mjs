@@ -14,7 +14,7 @@ import {
   startPostgresContainer,
   waitForApp,
   waitForPostgres,
-} from "./postgres-flow-common.mjs";
+} from "./flow-common.mjs";
 
 /**
  * End-to-end auth guard flow for admin APIs.
