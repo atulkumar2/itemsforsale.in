@@ -17,6 +17,8 @@
     "test:e2e:admin-create-validation": "node scripts/e2e/admin-create-validation-flow.mjs",
     "test:e2e:admin-delete": "node scripts/e2e/admin-delete-flow.mjs",
     "test:e2e:admin-image-validation": "node scripts/e2e/admin-image-validation-flow.mjs",
+    "test:e2e:admin-rate-limit": "node scripts/e2e/admin-rate-limit-flow.mjs",
+    "test:e2e:admin-session": "node scripts/e2e/admin-session-flow.mjs",
     "test:e2e:admin-slug-regression": "node scripts/e2e/admin-slug-regression-flow.mjs",
     "db:up": "docker compose up -d",
     "db:down": "docker compose down",

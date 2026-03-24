@@ -292,6 +292,12 @@ End-to-end flows:
 - `npm run test:e2e:admin-image-validation`
   - upload validation checks (MIME type, file count, file size)
 
+- `npm run test:e2e:admin-rate-limit`
+  - admin login throttling checks (`429` and `Retry-After`)
+
+- `npm run test:e2e:admin-session`
+  - session reuse/logout/tampered-cookie rejection checks
+
 - `npm run test:e2e:admin-slug-regression`
   - slug generation/update regression checks for similar titles and edit flows
 

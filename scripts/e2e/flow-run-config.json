@@ -4,5 +4,7 @@
   "admin-delete-flow.mjs": "run",
   "admin-flow.mjs": "run",
   "admin-image-validation-flow.mjs": "run",
+  "admin-rate-limit-flow.mjs": "run",
+  "admin-session-flow.mjs": "run",
   "admin-slug-regression-flow.mjs": "run"
 }

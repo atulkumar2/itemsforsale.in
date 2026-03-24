@@ -25,6 +25,16 @@ This folder is for disposable end-to-end flows that boot the app against a tempo
   - Verifies wrong captcha and wrong credentials are blocked.
   - Verifies valid session cookie is required for protected create/delete mutations.
 
+- `admin-rate-limit-flow.mjs`
+  - Repeatedly hits admin login until throttled.
+  - Verifies `429` responses include `Retry-After`.
+  - Verifies login succeeds again after fresh app restart (window reset strategy).
+
+- `admin-session-flow.mjs`
+  - Logs in once and reuses one session for multiple admin mutations.
+  - Verifies logout clears browser access for protected routes.
+  - Verifies tampered admin session cookie is rejected.
+
 - `admin-create-validation-flow.mjs`
   - Verifies missing title, invalid dates, bad status, and oversized number fields are rejected.
   - Verifies title too long is rejected.
@@ -47,17 +57,7 @@ This folder is for disposable end-to-end flows that boot the app against a tempo
 
 ### Admin inventory lifecycle (Complete)
 
-### Admin auth and security
-
-- `admin-rate-limit-flow.mjs`
-  - Repeatedly hit admin login until throttled.
-  - Verify `429` and `Retry-After`.
-  - Confirm a fresh flow succeeds after reset/window expiry strategy.
-
-- `admin-session-flow.mjs`
-  - Login once, reuse session across multiple admin mutations.
-  - Verify logout clears access.
-  - Verify expired or tampered cookie is rejected.
+### Admin auth and security (Complete)
 
 ### Public buyer flows
 
@@ -216,10 +216,10 @@ If you are building coverage incrementally, add scripts in this order:
 2. ✅ Admin create-validation flow
 3. ✅ Admin image-validation flow  
 4. ✅ Admin slug-regression flow
-5. Public single-item lead flow
-6. Public bulk-interest flow
-7. Public contact/about-seller flow
-8. Admin rate-limit flow
-9. Admin session flow
+5. ✅ Admin rate-limit flow
+6. ✅ Admin session flow
+7. Public single-item lead flow
+8. Public bulk-interest flow
+9. Public contact/about-seller flow
 10. CSV export flow
 11. System status and startup-schema flows
