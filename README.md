@@ -233,6 +233,8 @@ E2E run behavior:
 - runner discovers all `*-flow.mjs` files inside `scripts/e2e/`
 - runner reads `scripts/e2e/flow-run-config.json` for run control
 - set a flow to `"not-run"` in that file to skip it from combined runs
+- runner also writes combined logs to `scripts/e2e/logs/run-all-latest.log` and a timestamped `run-all-<timestamp>.log`
+- runner auto-rotates timestamped logs and keeps only the latest 5
 
 Example:
 
@@ -300,6 +302,18 @@ End-to-end flows:
 
 - `npm run test:e2e:admin-slug-regression`
   - slug generation/update regression checks for similar titles and edit flows
+
+- `npm run test:e2e:public-lead`
+  - single-item public interest submission checks with admin visibility assertions
+
+- `npm run test:e2e:public-bulk-interest`
+  - combined public interest submission checks with per-item lead mapping assertions
+
+- `npm run test:e2e:public-contact`
+  - merged seller-contact public submission checks with admin visibility assertions
+
+- `npm run test:e2e:public-location-fallback`
+  - public item location fallback link/text rendering checks
 
 ## Moving To Supabase Later
 

@@ -6,5 +6,9 @@
   "admin-image-validation-flow.mjs": "run",
   "admin-rate-limit-flow.mjs": "run",
   "admin-session-flow.mjs": "run",
-  "admin-slug-regression-flow.mjs": "run"
+  "admin-slug-regression-flow.mjs": "run",
+  "public-bulk-interest-flow.mjs": "run",
+  "public-contact-flow.mjs": "run",
+  "public-lead-flow.mjs": "run",
+  "public-location-fallback-flow.mjs": "run"
 }

@@ -53,32 +53,35 @@ This folder is for disposable end-to-end flows that boot the app against a tempo
   - Verifies old public route returns not-found.
   - Verifies new public route renders with updated content.
 
+- `public-lead-flow.mjs`
+  - Seeds one public item.
+  - Submits single-item interest via public route.
+  - Verifies lead row fields and expected price context linkage.
+  - Verifies admin leads page visibility for submitted enquiry.
+
+- `public-bulk-interest-flow.mjs`
+  - Seeds multiple public items.
+  - Submits one combined enquiry via `/api/bulk-leads`.
+  - Verifies one lead row per selected item and correct mapping.
+  - Verifies admin leads page visibility for submitted enquiry.
+
+- `public-contact-flow.mjs`
+  - Submits merged seller contact request via public route.
+  - Verifies contact submission persistence including captcha prompt.
+  - Verifies admin contact submissions page visibility.
+
+- `public-location-fallback-flow.mjs`
+  - Seeds one item without `locationArea` and one with real location text.
+  - Verifies no-location item page links to `/about-seller`.
+  - Verifies located item page renders location text directly.
+
 ## Scenario Backlog
 
 ### Admin inventory lifecycle (Complete)
 
 ### Admin auth and security (Complete)
 
-### Public buyer flows
-
-- `public-lead-flow.mjs`
-  - Seed one public item.
-  - Submit single-item interest from the public item page.
-  - Verify lead row, expected price context, and admin visibility.
-
-- `public-bulk-interest-flow.mjs`
-  - Seed multiple public items.
-  - Submit one combined enquiry from `/show-interest`.
-  - Verify one lead row per selected item and correct item mapping.
-
-- `public-contact-flow.mjs`
-  - Submit the merged seller contact form from `/about-seller`.
-  - Verify contact submission persistence and admin visibility.
-
-- `public-location-fallback-flow.mjs`
-  - Seed one item without `locationArea`.
-  - Verify the item detail page links to `/about-seller`.
-  - Verify items with a real location still show their own location text.
+### Public buyer flows (Complete)
 
 ### Captcha and abuse controls
 
@@ -193,6 +196,10 @@ Use these from `flow-common.mjs` when writing new scripts:
   - `node scripts/e2e/admin-flow.mjs`
   - `node scripts/e2e/admin-delete-flow.mjs`
 - Control combined runs with `scripts/e2e/flow-run-config.json`.
+- Every `npm run test:e2e` run writes logs to:
+  - `scripts/e2e/logs/run-all-latest.log`
+  - `scripts/e2e/logs/run-all-<timestamp>.log`
+- Timestamped logs are auto-rotated to keep only the latest 5 files.
 
 Example `flow-run-config.json`:
 
@@ -212,14 +219,15 @@ Allowed values:
 
 If you are building coverage incrementally, add scripts in this order:
 
-1. ✅ Admin delete flow
-2. ✅ Admin create-validation flow
-3. ✅ Admin image-validation flow  
-4. ✅ Admin slug-regression flow
-5. ✅ Admin rate-limit flow
-6. ✅ Admin session flow
-7. Public single-item lead flow
-8. Public bulk-interest flow
-9. Public contact/about-seller flow
-10. CSV export flow
-11. System status and startup-schema flows
+01. ✅ Admin delete flow
+02. ✅ Admin create-validation flow
+03. ✅ Admin image-validation flow  
+04. ✅ Admin slug-regression flow
+05. ✅ Admin rate-limit flow
+06. ✅ Admin session flow
+07. ✅ Public single-item lead flow
+08. ✅ Public bulk-interest flow
+09. ✅ Public contact/about-seller flow
+10. ✅ Public location fallback flow
+11. CSV export flow
+12. System status and startup-schema flows
