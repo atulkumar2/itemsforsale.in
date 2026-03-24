@@ -333,6 +333,20 @@ End-to-end flows:
 - `npm run test:e2e:about-seller`
   - seller page address, map, distances, and contact-form rendering checks
 
+- `npm run test:e2e:csv-export`
+  - public/admin CSV export header and CSV-escaping checks
+
+- `npm run test:e2e:admin-leads-view`
+  - admin leads list expected/bid column, sort, and filter behavior checks
+
+- `npm run test:e2e:system-status`
+  - admin system status page rendering and PostgreSQL connection health checks
+
+- `npm run test:e2e:startup-schema`
+  - schema initialization and DDL idempotence checks on fresh database
+
+- `npm run test:e2e:cleanup-resilience`
+  - failure recovery and cleanup reliability verification (ensures resources are cleaned up even after errors)
 ## Moving To Supabase Later
 
 1. Create a Supabase project

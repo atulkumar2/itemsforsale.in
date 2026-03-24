@@ -4,6 +4,8 @@ This folder is for disposable end-to-end flows that boot the app against a tempo
 
 ## Current
 
+### Admin inventory lifecycle
+
 - `admin-flow.mjs`
   - Starts a separate Postgres container on a non-default host port.
   - Applies DDL and inserts one dummy seed row before the app starts.
@@ -19,21 +21,6 @@ This folder is for disposable end-to-end flows that boot the app against a tempo
   - Verifies item and image rows are removed from PostgreSQL.
   - Verifies item image files are removed from local upload storage.
   - Verifies public item route returns not found after delete.
-
-- `admin-auth-guard-flow.mjs`
-  - Verifies protected admin APIs reject unauthenticated requests.
-  - Verifies wrong captcha and wrong credentials are blocked.
-  - Verifies valid session cookie is required for protected create/delete mutations.
-
-- `admin-rate-limit-flow.mjs`
-  - Repeatedly hits admin login until throttled.
-  - Verifies `429` responses include `Retry-After`.
-  - Verifies login succeeds again after fresh app restart (window reset strategy).
-
-- `admin-session-flow.mjs`
-  - Logs in once and reuses one session for multiple admin mutations.
-  - Verifies logout clears browser access for protected routes.
-  - Verifies tampered admin session cookie is rejected.
 
 - `admin-create-validation-flow.mjs`
   - Verifies missing title, invalid dates, bad status, and oversized number fields are rejected.
@@ -52,6 +39,20 @@ This folder is for disposable end-to-end flows that boot the app against a tempo
   - Edits an item and verifies slug changes to match new title.
   - Verifies old public route returns not-found.
   - Verifies new public route renders with updated content.
+
+### Admin auth and security
+
+- `admin-auth-guard-flow.mjs`
+  - Verifies protected admin APIs reject unauthenticated requests.
+  - Verifies wrong captcha and wrong credentials are blocked.
+  - Verifies valid session cookie is required for protected create/delete mutations.
+
+- `admin-session-flow.mjs`
+  - Logs in once and reuses one session for multiple admin mutations.
+  - Verifies logout clears browser access for protected routes.
+  - Verifies tampered admin session cookie is rejected.
+
+### Public buyer flows
 
 - `public-lead-flow.mjs`
   - Seeds one public item.
@@ -75,11 +76,18 @@ This folder is for disposable end-to-end flows that boot the app against a tempo
   - Verifies no-location item page links to `/about-seller`.
   - Verifies located item page renders location text directly.
 
+### Captcha and abuse controls
+
 - `human-check-refresh-flow.mjs`
   - Fetches one challenge and then a refreshed challenge from `/api/human-check`.
   - Verifies challenge token changes across refresh.
   - Verifies stale token with refreshed answer is rejected.
   - Verifies refreshed challenge accepts valid lead submission.
+
+- `admin-rate-limit-flow.mjs`
+  - Repeatedly hits admin login until throttled.
+  - Verifies `429` responses include `Retry-After`.
+  - Verifies login succeeds again after fresh app restart (window reset strategy).
 
 - `public-rate-limit-flow.mjs`
   - Repeatedly submits valid public lead requests to route limit.
@@ -91,6 +99,8 @@ This folder is for disposable end-to-end flows that boot the app against a tempo
   - Verifies invalid export filter is rejected with `400`.
   - Repeatedly hits public catalogue export until throttled.
   - Verifies `429` and `Retry-After` on overflow request.
+
+### Read-only public behavior
 
 - `catalogue-render-flow.mjs`
   - Seeds items in `available`, `reserved`, and `sold` states.
@@ -107,42 +117,42 @@ This folder is for disposable end-to-end flows that boot the app against a tempo
   - Verifies distance table rows and map embed render.
   - Verifies merged contact form and captcha selector render.
 
-## Scenario Backlog
-
-### Admin inventory lifecycle (Complete)
-
-### Admin auth and security (Complete)
-
-### Public buyer flows (Complete)
-
-### Captcha and abuse controls (Complete)
-
-### Read-only public behavior (Complete)
-
 ### Export and reporting
 
 - `csv-export-flow.mjs`
-  - Seed representative catalogue data.
-  - Hit public and admin export endpoints.
-  - Validate headers, row content, and CSV escaping for commas, quotes, formulas, and newlines.
+  - Seeds representative catalogue and leads data.
+  - Verifies public and admin CSV export headers.
+  - Verifies CSV escaping for commas, quotes, formulas, and newlines.
 
 - `admin-leads-view-flow.mjs`
-  - Seed leads with different timestamps, items, and bid prices.
-  - Verify admin leads list shows expected price, buyer bid, and correct sorting/filtering.
+  - Seeds leads with varied timestamps, items, and bid prices.
+  - Verifies admin leads list renders expected and bid prices.
+  - Verifies newest-first ordering and filter behavior.
 
 ### System and environment behavior
 
-- `system-status-flow.mjs`
-  - Verify admin system status page in postgres mode.
-  - Validate reported DB target metadata and reachability checks.
+- `system-status-flow.mjs` ✓
+  - Verify admin system status page renders correctly in postgres mode
+  - Validate reported DB connection metadata (host, port, database) is displayed
+  - Check PostgreSQL reachability status shows "Reachable" when DB is accessible
+  - Coverage: HTTP 200, page structure, connection details rendering
 
-- `startup-schema-flow.mjs`
-  - Start from minimal DDL only.
-  - Verify the app bootstraps missing columns/constraints needed by the current store implementation.
+- `startup-schema-flow.mjs` ✓
+  - Start fresh PostgreSQL database without prior schema
+  - Apply DDL and verify schema initialization creates all tables (items, item_images, leads, contact_submissions)
+  - Verify 14, 5, 8, 8 columns respectively for each table
+  - Insert test data, reapply DDL (idempotent check), verify data survives
+  - Test foreign key constraints remain functional after schema reapplication
+  - Coverage: Idempotent schema DDL, data persistence, constraint integrity
 
-- `cleanup-resilience-flow.mjs`
-  - Force a mid-test failure after uploads are created.
-  - Verify temp app/container cleanup still happens and uploaded files are removed.
+- `cleanup-resilience-flow.mjs` ✓
+  - Create item with multiple file uploads to generate temporary resources
+  - Intentionally trigger test failure mid-execution (try block throws error)
+  - Verify cleanup handlers execute reliably even after failure (finally block)
+  - Validate uploaded image files are removed from disk after cleanup
+  - Validate resource cleanup (app process, database container) executes properly
+  - Distinguish expected intentional failure from unexpected errors (exit code 0 vs 1)
+  - Coverage: Failure recovery, cleanup reliability under error conditions, file removal verification
 
 ## Conventions
 
@@ -244,5 +254,6 @@ If you are building coverage incrementally, add scripts in this order:
 14. ✅ Catalogue render flow
 15. ✅ Item detail render flow
 16. ✅ About seller flow
-17. CSV export flow
-18. System status and startup-schema flows
+17. ✅ CSV export flow
+18. ✅ Admin leads view flow
+19. ✅ System status, startup-schema, and cleanup-resilience flows

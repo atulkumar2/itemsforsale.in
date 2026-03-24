@@ -16,5 +16,10 @@
   "export-throttle-flow.mjs": "run",
   "catalogue-render-flow.mjs": "run",
   "item-detail-render-flow.mjs": "run",
-  "about-seller-flow.mjs": "run"
+  "about-seller-flow.mjs": "run",
+  "csv-export-flow.mjs": "run",
+  "admin-leads-view-flow.mjs": "run",
+  "cleanup-resilience-flow.mjs": "run",
+  "startup-schema-flow.mjs": "run",
+  "system-status-flow.mjs": "run"
 }
