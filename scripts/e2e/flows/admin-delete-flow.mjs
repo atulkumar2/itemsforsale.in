@@ -1,7 +1,7 @@
 import { strict as assert } from "node:assert";
 
 import { Client } from "pg";
-import { log } from "./helpers.mjs";
+import { log } from "../helpers.mjs";
 import {
   applySchemaAndSeedData,
   assertFileExists,
@@ -16,7 +16,7 @@ import {
   startPostgresContainer,
   waitForApp,
   waitForPostgres,
-} from "./flow-common.mjs";
+} from "../flow-common.mjs";
 
 /**
  * End-to-end admin delete flow against disposable PostgreSQL.

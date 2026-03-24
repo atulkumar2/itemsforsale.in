@@ -3,7 +3,7 @@ import { randomUUID } from "node:crypto";
 
 import { Client } from "pg";
 
-import { log } from "./helpers.mjs";
+import { log } from "../helpers.mjs";
 import {
   applySchemaAndSeedData,
   cleanupRun,
@@ -15,7 +15,7 @@ import {
   startPostgresContainer,
   waitForApp,
   waitForPostgres,
-} from "./flow-common.mjs";
+} from "../flow-common.mjs";
 
 /**
  * End-to-end CSV export flow.

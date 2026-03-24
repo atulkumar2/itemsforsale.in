@@ -5,15 +5,100 @@ import path from "node:path";
 import process from "node:process";
 
 const MAX_TIMESTAMPED_LOGS = 5;
+const VALID_RUN_STATES = new Set(["run", "not-run"]);
 
 /**
  * Executes all E2E flow scripts in deterministic order.
  *
- * Discovery rule: any file in scripts/e2e matching *-flow.mjs.
- * Run config rule: scripts/e2e/flow-run-config.json with values "run" or "not-run".
+ * Discovery rule: any file in scripts/e2e/flows matching *-flow.mjs.
+ * Run config rule: scripts/e2e/flow-run-config.json with either:
+ * - a string value: "run" | "not-run"
+ * - or an object: { status: "run" | "not-run", category: string }
+ *
+ * CLI options:
+ * - --category <name>
+ * - --category=<name>
  */
 function getLogTimestamp() {
   return new Date().toISOString().replace(/[.:]/g, "-");
+}
+
+function parseRunnerOptions(argv) {
+  const categories = [];
+
+  for (let index = 0; index < argv.length; index += 1) {
+    const arg = argv[index];
+
+    if (arg === "--category") {
+      const category = argv[index + 1];
+
+      if (!category) {
+        throw new Error('Missing value for "--category". Example: node scripts/e2e/run-all.mjs --category system-environment');
+      }
+
+      categories.push(category);
+      index += 1;
+      continue;
+    }
+
+    if (arg.startsWith("--category=")) {
+      const category = arg.slice("--category=".length);
+
+      if (!category) {
+        throw new Error('Missing value for "--category". Example: node scripts/e2e/run-all.mjs --category=system-environment');
+      }
+
+      categories.push(category);
+      continue;
+    }
+
+    throw new Error(`Unknown argument "${arg}". Supported options: --category <name>`);
+  }
+
+  return {
+    categories: [...new Set(categories)],
+  };
+}
+
+function normalizeRunConfigEntry(fileName, entry) {
+  if (typeof entry === "undefined") {
+    return { status: "run", category: null };
+  }
+
+  if (typeof entry === "string") {
+    if (!VALID_RUN_STATES.has(entry)) {
+      throw new Error(
+        `Invalid run state "${entry}" for ${fileName} in flow-run-config.json. Use "run" or "not-run".`,
+      );
+    }
+
+    return { status: entry, category: null };
+  }
+
+  if (!entry || typeof entry !== "object" || Array.isArray(entry)) {
+    throw new Error(
+      `Invalid config for ${fileName} in flow-run-config.json. Use "run", "not-run", or an object with { status, category }.`,
+    );
+  }
+
+  const { status = "run", category = null } = entry;
+
+  if (!VALID_RUN_STATES.has(status)) {
+    throw new Error(
+      `Invalid run state "${String(status)}" for ${fileName} in flow-run-config.json. Use "run" or "not-run".`,
+    );
+  }
+
+  if (category !== null && (typeof category !== "string" || category.trim().length === 0)) {
+    throw new Error(
+      `Invalid category for ${fileName} in flow-run-config.json. Category must be a non-empty string when provided.`,
+    );
+  }
+
+  return {
+    status,
+    category: category?.trim() ?? null,
+  };
 }
 
 function writeRunnerLog(logWriters, message) {
@@ -106,7 +191,9 @@ async function rotateTimestampedLogs(logsDir, keepCount) {
 }
 
 async function main() {
+  const options = parseRunnerOptions(process.argv.slice(2));
   const scriptsDir = path.join(process.cwd(), "scripts", "e2e");
+  const flowScriptsDir = path.join(scriptsDir, "flows");
   const runConfigPath = path.join(scriptsDir, "flow-run-config.json");
   const logsDir = path.join(scriptsDir, "logs");
   const logTimestamp = getLogTimestamp();
@@ -122,7 +209,7 @@ async function main() {
 
   const relativeTimestampedLogPath = path.posix.join("scripts", "e2e", "logs", `run-all-${logTimestamp}.log`);
   const relativeLatestLogPath = path.posix.join("scripts", "e2e", "logs", "run-all-latest.log");
-  const entries = await readdir(scriptsDir, { withFileTypes: true });
+  const entries = await readdir(flowScriptsDir, { withFileTypes: true });
   let runConfig = {};
 
   try {
@@ -141,7 +228,7 @@ async function main() {
     .sort((left, right) => left.localeCompare(right));
 
   if (flowFiles.length === 0) {
-    writeRunnerLog(logWriters, "[e2e] No flow scripts found in scripts/e2e.");
+    writeRunnerLog(logWriters, "[e2e] No flow scripts found in scripts/e2e/flows.");
     writeRunnerLog(logWriters, `[e2e] Log file: ${relativeTimestampedLogPath}`);
     await closeLogWriters(logWriters);
     return;
@@ -151,40 +238,68 @@ async function main() {
   writeRunnerLog(logWriters, `[e2e] Latest log alias: ${relativeLatestLogPath}`);
   writeRunnerLog(logWriters, `[e2e] Discovered ${flowFiles.length} flow script(s).`);
 
-  const runnableFiles = flowFiles.filter((fileName) => {
-    const runState = runConfig[fileName] ?? "run";
+  const configuredFlows = flowFiles.map((fileName) => {
+    const normalizedConfig = normalizeRunConfigEntry(fileName, runConfig[fileName]);
 
-    if (runState === "not-run") {
-      const relativePath = path.posix.join("scripts", "e2e", fileName);
+    return {
+      fileName,
+      ...normalizedConfig,
+    };
+  });
+
+  const availableCategories = [...new Set(configuredFlows.map((flow) => flow.category).filter(Boolean))].sort((left, right) => left.localeCompare(right));
+
+  if (options.categories.length > 0) {
+    const unknownCategories = options.categories.filter((category) => !availableCategories.includes(category));
+
+    if (unknownCategories.length > 0) {
+      throw new Error(
+        `Unknown E2E category ${unknownCategories.map((category) => `"${category}"`).join(", ")}. Available categories: ${availableCategories.join(", ")}`,
+      );
+    }
+
+    writeRunnerLog(logWriters, `[e2e] Category filter: ${options.categories.join(", ")}`);
+  }
+
+  const runnableFiles = configuredFlows.filter(({ fileName, status, category }) => {
+    const relativePath = path.posix.join("scripts", "e2e", "flows", fileName);
+
+    if (status === "not-run") {
       writeRunnerLog(logWriters, `[e2e] Skipping ${relativePath} (marked not-run)`);
       return false;
     }
 
-    if (runState !== "run") {
-      throw new Error(
-        `Invalid run state \"${String(runState)}\" for ${fileName} in flow-run-config.json. Use \"run\" or \"not-run\".`,
-      );
+    if (options.categories.length > 0 && !options.categories.includes(category)) {
+      writeRunnerLog(logWriters, `[e2e] Skipping ${relativePath} (category ${category ?? "unassigned"} not selected)`);
+      return false;
     }
 
     return true;
   });
 
   if (runnableFiles.length === 0) {
-    writeRunnerLog(logWriters, "[e2e] All discovered flow scripts are marked not-run.");
+    if (options.categories.length > 0) {
+      writeRunnerLog(logWriters, `[e2e] No runnable flow scripts matched category filter: ${options.categories.join(", ")}.`);
+    } else {
+      writeRunnerLog(logWriters, "[e2e] All discovered flow scripts are marked not-run.");
+    }
+
     await closeLogWriters(logWriters);
     return;
   }
 
   writeRunnerLog(logWriters, "[e2e] Execution plan:");
-  runnableFiles.forEach((fileName, index) => {
-    const relativePath = path.posix.join("scripts", "e2e", fileName);
-    writeRunnerLog(logWriters, `[e2e]   ${index + 1}. ${relativePath}`);
+  runnableFiles.forEach(({ fileName, category }, index) => {
+    const relativePath = path.posix.join("scripts", "e2e", "flows", fileName);
+    const categorySuffix = category ? ` [${category}]` : "";
+    writeRunnerLog(logWriters, `[e2e]   ${index + 1}. ${relativePath}${categorySuffix}`);
   });
 
   try {
-    for (const [index, fileName] of runnableFiles.entries()) {
-      const relativePath = path.posix.join("scripts", "e2e", fileName);
-      writeRunnerLog(logWriters, `\n[e2e] [${index + 1}/${runnableFiles.length}] Starting ${relativePath}`);
+    for (const [index, { fileName, category }] of runnableFiles.entries()) {
+      const relativePath = path.posix.join("scripts", "e2e", "flows", fileName);
+      const categorySuffix = category ? ` [${category}]` : "";
+      writeRunnerLog(logWriters, `\n[e2e] [${index + 1}/${runnableFiles.length}] Starting ${relativePath}${categorySuffix}`);
       const startedAt = Date.now();
 
       await runFlowWithLogging(relativePath, process.cwd(), logWriters);

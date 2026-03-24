@@ -23,7 +23,7 @@ import {
   startPostgresContainer,
   waitForApp,
   waitForPostgres,
-} from "./flow-common.mjs";
+} from "../flow-common.mjs";
 
 const config = getPostgresE2EConfig();
 

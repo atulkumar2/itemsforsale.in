@@ -156,7 +156,7 @@ This folder is for disposable end-to-end flows that boot the app against a tempo
 
 ## Conventions
 
-- Keep all new E2E scripts inside `scripts/e2e/`.
+- Keep all new E2E scripts inside `scripts/e2e/flows/`.
 - Prefer one script per clear user journey or security boundary.
 - Reuse helpers from `helpers.mjs` and shared setup/teardown from `flow-common.mjs`.
 - Use separate container names and non-default ports so local developer databases are not disturbed.
@@ -167,7 +167,7 @@ This folder is for disposable end-to-end flows that boot the app against a tempo
   - uploaded files on disk
   - rendered public/admin page HTML when useful
 - Every script should clean up its app process, temporary DB container, and test uploads even on failure.
-- `npm run test:e2e` auto-discovers `*-flow.mjs` scripts and uses `scripts/e2e/flow-run-config.json`.
+- `npm run test:e2e` auto-discovers `*-flow.mjs` scripts from `scripts/e2e/flows/` and uses `scripts/e2e/flow-run-config.json`.
 - Mark a script as `"not-run"` in that config to skip it during combined runs.
 
 ## Script Structure Conventions
@@ -211,9 +211,19 @@ Use these from `flow-common.mjs` when writing new scripts:
 
 - Run all enabled flows:
   - `npm run test:e2e`
+- Run one configured category:
+  - `npm run test:e2e -- --category system-environment`
+- Available categories in `flow-run-config.json`:
+  - `admin-inventory`
+  - `admin-auth-security`
+  - `public-buyer`
+  - `captcha-abuse`
+  - `public-readonly`
+  - `export-reporting`
+  - `system-environment`
 - Run one flow directly:
-  - `node scripts/e2e/admin-flow.mjs`
-  - `node scripts/e2e/admin-delete-flow.mjs`
+  - `node scripts/e2e/flows/admin-flow.mjs`
+  - `node scripts/e2e/flows/admin-delete-flow.mjs`
 - Control combined runs with `scripts/e2e/flow-run-config.json`.
 - Every `npm run test:e2e` run writes logs to:
   - `scripts/e2e/logs/run-all-latest.log`
@@ -224,8 +234,14 @@ Example `flow-run-config.json`:
 
 ```json
 {
-  "admin-flow.mjs": "run",
-  "admin-delete-flow.mjs": "not-run"
+  "admin-flow.mjs": {
+    "status": "run",
+    "category": "admin-inventory"
+  },
+  "admin-delete-flow.mjs": {
+    "status": "not-run",
+    "category": "admin-inventory"
+  }
 }
 ```
 
@@ -233,6 +249,8 @@ Allowed values:
 
 - `"run"`: include script in `npm run test:e2e`
 - `"not-run"`: skip script in `npm run test:e2e`
+- `"category"`: assign the script to a category for `--category <name>` filtering
+- Legacy string-only entries (`"run"` / `"not-run"`) still work, but object entries are preferred for category-based runs
 
 ## Recommended Order
 

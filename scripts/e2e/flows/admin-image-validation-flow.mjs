@@ -24,7 +24,7 @@ import {
   startPostgresContainer,
   waitForApp,
   waitForPostgres,
-} from "./flow-common.mjs";
+} from "../flow-common.mjs";
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);

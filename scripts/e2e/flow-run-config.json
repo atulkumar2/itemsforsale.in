@@ -1,25 +1,94 @@
 {
-  "admin-auth-guard-flow.mjs": "run",
-  "admin-create-validation-flow.mjs": "run",
-  "admin-delete-flow.mjs": "run",
-  "admin-flow.mjs": "run",
-  "admin-image-validation-flow.mjs": "run",
-  "admin-rate-limit-flow.mjs": "run",
-  "admin-session-flow.mjs": "run",
-  "admin-slug-regression-flow.mjs": "run",
-  "public-bulk-interest-flow.mjs": "run",
-  "public-contact-flow.mjs": "run",
-  "public-lead-flow.mjs": "run",
-  "public-location-fallback-flow.mjs": "run",
-  "human-check-refresh-flow.mjs": "run",
-  "public-rate-limit-flow.mjs": "run",
-  "export-throttle-flow.mjs": "run",
-  "catalogue-render-flow.mjs": "run",
-  "item-detail-render-flow.mjs": "run",
-  "about-seller-flow.mjs": "run",
-  "csv-export-flow.mjs": "run",
-  "admin-leads-view-flow.mjs": "run",
-  "cleanup-resilience-flow.mjs": "run",
-  "startup-schema-flow.mjs": "run",
-  "system-status-flow.mjs": "run"
+  "about-seller-flow.mjs": {
+    "status": "run",
+    "category": "public-readonly"
+  },
+  "admin-auth-guard-flow.mjs": {
+    "status": "run",
+    "category": "admin-auth-security"
+  },
+  "admin-create-validation-flow.mjs": {
+    "status": "run",
+    "category": "admin-inventory"
+  },
+  "admin-delete-flow.mjs": {
+    "status": "run",
+    "category": "admin-inventory"
+  },
+  "admin-flow.mjs": {
+    "status": "run",
+    "category": "admin-inventory"
+  },
+  "admin-image-validation-flow.mjs": {
+    "status": "run",
+    "category": "admin-inventory"
+  },
+  "admin-leads-view-flow.mjs": {
+    "status": "run",
+    "category": "export-reporting"
+  },
+  "admin-rate-limit-flow.mjs": {
+    "status": "run",
+    "category": "captcha-abuse"
+  },
+  "admin-session-flow.mjs": {
+    "status": "run",
+    "category": "admin-auth-security"
+  },
+  "admin-slug-regression-flow.mjs": {
+    "status": "run",
+    "category": "admin-inventory"
+  },
+  "catalogue-render-flow.mjs": {
+    "status": "run",
+    "category": "public-readonly"
+  },
+  "cleanup-resilience-flow.mjs": {
+    "status": "run",
+    "category": "system-environment"
+  },
+  "csv-export-flow.mjs": {
+    "status": "run",
+    "category": "export-reporting"
+  },
+  "export-throttle-flow.mjs": {
+    "status": "run",
+    "category": "captcha-abuse"
+  },
+  "human-check-refresh-flow.mjs": {
+    "status": "run",
+    "category": "captcha-abuse"
+  },
+  "item-detail-render-flow.mjs": {
+    "status": "run",
+    "category": "public-readonly"
+  },
+  "public-bulk-interest-flow.mjs": {
+    "status": "run",
+    "category": "public-buyer"
+  },
+  "public-contact-flow.mjs": {
+    "status": "run",
+    "category": "public-buyer"
+  },
+  "public-lead-flow.mjs": {
+    "status": "run",
+    "category": "public-buyer"
+  },
+  "public-location-fallback-flow.mjs": {
+    "status": "run",
+    "category": "public-buyer"
+  },
+  "public-rate-limit-flow.mjs": {
+    "status": "run",
+    "category": "captcha-abuse"
+  },
+  "startup-schema-flow.mjs": {
+    "status": "run",
+    "category": "system-environment"
+  },
+  "system-status-flow.mjs": {
+    "status": "run",
+    "category": "system-environment"
+  }
 }

@@ -28,8 +28,8 @@ import {
   preflightCleanup,
   startPostgresContainer,
   waitForPostgres,
-} from "./flow-common.mjs";
-import { log } from "./helpers.mjs";
+} from "../flow-common.mjs";
+import { log } from "../helpers.mjs";
 
 const config = getPostgresE2EConfig();
 const { appPort, containerName, databaseUrl, rootDir } = config;
